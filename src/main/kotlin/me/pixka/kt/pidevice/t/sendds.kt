@@ -24,8 +24,9 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     private val mapper = jacksonObjectMapper()
     private var checkserver: String? = "http://localhost:5555/check"
 
-    @Scheduled(initialDelay = 30*1000,fixedDelay = 60 * 1000)
+    @Scheduled(initialDelay = 30000, fixedDelay = 60 * 1000)
     fun sendtask() {
+        logger.info("Start Send DS data")
         setup()
         if (http.checkcanconnect(checkserver!!)) {
             send()
@@ -39,7 +40,7 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
             try {
                 val info = Infoobj()
 
-               // info.ip = io.wifiIpAddress()
+                // info.ip = io.wifiIpAddress()
                 info.mac = io.wifiMacAddress()
                 info.ds18value = item
 
@@ -49,12 +50,11 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
                     val response = EntityUtils.toString(entity)
                     logger.debug("[sendds18b20] response : " + response)
                     val ret = mapper.readValue(response, DS18value::class.java)
-                    if (ret.id != null) {
-                        item.toserver = true
-                        service.save(item)
-                        logger.info("[sendds18b20] Send complete  ${item.id}")
-                        //  dss.clean()
-                    }
+
+                    item.toserver = true
+                    service.save(item)
+                    logger.info("[sendds18b20] Send complete  ${item.id}")
+                    //  dss.clean()
                 }
             } catch (e: Exception) {
                 logger.error("[sendds18b20] ERROR " + e.message)
@@ -65,9 +65,12 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     }
 
     fun setup() {
-        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
-        target = host+dbcfg.findorcreate("serverds18addtarget", ":5002/ds18value/add")?.value!!
-        checkserver = host+dbcfg.findorcreate("servercheck", ":5002/run")?.value!!
+        logger.debug("Setup...")
+        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        target = host + dbcfg.findorcreate("serverds18addtarget", ":5002/ds18value/add").value
+        logger.debug("Target ${target}")
+        checkserver = host + dbcfg.findorcreate("servercheck", ":5002/run").value
+        logger.debug("Check ${checkserver}")
     }
 
     companion object {
