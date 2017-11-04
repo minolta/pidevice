@@ -25,7 +25,7 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
     private var targetloadstatus = ""
 
     val mapper = jacksonObjectMapper()
-    @Scheduled(initialDelay = 60000*5,fixedDelay = 60000)
+    @Scheduled(initialDelay = 60000,fixedDelay = 60000)
     fun run() {
 
         logger.info("Start load pijob")

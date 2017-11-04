@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 @Profile("pi")
 class Displaydsvalues(val dps: DisplayService, val dss: DS18sensorService, val dsvs: Ds18valueService, val dbcfg: DbconfigService) {
 
-    var df = DecimalFormat("##.#")
+    var df = DecimalFormat("##.0")
     @Scheduled(initialDelay = 5000,fixedDelay = 30000)
     fun run() {
         logger.info("Run display DS 18b20 value")
@@ -52,12 +52,12 @@ class Displaydsvalues(val dps: DisplayService, val dss: DS18sensorService, val d
                     println("whait for lock DSVALUE")
                     TimeUnit.MILLISECONDS.sleep(200)
                 }
-
                 var dot = dps.lockdisplay(this)
-                logger.debug("lock for ds value display")
+                logger.debug("lock for ds value display ")
+
                 for (b in buf) {
 
-                    dot.showMessage("sensor: ${b.dssensor?.name}")
+                    dot.showMessage("sensor:${b.dssensor?.name}")
                     TimeUnit.SECONDS.sleep(1)
                     dot.clear()
                     dot.print(df.format(b.ds18value?.t))
