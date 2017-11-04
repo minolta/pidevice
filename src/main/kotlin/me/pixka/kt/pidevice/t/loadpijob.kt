@@ -6,27 +6,26 @@ import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.pibase.d.Logistate
-import me.pixka.pibase.d.Pijob
-import me.pixka.pibase.d.Portname
-import me.pixka.pibase.d.Portstatusinjob
+import me.pixka.pibase.d.*
 import me.pixka.pibase.s.*
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
 
 @Component
+@Profile("pi")
 class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val dbcfg: DbconfigService
                 , val io: Piio, val http: HttpControl, val psijs: PortstatusinjobService, val ls: LogistateService,
-                var err: ErrorlogService, val js: JobService, val ps: PortnameService) {
+                var err: ErrorlogService, val js: JobService, val ps: PortnameService, val pds: PideviceService) {
     // load /pijob/list/{mac}
     private var target = ""
     // load port state /portstate/list/{mac}
     private var targetloadstatus = ""
 
     val mapper = jacksonObjectMapper()
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(initialDelay = 60000*5,fixedDelay = 60000)
     fun run() {
 
         logger.info("Start load pijob")
@@ -43,41 +42,15 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
 
                 if (ref == null) {// Save เข้าถ้าหาไม่เจอเป็น job ใหม่
                     logger.debug("[loadpijob] new Pi job on device ${item}")
-
-                    try {
-                        val job = js.findandcreateLocal(item.job!!)
-                        item.job = job
-
-                    } catch (e: Exception) {
-                        logger.error("loadpijob find job error ${e.message}")
-                        err.n("loadpijob", "52-53", "${e.message}")
-                    }
-                    try {
-                        val dss = dsservice.findorcreate(item.ds18sensor)
-                        item.ds18sensor = dss
-                    } catch (e: Exception) {
-                        logger.error("loadpijob find ds sensor error ${e.message}")
-                        err.n("loadpijob", "60-61", "${e.message}")
-                    }
-
-                    var p: Pijob? = null;
-                    try {
-                        p = service.newpijob(item)
-                    } catch (e: Exception) {
-                        logger.error("loadpijob new pijob  error ${e.message}")
-                        err.n("loadpijob", "69", "${e.message}")
-                    }
-                    p?.pidevice = null
-                    p?.pidevice_id = null
-                    logger.debug("[loadpijob newforsave] new Pi job for save :" + p)
-                    p = service.save(p!!)
-                    logger.debug("[loadpijob pijobsaved] Save pi job to device : " + p)
-                    ref = p!!
+                    ref = newpijobinlocaldevice(item)
                 } else {
                     logger.debug("[loadpijob] Jobs already edit " + ref)
                     ref = edit(ref, item)
 
                 }
+
+
+
                 saveportstatus(item, ref!!)
             }
 
@@ -87,6 +60,73 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
         }
 
 
+    }
+
+    fun newjob(job: Job): Job? {
+        try {
+            val job = js.findandcreateLocal(job)
+            return job
+        } catch (e: Exception) {
+            logger.error("loadpijob find job error ${e.message}")
+            err.n("loadpijob", "52-53", "${e.message}")
+        }
+
+        return null
+    }
+
+    fun newotherdevice(pd: PiDevice): PiDevice? {
+
+        try {
+            var other = pds.findByMac(pd.mac!!)
+            if(other==null) {
+                var p = pds.create(pd.mac!!)
+                return p
+            }
+
+            return other
+
+        } catch (e: Exception) {
+            logger.error("loadpijob find ds sensor error ${e.message}")
+            err.n("loadpijob", "60-61", "${e.message}")
+        }
+        return null
+    }
+
+    fun newdssensor(dssensor: DS18sensor): DS18sensor? {
+
+        try {
+            val dss = dsservice.findorcreate(dssensor)
+            return dss
+        } catch (e: Exception) {
+            logger.error("loadpijob find ds sensor error ${e.message}")
+            err.n("loadpijob", "60-61", "${e.message}")
+        }
+
+        return null
+    }
+
+    private fun newpijobinlocaldevice(item: Pijob): Pijob? {
+
+        try {
+            item.job = newjob(item.job!!)
+            item.ds18sensor = newdssensor(item.ds18sensor!!)
+            item.desdevice = newotherdevice(item.desdevice!!)
+            logger.debug("Item for new pijob ${item}")
+            var p: Pijob = service.newpijob(item)
+
+
+            logger.debug("P after newpijob ${p}")
+            // ตัวของเราเอง
+            p.pidevice = null
+            p.pidevice_id = null
+            logger.debug("[loadpijob newforsave] new Pi job for save :" + p)
+            p = service.save(p)!!
+            logger.debug("[loadpijob pijobsaved] Save pi job to device : " + p)
+            return p
+        } catch (e: Exception) {
+            logger.error("Can not create Pi job ${e.message}")
+        }
+        return null
     }
 
 
@@ -215,8 +255,10 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
     }
 
     fun setup() {
-        target = dbcfg.findorcreate("serverloadpijob", "http://pi.pixka.me:5000/pijob/lists").value!!
-        targetloadstatus = dbcfg.findorcreate("serverloadpijobportstate", "http://pi.pixka.me:5000/portstatusinjob/lists").value!!
+
+        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
+        target = host+dbcfg.findorcreate("serverloadpijob", ":5002/pijob/lists").value!!
+        targetloadstatus = host+dbcfg.findorcreate("serverloadpijobportstate", ":5002/portstatusinjob/lists").value!!
     }
 
 

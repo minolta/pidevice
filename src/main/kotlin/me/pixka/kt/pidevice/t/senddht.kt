@@ -11,22 +11,24 @@ import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DhtvalueService
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("pi")
 class SendDht(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
               val err: ErrorlogService, val http: HttpControl, val dbcfg: DbconfigService) {
     private val mapper = jacksonObjectMapper()
-    var target = "http://localhost:5000/dht/add"
-    private var checkserver = "http://localhost:5000/run"
+    var target = "http://localhost:5002/dht/add"
+    private var checkserver = "http://localhost:5002/run"
 
-    @Scheduled(fixedDelay = 60 * 1000)
+    @Scheduled(initialDelay = 60*1000,fixedDelay = 60 * 1000)
     fun run() {
 
         setup()
 
-        if (http!!.checkcanconnect(checkserver)) {
+        if (http.checkcanconnect(checkserver)) {
             send()
         } else {
             logger.error("[dhtvaluesend] Can not connect to server : " + checkserver)
@@ -74,8 +76,9 @@ class SendDht(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
     }
 
     fun setup() {
-        target = dbcfg.findorcreate("serverdhtaddtarget", "http://pi.pixka.me:5000/dht/add/")?.value!!
-        checkserver = dbcfg.findorcreate("servercheck", "http://pi.pixka.me:5000/run")?.value!!
+        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
+        target = host+dbcfg.findorcreate("serverdhtaddtarget", ":5002/dht/add/")?.value!!
+        checkserver = host+dbcfg.findorcreate("servercheck", ":5002/run")?.value!!
     }
 
     companion object {

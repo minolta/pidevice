@@ -1,6 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pidevice.o.DS18obj
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Worker
 import me.pixka.pibase.d.DS18sensor
@@ -25,13 +26,13 @@ import org.springframework.stereotype.Component
 @Profile("pi")
 class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorService,
                              val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService) {
+                             val ts: TaskService,var dsobj:DS18obj) {
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(initialDelay = 80000,fixedDelay = 10000)
     fun run() {
         logger.info("Run Find JOB for run ds18b20")
         var DSJOB = js.findByName("DS")
-        var lasts = findlast()
+        var lasts = dsobj.findlast()
 
         logger.debug("Found last ${lasts}")
         if (lasts != null) {
@@ -69,30 +70,8 @@ class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorServ
     }
 
 
-    /*ใช้สำหรับหาค่าสุดท้ายของ Sensor แต่ละตัว*/
-    fun findlast(): ArrayList<Dssensorforfindlast> {
-        var buf = ArrayList<Dssensorforfindlast>()
-        //หาข้อมูลจาก Last
-        var allsensor = dss.search("", 0, 1000)
-        if (allsensor != null)
-            for (o in allsensor) {
 
 
-                var t = dsvs.lastBysensor(o.id)
-                if (t != null) {
-                    var dsfl = Dssensorforfindlast(o, t)
-                    buf.add(dsfl)
-                }
-            }
-
-        logger.info("Last T by sensor ${buf}")
-        return buf
-    }
-
-    private fun findjobs(last: DS18value): Any? {
-
-        return null
-    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(FindJobforRunDS18value::class.java)

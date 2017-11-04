@@ -11,10 +11,12 @@ import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.Ds18valueService
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("pi")
 class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl, val cfg: Configfilekt,
              val err: ErrorlogService, val dbcfg: DbconfigService) {
 
@@ -22,7 +24,7 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     private val mapper = jacksonObjectMapper()
     private var checkserver: String? = "http://localhost:5555/check"
 
-    @Scheduled(fixedDelay = 60 * 1000)
+    @Scheduled(initialDelay = 30*1000,fixedDelay = 60 * 1000)
     fun sendtask() {
         setup()
         if (http.checkcanconnect(checkserver!!)) {
@@ -63,8 +65,9 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     }
 
     fun setup() {
-        target = dbcfg.findorcreate("serverds18addtarget", "http://pi.pixka.me:5000/ds18value/add")?.value!!
-        checkserver = dbcfg.findorcreate("servercheck", "http://pi.pixka.me:5000/run")?.value!!
+        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
+        target = host+dbcfg.findorcreate("serverds18addtarget", ":5002/ds18value/add")?.value!!
+        checkserver = host+dbcfg.findorcreate("servercheck", ":5002/run")?.value!!
     }
 
     companion object {

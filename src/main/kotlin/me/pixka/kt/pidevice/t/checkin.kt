@@ -11,19 +11,23 @@ import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DevicecheckinService
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 
 @Component
+@Profile("pi")
 class Checkin(val configfile: Configfilekt, val erl: ErrorlogService, val io: Piio, val http: HttpControl,
               val ds: DevicecheckinService, val dbcfg: DbconfigService) {
 
     var target: String? = null
-    @Scheduled(fixedDelay = 60000)
-    fun checkin() {
 
+    var host: String? = null
+    @Scheduled(initialDelay = 15000,fixedDelay = 60000)
+    fun checkin() {
+        logger.info("Checkin ")
         setup()
         check()
     }
@@ -58,7 +62,8 @@ class Checkin(val configfile: Configfilekt, val erl: ErrorlogService, val io: Pi
     }
 
     fun setup() {
-        target = dbcfg.findorcreate("checkintarget", "http://pi.pixka.me:5000/checkin").value
+        host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
+        target = host+dbcfg.findorcreate("checkintarget", ":5002/checkin").value
 
     }
 

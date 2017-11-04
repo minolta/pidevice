@@ -2,11 +2,13 @@ package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.base.s.ErrorlogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
+@Profile("pi")
 class Execdhtcommand() {
     companion object {
         internal var logger = LoggerFactory.getLogger(Execdhtcommand::class.java)

@@ -8,6 +8,7 @@ import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.pibase.d.Portname
 import me.pixka.pibase.s.PortnameService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -15,13 +16,14 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("pi")
 class LoadPortnameTask(val service: PortnameService, val cfg: DbconfigService, val http: HttpControl,val err:ErrorlogService) {
 
-    private var target = "http://192.168.69.50:5000/portname/lists/0/1000"
+    private var target = "http://192.168.69.50:5002/portname/lists/0/1000"
 
     private val om = jacksonObjectMapper()
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(initialDelay = 60*1000*5,fixedDelay = 60000)
     fun run() {
         logger.info("starttask Start loadportname")
         setup()
@@ -71,7 +73,8 @@ class LoadPortnameTask(val service: PortnameService, val cfg: DbconfigService, v
 
     private fun setup() {
         logger.debug("[Portname] setup")
-        target = cfg.findorcreate("serviceloadportname","http://pi.pixka.me:5000/portname/lists/0/1000").value!!
+        var host = cfg.findorcreate("hosttarget","http://pi1.pixka.me").value
+        target = host+cfg.findorcreate("serviceloadportname",":5002/portname/lists/0/1000").value!!
     }
 
     companion object {

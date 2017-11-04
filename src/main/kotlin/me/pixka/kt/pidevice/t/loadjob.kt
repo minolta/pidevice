@@ -8,21 +8,23 @@ import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.pibase.d.Job
 import me.pixka.pibase.s.JobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
 
 
 @Component
+@Profile("pi")
 class LoadMainJobTask(val service: JobService,
                       val dbcfg: DbconfigService,
                       val http: HttpControl, val err: ErrorlogService) {
 
     // load /pijob/list/{mac}
-    private var target = "http://192.168.69.2:5000/job/lists/0/1000"
+    private var target = "http://192.168.69.2:5002/job/lists/0/1000"
 
     var om = jacksonObjectMapper()
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(initialDelay = 30000,fixedDelay = 60000)
     fun run() {
         logger.info("in loadmainjob")
         setup()
@@ -66,7 +68,8 @@ class LoadMainJobTask(val service: JobService,
 
     private fun setup() {
         logger.debug("[loadmainjob] setup()")
-        target  = dbcfg.findorcreate("serviceloadmainjob","http://pi.pixka.me:5000/job/lists/0/1000").value!!
+        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
+        target  = host+dbcfg.findorcreate("serviceloadmainjob",":5002/job/lists/0/1000").value!!
     }
 
     companion object {

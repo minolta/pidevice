@@ -16,14 +16,14 @@ import java.util.concurrent.TimeUnit
 class Displaydsvalues(val dps: DisplayService, val dss: DS18sensorService, val dsvs: Ds18valueService, val dbcfg: DbconfigService) {
 
     var df = DecimalFormat("##.#")
-    @Scheduled(fixedDelay = 30000)
+    @Scheduled(initialDelay = 5000,fixedDelay = 30000)
     fun run() {
-
+        logger.info("Run display DS 18b20 value")
         var run = dbcfg.findorcreate("displaydsvalue", "true").value
         Displaydhtvalue.logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue
-            Displaydhtvalue.logger.debug("exit ")
+            Displaydhtvalue.logger.debug("exit DS display job ")
             return
         }
         var sensor = dss.all() //sensor ทั้งหมด
@@ -56,11 +56,13 @@ class Displaydsvalues(val dps: DisplayService, val dss: DS18sensorService, val d
                 var dot = dps.lockdisplay(this)
                 logger.debug("lock for ds value display")
                 for (b in buf) {
+
                     dot.showMessage("sensor: ${b.dssensor?.name}")
                     TimeUnit.SECONDS.sleep(1)
                     dot.clear()
                     dot.print(df.format(b.ds18value?.t))
                     TimeUnit.SECONDS.sleep(5)
+                    dot.clear()
                 }
                 dps.unlock(this)
 

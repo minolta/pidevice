@@ -6,6 +6,7 @@ import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.ktbase.io.Configfilekt
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
@@ -18,6 +19,7 @@ import java.util.*
 
 
 @Component
+@Profile("pi")
 class Findip(val service: IptableServicekt, val cfg: Configfilekt, val es: ErrorlogService, val dbcfg: DbconfigService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)

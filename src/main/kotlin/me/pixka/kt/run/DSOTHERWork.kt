@@ -1,7 +1,6 @@
 package me.pixka.kt.run
 
 import com.pi4j.io.gpio.GpioPinDigitalOutput
-import com.pi4j.io.gpio.PinState
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.d.Portstatusinjob
@@ -9,11 +8,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.TimeUnit
 
-/**
- * ใช้สำหรับ Run pijob
- */
 @Profile("pi")
-class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterface {
+class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterface {
     override fun getPijobid(): Long {
         return pijob.id
     }
@@ -91,10 +87,6 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(Worker::class.java)
+        internal var logger = LoggerFactory.getLogger(DSOTHERWorker::class.java)
     }
-
-
 }
-
-class Pinbackup(var pin: GpioPinDigitalOutput, var pinstate: PinState)

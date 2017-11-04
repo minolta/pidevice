@@ -2,7 +2,6 @@ package me.pixka.kt.pidevice.s
 
 import me.pixka.kt.pidevice.t.FindJobforRunDS18value
 import me.pixka.kt.run.PijobrunInterface
-import me.pixka.pibase.d.Pijob
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
@@ -20,8 +19,7 @@ class TaskService() {
 
         var forrun = checkalreadyrun(work)
 
-        if(forrun!=null)
-        {
+        if (forrun != null) {
             runinglist.add(forrun)
             executor.execute(forrun as Runnable)
         }
@@ -44,11 +42,9 @@ class TaskService() {
                     return null //ถ้าเจอเหมือน null
                 }
             }
-           return w //ถ้าไม่เจอ return w ไป exec
-        }
-        else
-        {
-          return w
+            return w //ถ้าไม่เจอ return w ไป exec
+        } else {
+            return w
         }
 
 
@@ -59,10 +55,13 @@ class TaskService() {
     }
 
     private fun removefinished() {
-        for (old in runinglist) {
-            if (!old.runStatus()) {
-                FindJobforRunDS18value.logger.debug("Remove finished run ${old}")
-                runinglist.remove(old)
+
+        if (runinglist!=null && runinglist.size > 0) {
+            for (old in runinglist) {
+                if (!old.runStatus()) {
+                    FindJobforRunDS18value.logger.debug("Remove finished run ${old}")
+                    runinglist.remove(old)
+                }
             }
         }
         logger.debug("Already run size: ${runinglist.size}  ${runinglist}")
