@@ -17,12 +17,7 @@ class DSDPWorker(
 
 
     override fun getPijobid(): Long {
-        if (pijob != null) {
-            var id = pijob?.id
-            return id!!
-        }
-
-        return 0
+        return pijob.id
     }
 
     var isRun: Boolean = false
@@ -44,27 +39,41 @@ class DSDPWorker(
 
     var df = DecimalFormat("##.0")
     override fun run() {
-        logger.info("Run DSDPWork")
-        if (pijob?.desdevice_id != null && pijob.ds18sensor_id != null) {
 
-            logger.debug(" JOB ${pijob}")
-            var dsvalue = ss.readDsOther(pijob?.desdevice_id!!, pijob?.ds18sensor_id!!) //อ่านค่าตัวอื่น
-            if (dsvalue != null) {
-                while (dps.lock) {
-                    logger.debug("Wait for lock display")
-                    TimeUnit.MILLISECONDS.sleep(200)
+        try {
+            logger.info("Run DSDPWork")
+            if (pijob?.desdevice_id != null && pijob.ds18sensor_id != null) {
+
+                logger.debug(" JOB ${pijob}")
+                var dsvalue = ss.readDsOther(pijob?.desdevice_id!!, pijob?.ds18sensor_id!!) //อ่านค่าตัวอื่น
+                if (dsvalue != null) {
+                    var count = 0
+                    while (dps.lock) {
+                        logger.debug("Wait for lock display")
+                        TimeUnit.MILLISECONDS.sleep(200)
+                        count++
+                        if (count >= 20) {
+                            isRun = false
+                            return
+                        }
+                    }
+                    dps.lockdisplay(this)
+                    dps.dot.print(df.format(dsvalue.t))
+                    dps.unlock(this)
+                    isRun = false
+
+                } else {
+                    logger.error("Read other fail ${pijob}")
+                    isRun = false
                 }
-                dps.lockdisplay(this)
-                dps.dot.print(df.format(dsvalue.t))
-                dps.unlock(this)
-                isRun = false
+            }
 
-            } else
-                logger.error("Read other fail ${pijob}")
+
+            isRun = false
+        } catch (e: Exception) {
+            logger.error("Display error ${e.message}")
+            isRun = false
         }
-
-
-        isRun = false
     }
 
     companion object {

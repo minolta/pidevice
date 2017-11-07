@@ -20,10 +20,10 @@ class Displaydsvalues(val dps: DisplayService, val dss: DS18sensorService, val d
     fun run() {
         logger.info("Run display DS 18b20 value")
         var run = dbcfg.findorcreate("displaydsvalue", "true").value
-        Displaydhtvalue.logger.debug(" Can run:${run}")
+        logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue
-            Displaydhtvalue.logger.debug("exit DS display job ")
+            logger.debug("exit DS display job ")
             return
         }
         var sensor = dss.all() //sensor ทั้งหมด

@@ -31,25 +31,30 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
     var jobid: Long = 0
     var isRun: Boolean = true
     override fun run() {
+        try {
 
-        isRun = true
-        var ports = pijob.ports
-        var runtime = pijob.runtime
-        var waittime = pijob.waittime
-        jobid = pijob.id
+            isRun = true
+            var ports = pijob.ports
+            var runtime = pijob.runtime
+            var waittime = pijob.waittime
+            jobid = pijob.id
 
-        logger.debug("Startworker ${pijob.id}")
+            logger.debug("Startworker ${pijob.id}")
 
-        setport(ports!!)
-        TimeUnit.SECONDS.sleep(runtime!!)
-        logger.debug("Run time: ${runtime}")
-        resetport()
-        TimeUnit.SECONDS.sleep(waittime!!)
-        logger.debug("Wait time: ${waittime}")
-        isRun = false
-        //end task
+            setport(ports!!)
+            TimeUnit.SECONDS.sleep(runtime!!)
+            logger.debug("Run time: ${runtime}")
+            resetport()
+            TimeUnit.SECONDS.sleep(waittime!!)
+            logger.debug("Wait time: ${waittime}")
+            isRun = false
+            //end task
 
-        logger.debug("End job ${pijob.id}")
+            logger.debug("End job ${pijob.id}")
+        } catch (e: Exception) {
+            logger.error("DSOTHER ${e.message}")
+            isRun = false
+        }
     }
 
     fun resetport() {

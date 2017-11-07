@@ -1,17 +1,17 @@
 package me.pixka.kt.pidevice.s
 
-import me.pixka.kt.pidevice.t.FindJobforRunDS18value
 import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
+import java.util.concurrent.ThreadPoolExecutor
 
 /**
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
 class TaskService() {
-    val executor = Executors.newFixedThreadPool(30)
+    val executor = Executors.newFixedThreadPool(50)
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
 
 
@@ -22,7 +22,10 @@ class TaskService() {
         if (forrun != null) {
             runinglist.add(forrun)
             executor.execute(forrun as Runnable)
+            logger.debug("Run ${forrun.getPijobid()}")
         }
+        var tp = executor as ThreadPoolExecutor
+        logger.debug("Running size : ${tp.activeCount} Job in ${runinglist}")
     }
 
 
@@ -54,17 +57,21 @@ class TaskService() {
         return null
     }
 
-    private fun removefinished() {
+    fun removefinished() {
 
-        if (runinglist!=null && runinglist.size > 0) {
-            for (old in runinglist) {
-                if (!old.runStatus()) {
-                    FindJobforRunDS18value.logger.debug("Remove finished run ${old}")
-                    runinglist.remove(old)
+        try {
+            if (runinglist != null && runinglist.size > 0) {
+                for (old in runinglist) {
+                    if (!old.runStatus()) {
+                        logger.debug("Remove finished run ${old}")
+                        runinglist.remove(old)
+                    }
                 }
             }
+            logger.debug("Already run size: ${runinglist.size}  ${runinglist}")
+        } catch (e: Exception) {
+            logger.error("Remove Error ${e.message}")
         }
-        logger.debug("Already run size: ${runinglist.size}  ${runinglist}")
     }
 
     companion object {
