@@ -20,7 +20,7 @@ class DSDPWorker(
         return pijob.id
     }
 
-    var isRun: Boolean = false
+    var isRun: Boolean = true
 
     override fun runStatus(): Boolean {
         return isRun
@@ -41,7 +41,9 @@ class DSDPWorker(
     override fun run() {
 
         try {
+
             logger.info("Run DSDPWork")
+            isRun = true
             if (pijob?.desdevice_id != null && pijob.ds18sensor_id != null) {
 
                 logger.debug(" JOB ${pijob}")
@@ -52,7 +54,8 @@ class DSDPWorker(
                         logger.debug("Wait for lock display")
                         TimeUnit.MILLISECONDS.sleep(200)
                         count++
-                        if (count >= 20) {
+                        if (count >= 5) {
+                            logger.error("Lock display time out")
                             isRun = false
                             return
                         }
@@ -61,19 +64,34 @@ class DSDPWorker(
                     dps.dot.print(df.format(dsvalue.t))
                     dps.unlock(this)
                     isRun = false
+                    logger.debug("End DSDPTASK")
 
                 } else {
                     logger.error("Read other fail ${pijob}")
-                    isRun = false
                 }
             }
 
 
-            isRun = false
         } catch (e: Exception) {
             logger.error("Display error ${e.message}")
-            isRun = false
+
         }
+
+        isRun = false
+    }
+
+    override fun toString(): String {
+        return "DPSP Worker RUN :${isRun} JOBID:${pijob.id} "
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (other is DSDPWorker) {
+            var o = other as DSDPWorker
+            if (pijob.id.equals(o.pijob.id))
+                return true
+        }
+
+        return false
     }
 
     companion object {
