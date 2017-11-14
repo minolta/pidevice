@@ -13,12 +13,15 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class Displaydsvalues(val dps: DisplayService, val dss: DS18sensorService, val dsvs: Ds18valueService, val dbcfg: DbconfigService) {
+class Displaydsvalues(val dps: DisplayService,
+                      val dss: DS18sensorService,
+                      val dsvs: Ds18valueService,
+                      val dbcfg: DbconfigService) {
 
     var df = DecimalFormat("##.0")
     @Scheduled(initialDelay = 5000,fixedDelay = 30000)
     fun run() {
-        logger.info("Run display DS 18b20 value")
+        logger.info("Run Display DS 18b20 value")
         var run = dbcfg.findorcreate("displaydsvalue", "true").value
         logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
@@ -47,10 +50,17 @@ class Displaydsvalues(val dps: DisplayService, val dss: DS18sensorService, val d
 
             if (buf.size > 0) {
                 logger.debug("start booking dpslay:")
+                var count=0
                 while (dps.lock) {
                     //wait lock display
                     println("whait for lock DSVALUE")
                     TimeUnit.MILLISECONDS.sleep(200)
+                    count++
+                    if(count > 5)
+                    {
+                        logger.error("Display Busy")
+                        return
+                    }
                 }
                 var dot = dps.lockdisplay(this)
                 logger.debug("lock for ds value display ")

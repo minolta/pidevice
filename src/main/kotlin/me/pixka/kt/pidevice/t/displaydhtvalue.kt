@@ -18,18 +18,25 @@ class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val db
     @Scheduled(fixedDelay = 20000)
     fun run() {
 
-        var run = dbcfg.findorcreate("displaydhtvalue", "true").value
+        var run = dbcfg.findorcreate("Displaydhtvalue", "true").value
         logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue
             logger.debug("exit ")
             return
         }
+        var count = 0
         while (dps.lock) {
             //รอจนกว่าจะแสดงได้
             println("whait for lock DHT")
             TimeUnit.MILLISECONDS.sleep(200)
+            count++
+            if(count>5) {
+                logger.error("Display is busy")
+                return
+            }
         }
+
 
         var dot = dps.lockdisplay(this)
         var last = dhts.last()

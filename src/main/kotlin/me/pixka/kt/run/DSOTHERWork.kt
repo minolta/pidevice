@@ -60,8 +60,8 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
     fun resetport() {
         for (b in pinbackuplist) {
             //  b.pin.setState(b.pinstate)
-            //    gpio.revertDigitalpin(b.pin)
-            gpio.resettoDefault(b.pin)
+                gpio.revertDigitalpin(b.pin)
+            //gpio.resettoDefault(b.pin)
         }
     }
 
