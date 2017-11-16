@@ -22,7 +22,9 @@ class TaskService() {
 
         if (forrun != null) {
             runinglist.add(forrun)
-            executor.execute(forrun as Runnable)
+         //   executor.submit(forrun as Runnable)
+            var t = Thread(forrun as Runnable)
+            t.start()
             logger.debug("Run ${forrun.getPijobid()}")
         }
         var tp = executor as ThreadPoolExecutor
@@ -100,7 +102,7 @@ class TaskService() {
             e.printStackTrace()
         }
 
-        logger.debug("Remove Already run size: ${runinglist.size}  ${runinglist}")
+        logger.debug("Remove Already run size: ${runinglist.size}  ${runinglist}  ")
     }
 
     companion object {
