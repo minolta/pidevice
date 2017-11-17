@@ -14,13 +14,13 @@ import java.math.BigDecimal
 
 @Component
 @Profile("pi")
-class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorService, val err: ErrorlogService,val dbcfg:DbconfigService) {
+class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorService, val err: ErrorlogService, val dbcfg: DbconfigService) {
 
     var oldvalue = ArrayList<dsbuf>()
-    @Scheduled(initialDelay = 3000,fixedDelay = 10000)
+    @Scheduled(initialDelay = 3000, fixedDelay = 30000)
     fun read() {
-        var canread = dbcfg.findorcreate("readdds","true").value
-        if(!canread.equals("true")) {
+        var canread = dbcfg.findorcreate("readdds", "true").value
+        if (!canread.equals("true")) {
             ReadDht.logger.info("Not run read ds")
             return
         }
@@ -30,9 +30,18 @@ class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorServ
                 for (value in values) {
                     var old = find(value)
                     if (old == null || old.value.compareTo(value.t) != 0) {
-                        logger.info("New DS18value ${value} old value:${old?.value}")
-                        ds.save(value)
-                        push(value)
+
+                        if (old == null) {
+                            logger.debug("New DS18value ${value} ")
+                            ds.save(value)
+                            push(value)
+                        } else {
+                            if (checkvaluetosave(value.t!!, old.value)) {
+                                logger.debug("Value has diff over rang")
+                                ds.save(value)
+                                push(value)
+                            }
+                        }
 
                     }
                 }
@@ -43,6 +52,21 @@ class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorServ
             err.n("Read Read18b20", "17-21", "${e.message}")
 
         }
+    }
+
+
+    fun checkvaluetosave(src: BigDecimal, des: BigDecimal): Boolean {
+
+        var rangertosave = BigDecimal(dbcfg.findorcreate("dsvaluerangtosave", "0.5").value)
+        var result = src.subtract(des)
+
+        var over05 = result.abs()
+        logger.debug("Diff ${over05}")
+        if (over05.compareTo(rangertosave) > 0)
+            return true
+
+        return false // not over rang
+
     }
 
     /**

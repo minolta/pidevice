@@ -10,7 +10,7 @@ import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
 
 @Profile("pi")
-class DSDPWorker(
+class DSDPWorker (
         val ss: SensorService,
         val dps: DisplayService,
         var pijob: Pijob) : Runnable, PijobrunInterface {
@@ -54,7 +54,7 @@ class DSDPWorker(
                         logger.debug("Wait for lock display")
                         TimeUnit.MILLISECONDS.sleep(200)
                         count++
-                        if (count >= 5) {
+                        if (count >= 20) {
                             logger.error("Lock display time out")
                             isRun = false
                             return
