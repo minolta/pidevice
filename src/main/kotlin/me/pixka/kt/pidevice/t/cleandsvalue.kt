@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 @Component
 class CleanDsvalue(val ds:Ds18valueService) {
 
-    @Scheduled(fixedDelay = 10*60*1000)
+    @Scheduled(fixedDelay = 60*60*1000)
     fun clean()
     {
         ds.cleanToserver()

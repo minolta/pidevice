@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 class CleanDhtvalue(val dhts:DhtvalueService) {
 
     //10 นาที ลบ ข้อมูลที่ หนึ่ง
-    @Scheduled(fixedDelay = 10*60*1000)
+    @Scheduled(fixedDelay = 60*60*1000)
     fun clean()
     {
         dhts.cleanToserver()

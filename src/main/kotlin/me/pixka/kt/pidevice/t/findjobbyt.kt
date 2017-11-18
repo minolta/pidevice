@@ -28,7 +28,7 @@ class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorServ
                              val pjs: PijobService, val js: JobService, val gpios: GpioService,
                              val ts: TaskService,var dsobj:DS18obj) {
 
-    @Scheduled(initialDelay = 80000,fixedDelay = 10000)
+    @Scheduled(initialDelay = 5000,fixedDelay = 10000)
     fun run() {
         logger.info("Run Find JOB for run ds18b20")
         var DSJOB = js.findByName("DS")
