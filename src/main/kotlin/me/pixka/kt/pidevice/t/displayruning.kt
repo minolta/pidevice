@@ -21,7 +21,7 @@ class Displayruning(val dps: DisplayService) {
             {
                 TimeUnit.MILLISECONDS.sleep(200)
                 count++
-                if(count>5)
+                if(count>10)
                 {
                     logger.error("Error Display timeout")
                     return

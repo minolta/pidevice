@@ -14,7 +14,7 @@ import java.util.concurrent.BlockingQueue
 @Component
 class ThreadInfo(val context: ApplicationContext,val tsk:TaskService) {
 
-    @Scheduled(fixedDelay = 10000)
+   // @Scheduled(fixedDelay = 10000)
     fun checkThread()
     {
        var t= context.getBean("taskScheduler") as ThreadPoolTaskScheduler

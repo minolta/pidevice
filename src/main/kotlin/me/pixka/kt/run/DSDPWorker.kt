@@ -38,6 +38,7 @@ class DSDPWorker (
     }
 
     var df = DecimalFormat("##.0")
+    var d100 = DecimalFormat("###")
     override fun run() {
 
         try {
@@ -61,7 +62,13 @@ class DSDPWorker (
                         }
                     }
                     dps.lockdisplay(this)
-                    dps.dot.print(df.format(dsvalue.t))
+                    var d = df.format(dsvalue.t)
+                    if(d.length >4)
+                    {
+                        d=  "*"+d100.format(dsvalue.t)
+
+                    }
+                    dps.dot.print(d)
                     dps.unlock(this)
                     isRun = false
                     logger.debug("End DSDPTASK")

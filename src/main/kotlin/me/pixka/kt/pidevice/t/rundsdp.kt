@@ -25,7 +25,7 @@ class RunDSDP(val pjs:PijobService,val js:JobService,val ts:TaskService,val ss:S
 
         if(job==null)
         {
-            logger.debug("Job not found DSDP")
+            logger.error("Job not found DSDP")
             return
         }
 

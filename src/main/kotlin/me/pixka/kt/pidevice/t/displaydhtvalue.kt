@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.sql.Time
 import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
 
@@ -22,7 +21,7 @@ class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val db
         logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue
-            logger.debug("exit ")
+            logger.error("Not run DHT display")
             return
         }
         var count = 0
@@ -31,31 +30,38 @@ class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val db
             println("whait for lock DHT")
             TimeUnit.MILLISECONDS.sleep(200)
             count++
-            if(count>5) {
+            if (count > 10) {
                 logger.error("Display is busy")
                 return
             }
         }
 
-
-        var dot = dps.lockdisplay(this)
-        var last = dhts.last()
-        if (last != null) {
-            dot.showMessage("DHT value ")
-            TimeUnit.SECONDS.sleep(1)
-            dot.print("H")
-            TimeUnit.SECONDS.sleep(1)
-            dot.clear()
-            dot.print(df.format(last.h))
-            TimeUnit.SECONDS.sleep(3)
-            dot.clear()
-            dot.print("T")
-            TimeUnit.SECONDS.sleep(1)
-            dot.clear()
-            dot.print(df.format(last.t))
-            TimeUnit.SECONDS.sleep(3)
+        try {
+            var dot = dps.lockdisplay(this)
+            var last = dhts.last()
+            logger.debug("Last DHT for display")
+            if (last != null) {
+                dot.showMessage("DHT value ")
+                TimeUnit.SECONDS.sleep(1)
+                dot.print("H")
+                TimeUnit.SECONDS.sleep(1)
+                dot.clear()
+                dot.print(df.format(last.h))
+                TimeUnit.SECONDS.sleep(3)
+                dot.clear()
+                dot.print("T")
+                TimeUnit.SECONDS.sleep(1)
+                dot.clear()
+                dot.print(df.format(last.t))
+                TimeUnit.SECONDS.sleep(3)
+            }
+        } catch (e: Exception) {
+            logger.error("Error ${e.message}")
+        } finally {
+            dps.unlock(this)
         }
-        dps.unlock(this)
+
+
     }
 
     companion object {
