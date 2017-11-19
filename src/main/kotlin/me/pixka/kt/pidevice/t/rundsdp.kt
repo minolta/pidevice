@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component
 @Profile("pi")
 class RunDSDP(val pjs:PijobService,val js:JobService,val ts:TaskService,val ss:SensorService,val dps:DisplayService) {
 
-    @Scheduled(initialDelay = 2000,fixedDelay = 5000)
+    @Scheduled(initialDelay = 2000,fixedDelay = 30000)
     fun run()
     {
         logger.info("Run DSDP ")
@@ -25,7 +25,7 @@ class RunDSDP(val pjs:PijobService,val js:JobService,val ts:TaskService,val ss:S
 
         if(job==null)
         {
-            logger.debug("Job not found DSDP")
+            logger.error("Job not found DSDP")
             return
         }
 

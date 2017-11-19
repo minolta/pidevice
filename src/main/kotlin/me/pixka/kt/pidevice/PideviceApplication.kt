@@ -28,7 +28,7 @@ class PideviceApplication
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
-        taskScheduler.poolSize = 30
+        taskScheduler.poolSize = 70
         return taskScheduler
     }
 }

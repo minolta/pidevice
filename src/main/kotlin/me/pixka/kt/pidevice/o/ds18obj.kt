@@ -1,9 +1,11 @@
 package me.pixka.kt.pidevice.o
 
+import me.pixka.kt.pidevice.t.Checkin
 import me.pixka.kt.pidevice.t.Dssensorforfindlast
 import me.pixka.kt.pidevice.t.FindJobforRunDS18value
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.Ds18valueService
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 
@@ -27,7 +29,12 @@ class DS18obj(var dss: DS18sensorService, var dsvs: Ds18valueService) {
                 }
             }
 
-        FindJobforRunDS18value.logger.info("Last T by sensor ${buf}")
+        logger.info("Last T by sensor ${buf}")
         return buf
+    }
+
+
+    companion object {
+        internal var logger = LoggerFactory.getLogger(DS18obj::class.java)
     }
 }

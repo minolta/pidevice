@@ -35,25 +35,29 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
     var jobid: Long = 0
     var isRun: Boolean = true
     override fun run() {
+        try {
+            isRun = true
+            var ports = pijob.ports
+            var runtime = pijob.runtime
+            var waittime = pijob.waittime
+            jobid = pijob.id
 
-        isRun = true
-        var ports = pijob.ports
-        var runtime = pijob.runtime
-        var waittime = pijob.waittime
-        jobid = pijob.id
+            logger.debug("Startworker ${pijob.id}")
 
-        logger.debug("Startworker ${pijob.id}")
+            setport(ports!!)
+            TimeUnit.SECONDS.sleep(runtime!!)
+            logger.debug("Run time: ${runtime}")
+            resetport()
+            TimeUnit.SECONDS.sleep(waittime!!)
+            logger.debug("Wait time: ${waittime}")
+            isRun = false
+            //end task
 
-        setport(ports!!)
-        TimeUnit.SECONDS.sleep(runtime!!)
-        logger.debug("Run time: ${runtime}")
-        resetport()
-        TimeUnit.SECONDS.sleep(waittime!!)
-        logger.debug("Wait time: ${waittime}")
-        isRun = false
-        //end task
-
-        logger.debug("End job ${pijob.id}")
+            logger.debug("End job ${pijob.id}")
+        } catch (e: Exception) {
+            logger.error("WOrking :${e.message}")
+            isRun=false
+        }
     }
 
     fun resetport() {
@@ -63,26 +67,29 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
     }
 
     fun setport(ports: List<Portstatusinjob>) {
+        try {
+            logger.debug("Gpio : ${gpio}")
 
-        logger.debug("Gpio : ${gpio}")
+            for (port in ports) {
+                logger.debug("Port for pijob ${port}")
+                var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
+                logger.debug("Pin: ${pin}")
 
-        for (port in ports) {
-            logger.debug("Port for pijob ${port}")
-            var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
-            logger.debug("Pin: ${pin}")
+                //save old state
+                var b = Pinbackup(pin, pin.state)
+                pinbackuplist.add(b)
 
-            //save old state
-            var b = Pinbackup(pin, pin.state)
-            pinbackuplist.add(b)
+                var sn = port.status?.name
+                if (sn?.indexOf("low") != -1) {
+                    pin.setState(false)
+                } else
+                    pin.setState(true)
 
-            var sn = port.status?.name
-            if (sn?.indexOf("low") != -1) {
-                pin.setState(false)
-            } else
-                pin.setState(true)
+                logger.debug("Set pin state: ${pin.state}")
 
-            logger.debug("Set pin state: ${pin.state}")
-
+            }
+        } catch (e: Exception) {
+            logger.error("Set port ${e.message}")
         }
     }
 

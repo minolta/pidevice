@@ -1,6 +1,5 @@
 package me.pixka.kt.run
 
-import com.pi4j.io.gpio.GpioPinDigitalOutput
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.d.Portstatusinjob
@@ -31,59 +30,73 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
     var jobid: Long = 0
     var isRun: Boolean = true
     override fun run() {
+        try {
 
-        isRun = true
-        var ports = pijob.ports
-        var runtime = pijob.runtime
-        var waittime = pijob.waittime
-        jobid = pijob.id
+            isRun = true
+            var ports = pijob.ports
+            var runtime = pijob.runtime
+            var waittime = pijob.waittime
+            jobid = pijob.id
 
-        logger.debug("Startworker ${pijob.id}")
+            logger.debug("Startworker ${pijob.id}")
 
-        setport(ports!!)
-        TimeUnit.SECONDS.sleep(runtime!!)
-        logger.debug("Run time: ${runtime}")
-        resetport()
-        TimeUnit.SECONDS.sleep(waittime!!)
-        logger.debug("Wait time: ${waittime}")
+            setport(ports!!)
+            TimeUnit.SECONDS.sleep(runtime!!)
+            logger.debug("Run time: ${runtime}")
+            resetport()
+            TimeUnit.SECONDS.sleep(waittime!!)
+            logger.debug("Wait time: ${waittime}")
+
+            //end task
+
+            logger.debug("End job DSOTHER ${pijob.id}")
+        } catch (e: Exception) {
+            logger.error("DSOTHER ${e.message}")
+        }
+
         isRun = false
-        //end task
-
-        logger.debug("End job ${pijob.id}")
     }
 
     fun resetport() {
         for (b in pinbackuplist) {
-            b.pin.setState(b.pinstate)
+            //  b.pin.setState(b.pinstate)
+                gpio.revertDigitalpin(b.pin)
+            //gpio.resettoDefault(b.pin)
         }
     }
 
     fun setport(ports: List<Portstatusinjob>) {
 
-        logger.debug("Gpio : ${gpio}")
+        try {
+            logger.debug("Gpio : ${gpio}")
 
-        for (port in ports) {
-            logger.debug("Port for pijob ${port}")
-            var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
-            logger.debug("Pin: ${pin}")
+            for (port in ports) {
+                logger.debug("Port for pijob ${port}")
+                var pin = gpio.getDigitalPin(port.portname?.name!!)
+                logger.debug("Pin current state: ${pin}")
 
-            //save old state
-            var b = Pinbackup(pin, pin.state)
-            pinbackuplist.add(b)
+                //save old state
+                var b = Pinbackup(pin!!, pin.state)
+                pinbackuplist.add(b)
 
-            var sn = port.status?.name
-            if (sn?.indexOf("low") != -1) {
-                pin.setState(false)
-            } else
-                pin.setState(true)
+                var sn = port.status?.name
+                if (sn?.indexOf("low") != -1) {
+                    gpio.setPort(pin, false)
+                    //pin.setState(false)
+                } else {
+                    gpio.setPort(pin, true)
+                    //pin.setState(true)
+                }
+                logger.debug("Set pin state: ${pin.state}")
 
-            logger.debug("Set pin state: ${pin.state}")
-
+            }
+        } catch (e: Exception) {
+            logger.error("Error in set port ${e.message}")
         }
     }
 
     override fun toString(): String {
-        return "Work pijob id : ${pijob.id} Run: ${isRun}  ${pijob}"
+        return "DSOTHERWorker id : ${pijob.id} Run: ${isRun}  ${pijob}"
     }
 
     companion object {

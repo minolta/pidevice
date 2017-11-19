@@ -17,7 +17,7 @@ import java.util.*
 class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogService,val dbcfg:DbconfigService) {
     val hlimit = BigDecimal("100")
     var old: Dhtvalue? = null
-    @Scheduled(initialDelay = 3000,fixedDelay = 5000)
+    @Scheduled(initialDelay = 3000,fixedDelay = 60000)
     fun read() {
 
         var canread = dbcfg.findorcreate("readdht","true").value
@@ -25,21 +25,38 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
             logger.info("Not run read dht")
             return
         }
+
+
         try {
             var o: Dhtvalue? = io.readDHT()
             if (o != null) {// มีข้อมูล
                 logger.info("DHT value :${o}")
                 if (o.h?.compareTo(hlimit)!! > 0)//Fix bug read h value is over 100 %
                 {
-                    logger.error("Dthvalue is over 100 ${o?.h}")
+                    logger.error("Dthvalue is over 100 ${o.h}")
                     o.h = BigDecimal(100)
 
                 }
+
                 if (old == null || o.t?.compareTo(old?.t) != 0 || o.h?.compareTo(old?.h) != 0)//ถ้าข้อมูลเปลียนให้บันทึก
                 {
-                    o = service!!.save(o)
-                    logger.info("Save Change ${old} -> ${o}   ${Date()}")
-                    old = o
+
+
+                    if(old==null) {
+                        o = service.save(o)
+                        logger.debug("Save New ${o}")
+                        old = o
+                    }
+                    else
+                    {
+                        if(checkvaluetosave(o.t!!, old!!.t!!) || checkvaluetosave(o.h!!,old!!.h!!) )
+                        {
+
+                            o = service.save(o)
+                            logger.debug("Save Value change over rang  ${o}")
+                            old = o
+                        }
+                    }
                 }
 
             }
@@ -49,6 +66,23 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
             err.n("Read dht", "19-25", "${e.message}")
 
         }
+
+
+
+    }
+
+
+    fun checkvaluetosave(src: BigDecimal, des: BigDecimal): Boolean {
+
+        var rangertosave = BigDecimal(dbcfg.findorcreate("dhtvaluerangtosave", "0.5").value)
+        var result = src.subtract(des)
+
+        var over05 = result.abs()
+        logger.debug("Diff ${over05}")
+        if (over05.compareTo(rangertosave) > 0)
+            return true
+
+        return false // not over rang
 
     }
 
