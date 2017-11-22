@@ -25,12 +25,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 @EntityScan(basePackages = arrayOf("me.pixka"))
 class PideviceApplication
 {
+    /*
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
         taskScheduler.poolSize = 70
         return taskScheduler
     }
+    */
 }
 
 fun main(args: Array<String>) {

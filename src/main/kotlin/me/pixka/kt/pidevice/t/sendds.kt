@@ -26,10 +26,15 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
 
     @Scheduled(initialDelay = 30000, fixedDelay = 60 * 1000)
     fun sendtask() {
-        logger.info("Start Send DS data")
-        setup()
-        if (http.checkcanconnect(checkserver!!)) {
-            send()
+        try {
+            logger.info("Start Send DS data")
+            setup()
+            if (http.checkcanconnect(checkserver!!)) {
+                send()
+            }
+        }catch (e:Exception)
+        {
+            logger.error("Error send Sendds ${e.message}")
         }
     }
 

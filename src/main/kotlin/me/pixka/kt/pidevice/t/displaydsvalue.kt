@@ -87,7 +87,8 @@ class Displaydsvalues(val dps: DisplayService,
                 logger.error("Error ${e.message}")
             }
             finally {
-                dps.unlock(this)
+                //dps.unlock(this)
+                logger.info("Finally")
             }
         }
 

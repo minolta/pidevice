@@ -28,7 +28,7 @@ class Displayruning(val dps: DisplayService) {
                 }
             }
             if (!dps.lock) {
-                var dot = dps.lockdisplay(any = this)
+                var dot = dps.lockdisplay(this)
                 dot.letter(2, '.'.toShort())
                 TimeUnit.MILLISECONDS.sleep(500)
                 dot.letter(2, ' '.toShort())
