@@ -19,9 +19,11 @@ class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorServ
     var oldvalue = ArrayList<dsbuf>()
     @Scheduled(initialDelay = 3000, fixedDelay = 30000)
     fun read() {
+
+        logger.info("Start read DS18b20")
         var canread = dbcfg.findorcreate("readdds", "true").value
         if (!canread.equals("true")) {
-            ReadDht.logger.info("Not run read ds")
+            logger.info("Not run read ds")
             return
         }
         try {
@@ -85,12 +87,15 @@ class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorServ
         for (d in oldvalue) {
             if (d.id == ds.id.toInt()) {
                 d.value = ds.t!!
+                logger.debug("Update old value ${d} to ${ds}")
                 return true
             }
         }
+
+        logger.debug("New Value push to old buffer")
         var buf = dsbuf(ds.id.toInt(), ds.t!!)
         oldvalue.add(buf)
-
+        logger.debug("Old buffer size: ${oldvalue.size}")
         return false
 
 

@@ -23,13 +23,12 @@ class DS18Control(val service: Ds18valueService,  val dss: DS18sensorService) {
             if (ds != null) {
 
                 last = service.lastBysensor(ds.id)
-                logger.debug("[ds18value] read by forread sensor : " + last!!)
+                logger.debug("[ds18value] read by forread sensor : " + last)
             } else {
                 last = service.last()
-                logger.debug("[ds18value] read by default sensor : " + last!!)
+                logger.debug("[ds18value] read by default sensor : " + last)
             }
             logger.debug("[ds18value ] read value : " + last)
-            // ds.print("DS value : " + last.getT());
             logger.debug("[ds18value] end status")
             return last
         } catch (e: Exception) {

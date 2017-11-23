@@ -2,34 +2,44 @@ package me.pixka.kt.pidevice.s
 
 import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
-import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.ExecutorService
 
 /**
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
-class TaskService() {
-    val executor = Executors.newFixedThreadPool(50)
+class TaskService(val context: ApplicationContext) {
+    //val executor = Executors.newFixedThreadPool(50)
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
 
 
     fun run(work: PijobrunInterface) {
 
+        val pool = context.getBean("pool") as ExecutorService
+
+
         var forrun = checkalreadyrun(work)
 
         if (forrun != null) {
             runinglist.add(forrun)
-         //   executor.submit(forrun as Runnable)
+
+            //pool.submit(forrun as Runnable)
+            pool.execute(forrun as Runnable)
+            /*
             var t = Thread(forrun as Runnable)
             t.start()
-            logger.debug("Run ${forrun.getPijobid()}")
+            */
+            logger.debug("Run ${forrun.getPijobid()} Buffer size ${runinglist.size}")
         }
-        var tp = executor as ThreadPoolExecutor
-        logger.debug("Running size : ${tp.activeCount}  Job in buffer [${runinglist.size}] ")
-        logger.debug("Jobin ${runinglist}")
+        /*
+        var tp = threadpool as ThreadPoolExecutor
+        logger.debug("Queue size :${tp.queue.size} Running size : ${tp.activeCount}  Job in buffer [${runinglist.size}] ")
+
+        */
+        logger.debug("Jobs in List  ${runinglist.size} ThreadInfo")
 
     }
 
@@ -64,16 +74,16 @@ class TaskService() {
         return null
     }
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(initialDelay = 2000,
+            fixedDelay = 5000)
     fun removefinished() {
         logger.debug("Start Remove job finished size: ${runinglist.size}")
         try {
             if (runinglist != null && runinglist.size > 0) {
 
                 var items = runinglist.iterator()
-
-                while(items.hasNext())
-                {
+                logger.debug("Size Before remove ${runinglist.size}")
+                while (items.hasNext()) {
 
                     var item = items.next()
                     logger.debug("Remove Job in list ${item}")
@@ -83,6 +93,8 @@ class TaskService() {
                             logger.debug("Remove finished run ${item} ")
                         }
                 }
+
+                logger.debug("Size after remove ${runinglist.size}")
 
                 /*
                 for (old in runinglist) {

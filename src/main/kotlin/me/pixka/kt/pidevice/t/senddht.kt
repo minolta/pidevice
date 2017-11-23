@@ -23,7 +23,7 @@ class SendDht(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
     var target = "http://localhost:5002/dht/add"
     private var checkserver = "http://localhost:5002/run"
 
-    @Scheduled(initialDelay = 60*1000,fixedDelay = 60 * 1000)
+    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 60 * 1000)
     fun run() {
 
         setup()
@@ -38,47 +38,51 @@ class SendDht(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
     }
 
     fun send() {
+        try {
+            val list = dhts.notInserver() as List<Dhtvalue>
 
-        val list = dhts.notInserver() as List<Dhtvalue>
-
-        logger.info("[dhtvaluesend send] Data for send : " + list?.size)
+            logger.info("[dhtvaluesend send] Data for send : " + list?.size)
 
 
-        for (item in list) {
+            for (item in list) {
 
-            try {
-                val info = Infoobj()
+                try {
+                    val info = Infoobj()
 
-                //info.ip = io.wifiIpAddress()
-                info.mac = io.wifiMacAddress()
-                info.dhtvalue = item
+                    //info.ip = io.wifiIpAddress()
+                    info.mac = io.wifiMacAddress()
+                    info.dhtvalue = item
 
-                val re = http.postJson(target, info)
-                val entity = re.entity
-                if (entity != null) {
-                    val response = EntityUtils.toString(entity)
-                    logger.debug("[dhtvaluesend return status ${re}] ")
-                    val ret = mapper.readValue(response, Dhtvalue::class.java)
-                    if (ret.id != null) {
-                        item.toserver = true
-                        dhts.save(item)
-                        logger.info("[dhtvalue ] Send complete  ${item}")
-                        // dss.clean()
+                    val re = http.postJson(target, info)
+                    val entity = re.entity
+                    if (entity != null) {
+                        val response = EntityUtils.toString(entity)
+                        logger.debug("[dhtvaluesend return ok ")
+                        val ret = mapper.readValue(response, Dhtvalue::class.java)
+                        if (ret.id != null) {
+                            item.toserver = true
+                            dhts.save(item)
+                            logger.info("[dhtvalue ] Send complete ")
+                            // dss.clean()
+                        }
                     }
+                } catch (e: Exception) {
+                    logger.error("[dhtvaluesend ] cannot send : " + e.message)
+                    err.n("Senddht", "43-62", "${e.message}")
                 }
-            } catch (e: Exception) {
-                logger.error("[dhtvaluesend ] cannot send : " + e.message)
-                err.n("Senddht", "43-62", "${e.message}")
+
             }
 
+        } catch (e: Exception) {
+            logger.debug("Send error : ${e.message}")
         }
-
+        logger.debug("End Send DHT")
     }
 
     fun setup() {
-        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
-        target = host+dbcfg.findorcreate("serverdhtaddtarget", ":5002/dht/add/").value!!
-        checkserver = host+dbcfg.findorcreate("servercheck", ":5002/run").value!!
+        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        target = host + dbcfg.findorcreate("serverdhtaddtarget", ":5002/dht/add/").value!!
+        checkserver = host + dbcfg.findorcreate("servercheck", ":5002/run").value!!
     }
 
     companion object {
