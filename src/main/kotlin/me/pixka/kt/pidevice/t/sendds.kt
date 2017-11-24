@@ -24,43 +24,55 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     private val mapper = jacksonObjectMapper()
     private var checkserver: String? = "http://localhost:5555/check"
 
-    @Scheduled(initialDelay = 30000, fixedDelay = 60 * 1000)
+    @Scheduled(initialDelay = 1000, fixedDelay =  30000)
     fun sendtask() {
-        logger.info("Start Send DS data")
-        setup()
-        if (http.checkcanconnect(checkserver!!)) {
-            send()
+        try {
+            logger.info("Start Send DS data")
+            setup()
+            if (http.checkcanconnect(checkserver!!)) {
+                send()
+            }
+        }catch (e:Exception)
+        {
+            logger.error("Error send Sendds ${e.message}")
         }
+
+        logger.debug("End Send ds")
     }
 
     fun send() {
-        val list = service.notInserver()
-        for (item in list) {
-            logger.debug("[sendds18b20]  " + item)
-            try {
-                val info = Infoobj()
+        try {
+            val list = service.notInserver()
+            for (item in list) {
+                logger.debug("[sendds18b20]  " + item)
+                try {
+                    val info = Infoobj()
 
-                // info.ip = io.wifiIpAddress()
-                info.mac = io.wifiMacAddress()
-                info.ds18value = item
+                    // info.ip = io.wifiIpAddress()
+                    info.mac = io.wifiMacAddress()
+                    info.ds18value = item
 
-                val re = http.postJson(target, info)
-                var entity = re.entity
-                if (entity != null) {
-                    val response = EntityUtils.toString(entity)
-                    logger.debug("[sendds18b20] response : " + response)
-                    val ret = mapper.readValue(response, DS18value::class.java)
+                    val re = http.postJson(target, info)
+                    var entity = re.entity
+                    if (entity != null) {
+                        val response = EntityUtils.toString(entity)
+                        logger.debug("[sendds18b20] response : " + response)
+                        val ret = mapper.readValue(response, DS18value::class.java)
 
-                    item.toserver = true
-                    service.save(item)
-                    logger.info("[sendds18b20] Send complete  ${item.id}")
-                    //  dss.clean()
+                        item.toserver = true
+                        service.save(item)
+                        logger.info("[sendds18b20] Send complete  ${item.id}")
+                        //  dss.clean()
+                    }
+                } catch (e: Exception) {
+                    logger.error("[sendds18b20] ERROR " + e.message)
+                    err.n("Sendds", "37-50", "${e.message}")
                 }
-            } catch (e: Exception) {
-                logger.error("[sendds18b20] ERROR " + e.message)
-                err.n("Sendds", "37-50", "${e.message}")
-            }
 
+            }
+        }catch (e:Exception)
+        {
+            logger.debug(e.message)
         }
     }
 

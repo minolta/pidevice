@@ -13,8 +13,8 @@ import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import org.springframework.scheduling.TaskScheduler
 import java.util.concurrent.Executor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
-
-
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 
 @SpringBootApplication
@@ -25,11 +25,18 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 @EntityScan(basePackages = arrayOf("me.pixka"))
 class PideviceApplication
 {
+
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
-        taskScheduler.poolSize = 70
+        taskScheduler.poolSize = 100
         return taskScheduler
+    }
+
+    @Bean
+    fun pool(): ExecutorService? {
+        val threadpool = Executors.newFixedThreadPool(20)
+        return threadpool
     }
 }
 

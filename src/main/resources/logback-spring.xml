@@ -31,7 +31,7 @@
 
     <springProfile name="dev">
         <logger name="me.pixka" level="DEBUG">
-            <!-- <appender-ref ref="ROLLING" /> -->
+            <appender-ref ref="ROLLING"/>
             <appender-ref ref="STDOUT"></appender-ref>
         </logger>
     </springProfile>

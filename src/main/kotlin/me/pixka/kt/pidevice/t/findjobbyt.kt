@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 /**
 ใช้สำหรับ ค้นหา job ที่มา run สำหรับ DS18b20
@@ -28,7 +30,7 @@ class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorServ
                              val pjs: PijobService, val js: JobService, val gpios: GpioService,
                              val ts: TaskService,var dsobj:DS18obj) {
 
-    @Scheduled(initialDelay = 5000,fixedDelay = 10000)
+    @Scheduled(initialDelay = 5000,fixedDelay = 12000)
     fun run() {
         logger.info("Run Find JOB for run ds18b20")
         var DSJOB = js.findByName("DS")
@@ -52,11 +54,15 @@ class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorServ
                     }
                 }
             }
+
             //ถ้ามี ่ job ก็ทำการ run หรือส่งไปยัง Runpijob
             logger.debug("Jobs ${buf.size}")
             if (buf.size > 0) {
                 runpiJob(buf)
             }
+
+
+
         }
 
         logger.debug("End Run")

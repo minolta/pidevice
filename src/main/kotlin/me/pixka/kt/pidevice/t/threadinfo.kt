@@ -6,37 +6,33 @@ import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Component
-import sun.java2d.Disposer.getQueue
-import java.util.concurrent.BlockingQueue
-
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.ThreadPoolExecutor
 
 
 @Component
-class ThreadInfo(val context: ApplicationContext,val tsk:TaskService) {
+class ThreadInfo(val context: ApplicationContext, val tsk: TaskService) {
 
-   // @Scheduled(fixedDelay = 10000)
-    fun checkThread()
-    {
-       var t= context.getBean("taskScheduler") as ThreadPoolTaskScheduler
-
-        logger.info("${t} active count ${t.activeCount} pool size${t.poolSize}")
+    @Scheduled(fixedDelay = 10000)
+    fun checkThread() {
+        var t = context.getBean("taskScheduler") as ThreadPoolTaskScheduler
+        var tp = context.getBean("pool") as ExecutorService
 
         val queue = t.scheduledThreadPoolExecutor
-        val s = queue.queue.iterator()
-        while(s.hasNext())
+        val s = queue.queue
+
+        logger.info("Scheduler active count: ${t.activeCount} pool size: ${t.poolSize}  Queue size:${s.size} ")
+        var tt = tp as ThreadPoolExecutor
+        logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
+
+       /*
+        var o = s.iterator()
+        for(run in o)
         {
-            logger.info("JOB in ${s.next()}")
-        }
-
-
-        logger.info("Task Service ${tsk} ")
-        var pool = tsk.executor
-
-
-
-
-
+            logger.info("run : ${run}")
+        }*/
     }
+
     companion object {
         internal var logger = LoggerFactory.getLogger(ThreadInfo::class.java)
     }

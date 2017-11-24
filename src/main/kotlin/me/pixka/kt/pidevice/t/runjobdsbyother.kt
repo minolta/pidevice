@@ -21,7 +21,7 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
                        val gpios: GpioService,
                        val ss: SensorService) {
     private val om = ObjectMapper()
-    @Scheduled(initialDelay = 10000, fixedDelay = 3000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 5000)
     fun find() {
         logger.debug("Start run DSOTHER")
         var DSOTHER = js.findByName("DSOTHER")
