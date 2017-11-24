@@ -25,11 +25,12 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService) {
         var tt = tp as ThreadPoolExecutor
         logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
 
+       /*
         var o = s.iterator()
         for(run in o)
         {
             logger.info("run : ${run}")
-        }
+        }*/
     }
 
     companion object {

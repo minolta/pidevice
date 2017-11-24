@@ -24,7 +24,7 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     private val mapper = jacksonObjectMapper()
     private var checkserver: String? = "http://localhost:5555/check"
 
-    @Scheduled(initialDelay = 1000, fixedDelay =  5000)
+    @Scheduled(initialDelay = 1000, fixedDelay =  30000)
     fun sendtask() {
         try {
             logger.info("Start Send DS data")
