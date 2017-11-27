@@ -92,6 +92,7 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
             }
         } catch (e: Exception) {
             logger.error("Error in set port ${e.message}")
+            throw e
         }
     }
 

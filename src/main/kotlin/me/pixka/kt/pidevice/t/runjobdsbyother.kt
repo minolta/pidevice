@@ -13,6 +13,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+
 
 @Component
 @Profile("pi")
@@ -21,6 +25,16 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
                        val gpios: GpioService,
                        val ss: SensorService) {
     private val om = ObjectMapper()
+    var es: ThreadPoolExecutor? = null
+
+    fun c() {
+        val linkedBlockingDeque = LinkedBlockingDeque<Runnable>(
+                1)
+        es = ThreadPoolExecutor(1, 2, 30,
+                TimeUnit.MINUTES, linkedBlockingDeque,
+                ThreadPoolExecutor.CallerRunsPolicy())
+    }
+
     @Scheduled(initialDelay = 10000, fixedDelay = 5000)
     fun find() {
         logger.debug("Start run DSOTHER")
@@ -50,7 +64,12 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
         if (jobforrun.size > 0)
             for (r in jobforrun) {
                 var w = DSOTHERWorker(r, gpios)
-                ts.run(w)
+                //ts.run(w)
+                try {
+                    es?.execute(w)
+                } catch (e: Exception) {
+                    logger.error(e.message)
+                }
             }
 
         // pjs.findByDSOrther()
