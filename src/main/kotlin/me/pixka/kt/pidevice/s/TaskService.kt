@@ -6,6 +6,9 @@ import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 /**
  * ใช้สำหรับ run task ต่างๆ
@@ -15,6 +18,9 @@ class TaskService(val context: ApplicationContext) {
     //val executor = Executors.newFixedThreadPool(50)
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
 
+    val queue = ThreadPoolExecutor(5, 10, 30,
+    TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
+    ThreadPoolExecutor.CallerRunsPolicy())
 
     fun run(work: PijobrunInterface) {
 
@@ -27,7 +33,7 @@ class TaskService(val context: ApplicationContext) {
             runinglist.add(forrun)
 
             //pool.submit(forrun as Runnable)
-            pool.execute(forrun as Runnable)
+            pool.submit(forrun as Runnable)
             /*
             var t = Thread(forrun as Runnable)
             t.start()

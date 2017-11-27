@@ -24,16 +24,16 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     private val mapper = jacksonObjectMapper()
     private var checkserver: String? = "http://localhost:5555/check"
 
-    @Scheduled(initialDelay = 1000, fixedDelay =  30000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 30000)
     fun sendtask() {
         try {
             logger.info("Start Send DS data")
             setup()
             if (http.checkcanconnect(checkserver!!)) {
+                logger.debug("Start to send Value ")
                 send()
             }
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error("Error send Sendds ${e.message}")
         }
 
@@ -43,6 +43,8 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
     fun send() {
         try {
             val list = service.notInserver()
+
+            logger.debug("Values for send ${list.size}")
             for (item in list) {
                 logger.debug("[sendds18b20]  " + item)
                 try {
@@ -70,8 +72,7 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
                 }
 
             }
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.debug(e.message)
         }
     }

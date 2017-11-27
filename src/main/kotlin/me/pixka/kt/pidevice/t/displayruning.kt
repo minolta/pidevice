@@ -14,15 +14,14 @@ class Displayruning(val dps: DisplayService) {
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
+
         logger.debug("Run Display status")
-        var count=0
+        var count = 0
         try {
-            while(dps.lock)
-            {
+            while (dps.lock) {
                 TimeUnit.MILLISECONDS.sleep(200)
                 count++
-                if(count>10)
-                {
+                if (count > 10) {
                     logger.error("Error Display timeout")
                     return
                 }
@@ -41,6 +40,7 @@ class Displayruning(val dps: DisplayService) {
         } catch (e: Exception) {
             logger.error("Error: ${e.message}")
         }
+
     }
 
     companion object {
@@ -49,3 +49,4 @@ class Displayruning(val dps: DisplayService) {
 
 
 }
+
