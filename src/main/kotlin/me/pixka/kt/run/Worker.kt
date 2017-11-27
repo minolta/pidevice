@@ -50,19 +50,28 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
             resetport()
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
-            isRun = false
             //end task
 
             logger.debug("End job ${pijob.id}")
         } catch (e: Exception) {
             logger.error("WOrking :${e.message}")
-            isRun=false
+
         }
+
+        isRun=false
     }
 
     fun resetport() {
-        for (b in pinbackuplist) {
-            b.pin.setState(b.pinstate)
+        try {
+            for (b in pinbackuplist) {
+                    //b.pin.setState(b.pinstate)
+                gpio.resettoDefault(b.pin)
+            }
+        }catch (e:Exception)
+        {
+            logger.error(e.message)
+            throw e
+
         }
     }
 
@@ -90,6 +99,7 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
             }
         } catch (e: Exception) {
             logger.error("Set port ${e.message}")
+            throw e
         }
     }
 
