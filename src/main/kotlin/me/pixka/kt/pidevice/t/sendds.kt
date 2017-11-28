@@ -9,6 +9,7 @@ import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.d.DS18value
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.Ds18valueService
+import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -47,6 +48,7 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
             logger.debug("Values for send ${list.size}")
             for (item in list) {
                 logger.debug("[sendds18b20]  " + item)
+                var re: CloseableHttpResponse? = null
                 try {
                     val info = Infoobj()
 
@@ -54,7 +56,7 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
                     info.mac = io.wifiMacAddress()
                     info.ds18value = item
 
-                    val re = http.postJson(target, info)
+                    re = http.postJson(target, info)
                     var entity = re.entity
                     if (entity != null) {
                         val response = EntityUtils.toString(entity)
@@ -69,6 +71,9 @@ class Sendds(val io: Piio, val service: Ds18valueService, val http: HttpControl,
                 } catch (e: Exception) {
                     logger.error("[sendds18b20] ERROR " + e.message)
                     err.n("Sendds", "37-50", "${e.message}")
+                } finally {
+                    if (re != null)
+                        re.close()
                 }
 
             }

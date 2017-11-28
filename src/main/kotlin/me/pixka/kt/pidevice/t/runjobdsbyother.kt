@@ -64,12 +64,14 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
         if (jobforrun.size > 0)
             for (r in jobforrun) {
                 var w = DSOTHERWorker(r, gpios)
-                //ts.run(w)
+                ts.run(w)
+               /*
                 try {
                     es?.execute(w)
                 } catch (e: Exception) {
                     logger.error(e.message)
                 }
+                */
             }
 
         // pjs.findByDSOrther()

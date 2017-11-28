@@ -91,7 +91,7 @@
 		<dependency>
 			<groupId>me.pixka.kt</groupId>
 			<artifactId>pibasekt</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0.0-stable</version>
 		</dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>

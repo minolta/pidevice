@@ -43,7 +43,6 @@ class TaskService(val context: ApplicationContext) {
         /*
         var tp = threadpool as ThreadPoolExecutor
         logger.debug("Queue size :${tp.queue.size} Running size : ${tp.activeCount}  Job in buffer [${runinglist.size}] ")
-
         */
         logger.debug("Jobs in List  ${runinglist.size} ThreadInfo")
 

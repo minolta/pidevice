@@ -9,6 +9,8 @@ import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.d.Dhtvalue
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DhtvalueService
+import org.apache.http.HttpResponse
+import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -45,7 +47,7 @@ class SendDht(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
 
 
             for (item in list) {
-
+                var re: CloseableHttpResponse? = null
                 try {
                     val info = Infoobj()
 
@@ -53,7 +55,7 @@ class SendDht(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
                     info.mac = io.wifiMacAddress()
                     info.dhtvalue = item
 
-                    val re = http.postJson(target, info)
+                    re = http.postJson(target, info)
                     val entity = re.entity
                     if (entity != null) {
                         val response = EntityUtils.toString(entity)
@@ -69,6 +71,11 @@ class SendDht(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
                 } catch (e: Exception) {
                     logger.error("[dhtvaluesend ] cannot send : " + e.message)
                     err.n("Senddht", "43-62", "${e.message}")
+                }
+                finally {
+                    if(re!=null)
+                        re.close()
+
                 }
 
             }
