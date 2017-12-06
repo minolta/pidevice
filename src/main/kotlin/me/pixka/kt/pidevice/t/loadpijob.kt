@@ -25,7 +25,7 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
     private var targetloadstatus = ""
 
     val mapper = jacksonObjectMapper()
-    @Scheduled(initialDelay = 60000,fixedDelay = 60000)
+    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     fun run() {
 
         logger.info("Start load pijob")
@@ -78,7 +78,7 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
 
         try {
             var other = pds.findByMac(pd.mac!!)
-            if(other==null) {
+            if (other == null) {
                 var p = pds.create(pd.mac!!)
                 return p
             }
@@ -162,7 +162,7 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
 
         try {
             for (item in listofports) {
-                var ref: Portstatusinjob? = psijs!!.finByRefId(item.id)
+                var ref: Portstatusinjob? = psijs.finByRefId(item.id)
                 if (ref == null) {
                     logger.debug("[loadpijob saveport] new portstatus ")
                     var pn = item.portname
@@ -243,7 +243,7 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
     fun loadPijob(mac: String): List<Pijob>? {
 
         try {
-            val re = http!!.get(target + "/" + mac)
+            val re = http.get(target + "/" + mac)
             val list = mapper.readValue<List<Pijob>>(re)
             logger.debug("[pijob loadpijob] Found Jobs for me " + list.size)
             return list
@@ -256,9 +256,9 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
 
     fun setup() {
 
-        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
-        target = host+dbcfg.findorcreate("serverloadpijob", ":5002/pijob/lists").value!!
-        targetloadstatus = host+dbcfg.findorcreate("serverloadpijobportstate", ":5002/portstatusinjob/lists").value!!
+        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        target = host + dbcfg.findorcreate("serverloadpijob", ":5002/pijob/lists").value!!
+        targetloadstatus = host + dbcfg.findorcreate("serverloadpijobportstate", ":5002/portstatusinjob/lists").value!!
     }
 
 

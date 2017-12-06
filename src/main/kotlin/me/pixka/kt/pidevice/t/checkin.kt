@@ -9,6 +9,7 @@ import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.d.Devicecheckin
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DevicecheckinService
+import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -25,7 +26,7 @@ class Checkin(val configfile: Configfilekt, val erl: ErrorlogService, val io: Pi
     var target: String? = null
 
     var host: String? = null
-    @Scheduled(initialDelay = 15000,fixedDelay = 60000)
+    @Scheduled(initialDelay = 15000, fixedDelay = 60000)
     fun checkin() {
         logger.info("Checkin ")
         setup()
@@ -34,6 +35,7 @@ class Checkin(val configfile: Configfilekt, val erl: ErrorlogService, val io: Pi
 
 
     fun check() {
+        var re: CloseableHttpResponse? = null
         try {
             logger.info("[checkin] start : target : " + target)
             val i = Infoobj()
@@ -44,7 +46,7 @@ class Checkin(val configfile: Configfilekt, val erl: ErrorlogService, val io: Pi
             // Server
             // ใช้สำหรับติดต่อกับเรา
 
-            val re = http.postJson(target!!, i)
+            re = http.postJson(target!!, i)
             logger.info("[checkin] Checkin already ")
             val mapper = ObjectMapper()
 
@@ -58,12 +60,14 @@ class Checkin(val configfile: Configfilekt, val erl: ErrorlogService, val io: Pi
             logger.debug("[checkin] update password checkin ok..")
         } catch (e: Exception) {
             logger.error("[checkin] Can not checkin ${e.message}")
+        } finally {
+            re?.close()
         }
     }
 
     fun setup() {
-        host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
-        target = host+dbcfg.findorcreate("checkintarget", ":5002/checkin").value
+        host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        target = host + dbcfg.findorcreate("checkintarget", ":5002/checkin").value
 
     }
 
