@@ -25,6 +25,7 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
                        val gpios: GpioService,
                        val ss: SensorService) {
     private val om = ObjectMapper()
+   /*
     var es: ThreadPoolExecutor? = null
 
     fun c() {
@@ -34,7 +35,7 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
                 TimeUnit.MINUTES, linkedBlockingDeque,
                 ThreadPoolExecutor.CallerRunsPolicy())
     }
-
+*/
     @Scheduled(initialDelay = 10000, fixedDelay = 5000)
     fun find() {
         logger.debug("Start run DSOTHER")
@@ -65,13 +66,13 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
             for (r in jobforrun) {
                 var w = DSOTHERWorker(r, gpios)
                 ts.run(w)
-               /*
-                try {
-                    es?.execute(w)
-                } catch (e: Exception) {
-                    logger.error(e.message)
-                }
-                */
+                /*
+                 try {
+                     es?.execute(w)
+                 } catch (e: Exception) {
+                     logger.error(e.message)
+                 }
+                 */
             }
 
         // pjs.findByDSOrther()
@@ -122,5 +123,10 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
     companion object {
         internal var logger = LoggerFactory.getLogger(Finddsjobbyother::class.java)
     }
+
+}
+
+@Component
+class RunotherTask() {
 
 }

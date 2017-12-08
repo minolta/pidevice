@@ -10,28 +10,69 @@ import me.pixka.pibase.d.*
 import me.pixka.pibase.s.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val dbcfg: DbconfigService
-                , val io: Piio, val http: HttpControl, val psijs: PortstatusinjobService, val ls: LogistateService,
-                var err: ErrorlogService, val js: JobService, val ps: PortnameService, val pds: PideviceService) {
+class Loadpijob(val task:LoadjobTask) {
+
+    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+    fun run() {
+
+        logger.info("Start load pijob")
+        var f = task.run()
+
+        var count = 0
+        while(true)
+        {
+            if(f!!.isDone)
+            {
+                logger.info("Load pi job end")
+                break
+
+            }
+
+            TimeUnit.SECONDS.sleep(1)
+            count++
+            if(count>30)
+            {
+                logger.error("Time out")
+                f.cancel(true)
+            }
+        }
+
+    }
+
+    companion object {
+        internal var logger = LoggerFactory.getLogger(Loadpijob::class.java)
+    }
+
+}
+
+@Component
+class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService, val dbcfg: DbconfigService
+                    , val io: Piio, val http: HttpControl,
+                    val psijs: PortstatusinjobService, val ls: LogistateService,
+                    var err: ErrorlogService, val js: JobService,
+                    val ps: PortnameService, val pds: PideviceService) {
     // load /pijob/list/{mac}
     private var target = ""
     // load port state /portstate/list/{mac}
     private var targetloadstatus = ""
 
     val mapper = jacksonObjectMapper()
-    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
-    fun run() {
 
-        logger.info("Start load pijob")
-        setup()
-
+    @Async("aa")
+    fun run(): Future<Boolean>? {
         try {
+
+            setup()
             val list = loadPijob(io.wifiMacAddress())
 
             for (item in list!!) {
@@ -54,12 +95,12 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
                 saveportstatus(item, ref!!)
             }
 
+            return AsyncResult(true)
         } catch (e: Exception) {
             logger.error(" [loadpijob] Error run load pijob : " + e.message)
             err.n("loadpijob", "40-90", "${e.message}")
         }
-
-
+        return null
     }
 
     fun newjob(job: Job): Job? {
@@ -111,11 +152,11 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
             item.job = newjob(item.job!!)
             item.ds18sensor = newdssensor(item.ds18sensor!!)
             item.desdevice = newotherdevice(item.desdevice!!)
-            logger.debug("Item for new pijob ${item}")
+            Loadpijob.logger.debug("Item for new pijob ${item}")
             var p: Pijob = service.newpijob(item)
 
 
-            logger.debug("P after newpijob ${p}")
+            Loadpijob.logger.debug("P after newpijob ${p}")
             // ตัวของเราเอง
             p.pidevice = null
             p.pidevice_id = null
@@ -263,7 +304,7 @@ class Loadpijob(val service: PijobService, val dsservice: DS18sensorService, val
 
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(Loadpijob::class.java)
+        internal var logger = LoggerFactory.getLogger(LoadpijobTask::class.java)
     }
 
 }

@@ -13,6 +13,9 @@ import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import java.util.concurrent.*
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+
+
 
 
 @SpringBootApplication
@@ -31,6 +34,13 @@ class PideviceApplication
         return taskScheduler
     }
 
+    @Bean(name = arrayOf("aa"))
+    fun threadPoolTaskExecutor(): Executor {
+        return    ThreadPoolExecutor(5, 20, 30,
+                TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
+                ThreadPoolExecutor.CallerRunsPolicy())
+
+    }
     @Bean
     fun pool(): ExecutorService? {
         val threadpool =     ThreadPoolExecutor(5, 10, 30,

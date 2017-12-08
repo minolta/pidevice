@@ -17,20 +17,20 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService) {
     fun checkThread() {
         var t = context.getBean("taskScheduler") as ThreadPoolTaskScheduler
         var tp = context.getBean("pool") as ExecutorService
-
+        var aa = context.getBean("aa") as ThreadPoolExecutor
         val queue = t.scheduledThreadPoolExecutor
         val s = queue.queue
 
         logger.info("Scheduler active count: ${t.activeCount} pool size: ${t.poolSize}  Queue size:${s.size} ")
         var tt = tp as ThreadPoolExecutor
         logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
-
-       /*
-        var o = s.iterator()
-        for(run in o)
-        {
-            logger.info("run : ${run}")
-        }*/
+        logger.info("Asyn AT: ${aa.activeCount} pool size: ${aa.poolSize}  Queue size:${aa.queue}  c:${aa.completedTaskCount}")
+        /*
+         var o = s.iterator()
+         for(run in o)
+         {
+             logger.info("run : ${run}")
+         }*/
     }
 
     companion object {

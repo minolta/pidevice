@@ -9,49 +9,86 @@ import me.pixka.pibase.d.Job
 import me.pixka.pibase.s.JobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 
 @Component
 @Profile("pi")
-class LoadMainJobTask(val service: JobService,
-                      val dbcfg: DbconfigService,
-                      val http: HttpControl, val err: ErrorlogService) {
+class LoadMainJobTask(val task: LoadjobTask) {
+
+
+    @Scheduled(initialDelay = 30000, fixedDelay = 60000)
+    fun run() {
+        logger.info("in loadmainjob")
+
+        var count = 0
+        try {
+            logger.debug("in while  loadmainjob")
+
+            var f = task.run()
+            while (true) {
+                if (f!!.isDone) {
+                    break
+                    logger.info("End load job ")
+                }
+                TimeUnit.SECONDS.sleep(1)
+                count++
+                if (count > 30) {
+                    logger.error("Time out")
+                    f.cancel(true)
+                }
+            }
+
+        } catch (e: Exception) {
+            logger.error("Error loadmainjob : " + e.message)
+
+        }
+
+    }
+
+
+    companion object {
+        internal var logger = LoggerFactory.getLogger(LoadMainJobTask::class.java)
+    }
+}
+
+@Component
+class LoadjobTask(val service: JobService,
+                  val dbcfg: DbconfigService,
+                  val http: HttpControl, val err: ErrorlogService) {
+
 
     // load /pijob/list/{mac}
     private var target = "http://192.168.69.2:5002/job/lists/0/1000"
-
     var om = jacksonObjectMapper()
-    @Scheduled(initialDelay = 30000,fixedDelay = 60000)
-    fun run() {
-        logger.info("in loadmainjob")
-        setup()
+    @Async("aa")
+    fun run(): Future<Boolean>? {
         try {
-            logger.debug("in while  loadmainjob")
+            setup()
             val list = loadjobfromServer(target)
-            for(j in list)
-            {
+            for (j in list) {
                 var job = service.findByName(j.name!!)
-                if(job == null)
-                {
+                if (job == null) {
                     var nj = Job()
                     nj.name = j.name
                     nj.refid = j.id
                     service.save(nj)
                 }
             }
-
-
+            return AsyncResult(true)
         } catch (e: Exception) {
-            logger.error("Error loadmainjob : " + e.message)
-            err.n("Loadjob", "35", e.message!!)
+            logger.error(e.message)
         }
 
+        return null
     }
 
-    @Throws(IOException::class)
     fun loadjobfromServer(target: String): List<Job> {
         try {
             val re = http.get(target)
@@ -66,13 +103,14 @@ class LoadMainJobTask(val service: JobService,
 
     }
 
-    private fun setup() {
+    fun setup() {
         logger.debug("[loadmainjob] setup()")
-        var host = dbcfg.findorcreate("hosttarget","http://pi1.pixka.me").value
-        target  = host+dbcfg.findorcreate("serviceloadmainjob",":5002/job/lists/0/1000").value!!
+        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        target = host + dbcfg.findorcreate("serviceloadmainjob", ":5002/job/lists/0/1000").value!!
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(LoadMainJobTask::class.java)
+        internal var logger = LoggerFactory.getLogger(LoadjobTask::class.java)
     }
+
 }
