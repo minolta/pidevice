@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class Loadpijob(val task:LoadjobTask) {
+class Loadpijob(val task:LoadpijobTask) {
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     fun run() {
@@ -233,7 +233,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
 
     fun find(l: Logistate): Logistate? {
         logger.debug("[loadpijob saveport Logistatus to save] " + l)
-        val lg = ls!!.findorcreate(l.name!!) // find
+        val lg = ls.findorcreate(l.name!!) // find
         logger.debug("[loadpijob saveport Logi found] " + lg)
         return lg
 
@@ -252,9 +252,9 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             logger.debug("[loadpijob] edit  :" + item)
 
             ref.copy(item)
-            ref.portname = ps!!.findorcreate(item.portname?.name!!)
-            ref.status = ls!!.findorcreate(item.status?.name!!)
-            return psijs!!.save(ref)
+            ref.portname = ps.findorcreate(item.portname?.name!!)
+            ref.status = ls.findorcreate(item.status?.name!!)
+            return psijs.save(ref)
         } catch (e: Exception) {
             logger.error("loadpijob edit error : " + e.message)
             err.n("loadpijob", "176-183", "${e.message}")
@@ -268,7 +268,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
 
 
         try {
-            val re = http!!.get(targetloadstatus + "/" + pijobid)
+            val re = http.get(targetloadstatus + "/" + pijobid)
             val list = mapper.readValue<List<Portstatusinjob>>(re)
             logger.debug("[loadpijob] Found Port states  for me " + list.size)
             return list
