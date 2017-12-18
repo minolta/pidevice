@@ -1,6 +1,6 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class Loadpijob(val task:LoadpijobTask) {
+class Loadpijob(val task: LoadpijobTask) {
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     fun run() {
@@ -29,10 +29,8 @@ class Loadpijob(val task:LoadpijobTask) {
         var f = task.run()
 
         var count = 0
-        while(true)
-        {
-            if(f!!.isDone)
-            {
+        while (true) {
+            if (f!!.isDone) {
                 logger.info("Load pi job end")
                 break
 
@@ -40,8 +38,7 @@ class Loadpijob(val task:LoadpijobTask) {
 
             TimeUnit.SECONDS.sleep(1)
             count++
-            if(count>30)
-            {
+            if (count > 30) {
                 logger.error("Time out")
                 f.cancel(true)
             }
@@ -66,7 +63,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
     // load port state /portstate/list/{mac}
     private var targetloadstatus = ""
 
-    val mapper = jacksonObjectMapper()
 
     @Async("aa")
     fun run(): Future<Boolean>? {
@@ -268,6 +264,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
 
 
         try {
+            val mapper = ObjectMapper()
             val re = http.get(targetloadstatus + "/" + pijobid)
             val list = mapper.readValue<List<Portstatusinjob>>(re)
             logger.debug("[loadpijob] Found Port states  for me " + list.size)
@@ -284,6 +281,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
     fun loadPijob(mac: String): List<Pijob>? {
 
         try {
+            val mapper = ObjectMapper()
             val re = http.get(target + "/" + mac)
             val list = mapper.readValue<List<Pijob>>(re)
             logger.debug("[pijob loadpijob] Found Jobs for me " + list.size)

@@ -1,6 +1,6 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
@@ -66,7 +66,7 @@ class LoadjobTask(val service: JobService,
 
     // load /pijob/list/{mac}
     private var target = "http://192.168.69.2:5002/job/lists/0/1000"
-    var om = jacksonObjectMapper()
+
     @Async("aa")
     fun run(): Future<Boolean>? {
         try {
@@ -91,6 +91,7 @@ class LoadjobTask(val service: JobService,
 
     fun loadjobfromServer(target: String): List<Job> {
         try {
+            val om = ObjectMapper()
             val re = http.get(target)
             logger.debug("loadmainjob target : $target result: $re")
             val list = om.readValue<List<Job>>(re)

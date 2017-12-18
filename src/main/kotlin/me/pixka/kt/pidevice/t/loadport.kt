@@ -1,6 +1,6 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class LoadPortnameTask(val task:LoadPortTask) {
+class LoadPortnameTask(val task: LoadPortTask) {
 
 
     @Scheduled(initialDelay = 5000, fixedDelay = 60000)
@@ -27,19 +27,16 @@ class LoadPortnameTask(val task:LoadPortTask) {
         logger.info("starttask Start loadportname")
 
         var f = task.run()
-        var count =0
-        while(true)
-        {
-            if(f!!.isDone)
-            {
+        var count = 0
+        while (true) {
+            if (f!!.isDone) {
                 logger.info("LoadPort job done")
                 break
             }
 
             TimeUnit.SECONDS.sleep(1)
             count++
-            if(count > 30)
-            {
+            if (count > 30) {
                 logger.error("Time out")
                 f.cancel(true)
             }
@@ -60,7 +57,7 @@ class LoadPortTask(val service: PortnameService,
                    val http: HttpControl,
                    val err: ErrorlogService) {
     private var target = "http://192.168.69.50:5002/portname/lists/0/1000"
-    private val om = jacksonObjectMapper()
+    private val om = ObjectMapper()
     @Async("aa")
     fun run(): Future<Boolean>? {
         setup()

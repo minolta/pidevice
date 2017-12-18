@@ -46,6 +46,9 @@ class Displaydsvalues(val dps: DisplayService,
                     buf.add(dsfl)
                     logger.debug("Add to display-> ${dsfl}")
                 }
+                else{
+                    logger.error(" Last value not found ")
+                }
             }
 
 

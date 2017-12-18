@@ -1,6 +1,6 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class Sendds(val task:SenddsTask) {
+class Sendds(val task: SenddsTask) {
 
 
     @Scheduled(initialDelay = 1000, fixedDelay = 30000)
@@ -29,19 +29,16 @@ class Sendds(val task:SenddsTask) {
         try {
 
             var f = task.run()
-         var count = 0
-            while(true)
-            {
-                if(f!!.isDone)
-                {
+            var count = 0
+            while (true) {
+                if (f!!.isDone) {
                     logger.info("Run commplete")
                     break
                 }
-               TimeUnit.SECONDS.sleep(1)
+                TimeUnit.SECONDS.sleep(1)
                 count++
 
-                if(count>30)
-                {
+                if (count > 30) {
                     f.cancel(true)
                     logger.error("Timeout")
                 }
@@ -53,7 +50,6 @@ class Sendds(val task:SenddsTask) {
 
         logger.debug("End Send ds")
     }
-
 
 
     companion object {
@@ -68,7 +64,7 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
 
 
     var target = "http://localhost:5555/ds18value/add"
-    private val mapper = jacksonObjectMapper()
+
     private var checkserver: String? = "http://localhost:5555/check"
 
 
@@ -91,6 +87,7 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
 
     fun send() {
         try {
+            val mapper = ObjectMapper()
             val list = service.notInserver()
 
             logger.debug("Values for send ${list.size}")

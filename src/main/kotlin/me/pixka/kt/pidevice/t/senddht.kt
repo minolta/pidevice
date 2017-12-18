@@ -1,6 +1,6 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
@@ -57,7 +57,7 @@ class SenddhtTask(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt
                   val err: ErrorlogService, val http: HttpControl, val dbcfg: DbconfigService) {
 
 
-    private val mapper = jacksonObjectMapper()
+    private val mapper = ObjectMapper()
     var target = "http://localhost:5002/dht/add"
     private var checkserver = "http://localhost:5002/run"
 
