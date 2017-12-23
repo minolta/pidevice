@@ -1,7 +1,9 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.base.s.DbconfigService
+import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.s.DisplayService
+import me.pixka.pibase.d.Dhtvalue
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -12,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val dbcfg: DbconfigService) {
+class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val dbcfg: DbconfigService,val io: Piio) {
     var df = DecimalFormat("##.#")
     @Scheduled(fixedDelay = 20000)
     fun run() {
@@ -24,6 +26,8 @@ class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val db
             logger.error("Not run DHT display")
             return
         }
+
+
         var count = 0
         while (dps.lock) {
             //รอจนกว่าจะแสดงได้
@@ -36,9 +40,12 @@ class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val db
             }
         }
 
+
         try {
             var dot = dps.lockdisplay(this)
-            var last = dhts.last()
+            var last = readdirect()
+
+                    //dhts.last()
             logger.debug("Last DHT for display")
             if (last != null) {
                 dot.showMessage("DHT value ")
@@ -66,5 +73,10 @@ class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val db
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Displaydhtvalue::class.java)
+    }
+
+    fun readdirect(): Dhtvalue? {
+        var v = io.readDHT()
+        return v
     }
 }

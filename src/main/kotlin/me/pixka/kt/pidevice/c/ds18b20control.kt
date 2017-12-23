@@ -1,6 +1,6 @@
 package me.pixka.kt.pidevice.c
 
-import me.pixka.kt.pibase.c.Pi
+import me.pixka.kt.pibase.c.Piio
 import me.pixka.pibase.d.DS18value
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.Ds18valueService
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @Profile("pi")
-class DS18Control(val service: Ds18valueService,  val dss: DS18sensorService) {
+class DS18Control(val service: Ds18valueService, val dss: DS18sensorService, val io: Piio) {
     @CrossOrigin
     @RequestMapping(value = "/ds18value", method = arrayOf(RequestMethod.GET))
     @ResponseBody
@@ -43,6 +43,21 @@ class DS18Control(val service: Ds18valueService,  val dss: DS18sensorService) {
     @ResponseBody
     @Throws(Exception::class)
     fun value(@PathVariable("sensor") sensor: String): DS18value? {
+
+        //เปลียนไป read direct
+        var values = io.reads()
+        if (values != null) {
+            for (value in values) {
+
+                if (value.ds18sensor?.name.equals(sensor)) {
+                    return value
+                }
+            }
+        }
+
+        return null
+
+        /*
         logger.debug("[ds18value] read by bysensor name")
         try {
             val ds = dss.findByname(sensor)
@@ -65,8 +80,9 @@ class DS18Control(val service: Ds18valueService,  val dss: DS18sensorService) {
         } catch (e: Exception) {
             logger.error("[ds18value] Error: " + e.message)
         }
-
         return null
+        */
+
     }
 
 

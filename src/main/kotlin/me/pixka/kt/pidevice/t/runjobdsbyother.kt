@@ -1,6 +1,5 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.TaskService
@@ -11,38 +10,63 @@ import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 
 @Component
 @Profile("pi")
-class Finddsjobbyother(var pjs: PijobService, var js: JobService,
-                       val ts: TaskService,
-                       val gpios: GpioService,
-                       val ss: SensorService) {
-    private val om = ObjectMapper()
-    var es: ThreadPoolExecutor? = null
+class Finddsjobbyother(val task: RunotherTask) {
 
-    fun c() {
-        val linkedBlockingDeque = LinkedBlockingDeque<Runnable>(
-                1)
-        es = ThreadPoolExecutor(1, 2, 30,
-                TimeUnit.MINUTES, linkedBlockingDeque,
-                ThreadPoolExecutor.CallerRunsPolicy())
-    }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 5000)
     fun find() {
+
+        Loadpijob.logger.info("Start read other")
+        var f = task.run()
+
+        var count = 0
+        while (true) {
+            if (f!!.isDone) {
+                Loadpijob.logger.info("Load pi job end")
+                break
+
+            }
+
+            TimeUnit.SECONDS.sleep(1)
+            count++
+            if (count > 60) {
+                Loadpijob.logger.error("Time out")
+                f.cancel(true)
+            }
+        }
+    }
+
+
+    companion object {
+        internal var logger = LoggerFactory.getLogger(Finddsjobbyother::class.java)
+    }
+
+}
+
+@Component
+@Profile("pi")
+class RunotherTask(var pjs: PijobService, var js: JobService,
+                   val ts: TaskService,
+                   val gpios: GpioService,
+                   val ss: SensorService) {
+    @Async("aa")
+    fun run(): Future<Boolean>?  {
         logger.debug("Start run DSOTHER")
         var DSOTHER = js.findByName("DSOTHER")
 
         if (DSOTHER == null) {
             logger.error("NOT Found job DSOTHER ")
-            return
+            return AsyncResult(false)
         }
 
         //ค้นหางานที่ต้องอ่านค่า DS จากตัวอื่น
@@ -64,19 +88,20 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
         if (jobforrun.size > 0)
             for (r in jobforrun) {
                 var w = DSOTHERWorker(r, gpios)
-                //ts.run(w)
-                try {
-                    es?.execute(w)
-                } catch (e: Exception) {
-                    logger.error(e.message)
-                }
+                ts.run(w)
             }
 
-        // pjs.findByDSOrther()
-
-
+        return AsyncResult(true)
     }
 
+    fun readDsOther(otherid: Long): DS18value? {
+
+        return null
+    }
+
+    /**
+     * อ่านค่าจากตัวอื่นแล้ว ตรวจสอบค่าว่าอยู่ในเงือนไขหรือเปล่าถ้าอยู่ก็ทำงาน
+     */
     fun findCanrunjob(job: Pijob): Pijob? {
 
         var desid = job.desdevice_id
@@ -111,14 +136,8 @@ class Finddsjobbyother(var pjs: PijobService, var js: JobService,
     }
 
 
-    fun readDsOther(otherid: Long): DS18value? {
-
-        return null
-    }
-
-
     companion object {
-        internal var logger = LoggerFactory.getLogger(Finddsjobbyother::class.java)
+        internal var logger = LoggerFactory.getLogger(RunotherTask::class.java)
     }
 
 }
