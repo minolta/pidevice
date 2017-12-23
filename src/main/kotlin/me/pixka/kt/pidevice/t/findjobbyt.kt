@@ -7,16 +7,12 @@ import me.pixka.kt.run.Worker
 import me.pixka.pibase.d.DS18sensor
 import me.pixka.pibase.d.DS18value
 import me.pixka.pibase.d.Pijob
-import me.pixka.pibase.s.DS18sensorService
-import me.pixka.pibase.s.Ds18valueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 /**
 ใช้สำหรับ ค้นหา job ที่มา run สำหรับ DS18b20
@@ -26,11 +22,10 @@ import java.util.concurrent.Future
 
 @Component
 @Profile("pi")
-class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorService,
-                             val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService,var dsobj:DS18obj) {
+class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpios: GpioService,
+                             val ts: TaskService, var dsobj: DS18obj) {
 
-    @Scheduled(initialDelay = 5000,fixedDelay = 12000)
+    @Scheduled(initialDelay = 5000, fixedDelay = 12000)
     fun run() {
         logger.info("Run Find JOB for run ds18b20")
         var DSJOB = js.findByName("DS")
@@ -62,7 +57,6 @@ class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorServ
             }
 
 
-
         }
 
         logger.debug("End Run")
@@ -74,9 +68,6 @@ class FindJobforRunDS18value(val dsvs: Ds18valueService, val dss: DS18sensorServ
             ts.run(w)
         }
     }
-
-
-
 
 
     companion object {

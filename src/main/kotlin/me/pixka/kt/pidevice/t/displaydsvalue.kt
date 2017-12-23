@@ -36,9 +36,8 @@ class Displaydsvalues(val dps: DisplayService,
 
         var buf = findvalues()
 
-        if(buf.size>0)
-        {
-        display(buf)
+        if (buf.size > 0) {
+            display(buf)
         }
         /*
         var sensor = dss.all() //sensor ทั้งหมด
@@ -113,8 +112,7 @@ class Displaydsvalues(val dps: DisplayService,
     }
 
 
-    fun display(buf:List<Dssensorforfindlast>)
-    {
+    fun display(buf: List<Dssensorforfindlast>) {
         logger.debug("start booking dpslay:")
         var count = 0
         while (dps.lock) {
