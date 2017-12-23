@@ -8,14 +8,8 @@ import org.springframework.context.annotation.ComponentScan
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.core.task.SimpleAsyncTaskExecutor
-import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
-import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import java.util.concurrent.*
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
-
-
 
 
 @SpringBootApplication
@@ -24,8 +18,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 @ComponentScan(basePackages = arrayOf("me.pixka"))
 @EnableJpaRepositories(basePackages = arrayOf("me.pixka"))
 @EntityScan(basePackages = arrayOf("me.pixka"))
-class PideviceApplication
-{
+class PideviceApplication {
 
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
@@ -36,14 +29,22 @@ class PideviceApplication
 
     @Bean(name = arrayOf("aa"))
     fun threadPoolTaskExecutor(): Executor {
-        return    ThreadPoolExecutor(5, 20, 30,
+        return ThreadPoolExecutor(5, 20, 30,
                 TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
+                ThreadPoolExecutor.CallerRunsPolicy())
+
+    }
+
+    @Bean(name = arrayOf("longrun"))
+    fun longrun(): Executor {
+        return ThreadPoolExecutor(5, 20, 30,
+                TimeUnit.HOURS, LinkedBlockingDeque<Runnable>(50),
                 ThreadPoolExecutor.CallerRunsPolicy())
 
     }
     @Bean
     fun pool(): ExecutorService? {
-        val threadpool =     ThreadPoolExecutor(5, 10, 30,
+        val threadpool = ThreadPoolExecutor(5, 10, 30,
                 TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
                 ThreadPoolExecutor.CallerRunsPolicy())
 
