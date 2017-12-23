@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit
 class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorService, val dps: DisplayService) : Runnable, PijobrunInterface {
 
     var run: Long? = null
+    var timeout :Long ?=10000 //สำหรับหมดเวลา
     var startdate: Date? = null
     var runtime: Date? = null
     var completerun: Int? = 0 //เวลาที่ run ไปแล้ว
@@ -46,7 +47,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
     override fun run() {
 
         logger.debug("Start run counter job ID ***${pijob.id}***")
-
+        var timeoutcount = 0
         while (true) {
             var desid = pijob.desdevice_id
             var sensorid = pijob.ds18sensor_id
@@ -65,6 +66,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                     logger.debug("Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}")
                     if (startdate == null) {
                         startdate = Date()
+                        timeout = pijob.waittime //
                         run = pijob.runtime //เวลาในการ run เอ็นวินาที
                         finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
                     }
@@ -92,6 +94,13 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
 
                 } else {
                     logger.error("Value not in range range ${pijob.tlow} <= ${v} => ${pijob.thigh} ")
+                    timeoutcount++
+                    if(timeoutcount >= timeout?.toInt()!!)
+                    {
+                        logger.error("Time out count exit ${timeoutcount}")
+                        break
+                    }
+
                 }
             }
 
