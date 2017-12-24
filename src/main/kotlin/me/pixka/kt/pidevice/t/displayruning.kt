@@ -1,6 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.s.DisplayService
+import me.pixka.pi.io.Dotmatrix
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -16,23 +17,23 @@ class Displayruning(val dps: DisplayService) {
     fun run() {
 
         logger.debug("Run Display status")
-        var count = 0
+
         try {
-            while (dps.lock) {
-                TimeUnit.MILLISECONDS.sleep(200)
-                count++
-                if (count > 10) {
-                    logger.error("Error Display timeout")
-                    return
-                }
-            }
+
             if (!dps.lock) {
-                var dot = dps.lockdisplay(this)
-                dot.letter(2, '.'.toShort())
-                TimeUnit.MILLISECONDS.sleep(500)
-                dot.letter(2, ' '.toShort())
-                TimeUnit.MILLISECONDS.sleep(500)
-                dps.unlock(this)
+                var dot = lockdisplay()
+                if (dot != null) {
+                    dot.letter(2, '.'.toShort())
+                    unlock()
+                    TimeUnit.MILLISECONDS.sleep(500)
+                    dot = lockdisplay()
+                }
+                if (dot != null) {
+                    dot.letter(2, ' '.toShort())
+                    unlock()
+                    TimeUnit.MILLISECONDS.sleep(500)
+
+                }
                 //  TimeUnit.SECONDS.sleep(1)
             } else {
                 logger.error("Display device Busy")
@@ -41,6 +42,23 @@ class Displayruning(val dps: DisplayService) {
             logger.error("Error: ${e.message}")
         }
 
+    }
+
+    fun lockdisplay(): Dotmatrix? {
+        var count = 0
+        while (dps.lock) {
+            TimeUnit.MILLISECONDS.sleep(200)
+            count++
+            if (count > 10) {
+                logger.error("Error Display timeout")
+                return null
+            }
+        }
+        return dps.lockdisplay(this)
+    }
+
+    fun unlock() {
+        dps.unlock(this)
     }
 
     companion object {
