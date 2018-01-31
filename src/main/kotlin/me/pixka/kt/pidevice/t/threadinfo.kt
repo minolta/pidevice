@@ -23,7 +23,17 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService) {
 
         logger.info("Scheduler active count: ${t.activeCount} pool size: ${t.poolSize}  Queue size:${s.size} ")
         var tt = tp as ThreadPoolExecutor
+
         logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
+
+        if(tt.activeCount>0)
+        {
+            for(run in tsk.runinglist)
+            {
+                logger.debug("Runs id : "+ run.getPijobid().toString()+ " "+run.runStatus())
+            }
+        }
+
         logger.info("Asyn AT: ${aa.activeCount} pool size: ${aa.poolSize}  Queue size:${aa.queue}  c:${aa.completedTaskCount}")
         /*
          var o = s.iterator()
