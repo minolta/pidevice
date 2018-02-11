@@ -47,7 +47,7 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
             setport(ports!!)
             TimeUnit.SECONDS.sleep(runtime!!)
             logger.debug("Run time: ${runtime}")
-            resetport()
+            resetport(ports)
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
             //end task
@@ -58,21 +58,18 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
 
         }
 
-        isRun=false
+        isRun = false
     }
 
-    fun resetport() {
-        try {
-            for (b in pinbackuplist) {
-                    //b.pin.setState(b.pinstate)
-                gpio.resettoDefault(b.pin)
-            }
-        }catch (e:Exception)
-        {
-            logger.error(e.message)
-            throw e
+    fun resetport(ports: List<Portstatusinjob>?) {
 
-        }
+        if (ports != null)
+            for (port in ports) {
+                logger.debug("Reset Port to default")
+                var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
+                gpio.resettoDefault(pin)
+            }
+
     }
 
     fun setport(ports: List<Portstatusinjob>) {
@@ -85,14 +82,17 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
                 logger.debug("Pin: ${pin}")
 
                 //save old state
-                var b = Pinbackup(pin, pin.state)
-                pinbackuplist.add(b)
+                //  var b = Pinbackup(pin, pin.state)
+                //   pinbackuplist.add(b)
 
                 var sn = port.status?.name
+                logger.debug("Set to " + sn)
                 if (sn?.indexOf("low") != -1) {
-                    pin.setState(false)
+                    gpio.setPort(pin, false)
+                    //pin.setState(false)
                 } else
-                    pin.setState(true)
+                // pin.setState(true)
+                    gpio.setPort(pin, true)
 
                 logger.debug("Set pin state: ${pin.state}")
 

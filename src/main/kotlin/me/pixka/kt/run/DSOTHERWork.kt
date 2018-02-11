@@ -43,7 +43,7 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
             setport(ports!!)
             TimeUnit.SECONDS.sleep(runtime!!)
             logger.debug("Run time: ${runtime}")
-            resetport()
+            resetport(ports!!)
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
 
@@ -57,11 +57,10 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
         isRun = false
     }
 
-    fun resetport() {
-        for (b in pinbackuplist) {
-            //  b.pin.setState(b.pinstate)
-                gpio.revertDigitalpin(b.pin)
-            //gpio.resettoDefault(b.pin)
+    fun resetport(ports: List<Portstatusinjob>) {
+        for (p in ports) {
+            var pin = gpio.getDigitalPin(p.portname?.name!!)
+            gpio.resettoDefault(pin!!)
         }
     }
 
@@ -76,15 +75,15 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
                 logger.debug("Pin current state: ${pin}")
 
                 //save old state
-                var b = Pinbackup(pin!!, pin.state)
-                pinbackuplist.add(b)
+                // var b = Pinbackup(pin!!, pin.state)
+                // pinbackuplist.add(b)
 
                 var sn = port.status?.name
                 if (sn?.indexOf("low") != -1) {
-                    gpio.setPort(pin, false)
+                    gpio.setPort(pin!!, false)
                     //pin.setState(false)
                 } else {
-                    gpio.setPort(pin, true)
+                    gpio.setPort(pin!!, true)
                     //pin.setState(true)
                 }
                 logger.debug("Set pin state: ${pin.state}")

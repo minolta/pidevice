@@ -32,7 +32,7 @@ class Finddsjobbyother(val task: RunotherTask) {
         var count = 0
         while (true) {
             if (f!!.isDone) {
-                Loadpijob.logger.info("Load pi job end")
+                logger.info("Load pi job end")
                 break
 
             }
@@ -40,7 +40,7 @@ class Finddsjobbyother(val task: RunotherTask) {
             TimeUnit.SECONDS.sleep(1)
             count++
             if (count > 60) {
-                Loadpijob.logger.error("Time out")
+                logger.error("Time out")
                 f.cancel(true)
             }
         }

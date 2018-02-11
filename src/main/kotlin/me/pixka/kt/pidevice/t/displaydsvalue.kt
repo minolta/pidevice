@@ -39,70 +39,7 @@ class Displaydsvalues(val dps: DisplayService,
         if (buf.size > 0) {
             display(buf)
         }
-        /*
-        var sensor = dss.all() //sensor ทั้งหมด
-        logger.debug("All sensor : ${sensor}")
-
-
-        if (sensor != null) {
-
-            var buf = ArrayList<Dssensorforfindlast>()
-            for (s in sensor) {
-                var t = dsvs.lastBysensor(s.id)
-
-                if (t != null) {
-                    logger.debug("sensor: ${s} T:${t.t}")
-                    var dsfl = Dssensorforfindlast(s, t)
-                    buf.add(dsfl)
-                    logger.debug("Add to display-> ${dsfl}")
-                } else {
-                    logger.error(" Last value not found ")
-                }
-            }
-
-
-
-            logger.debug("All for display ${buf} size:${buf.size}")
-
-            try {
-                if (buf.size > 0) {
-                    logger.debug("start booking dpslay:")
-                    var count = 0
-                    while (dps.lock) {
-                        //wait lock display
-                        println("whait for lock DSVALUE")
-                        TimeUnit.MILLISECONDS.sleep(200)
-                        count++
-                        if (count > 20) {
-                            logger.error("Display Busy")
-                            return
-                        }
-                    }
-                    var dot = dps.lockdisplay(this)
-                    logger.debug("lock for ds value display ")
-                    for (b in buf) {
-                        dot.showMessage("sensor:${b.dssensor?.name}")
-                        TimeUnit.SECONDS.sleep(1)
-                        dot.clear()
-                        var dd = df.format(b.ds18value?.t)
-                        if (dd.length > 4)
-                            dd = "*" + df100.format(b.ds18value?.t)
-
-                        dot.print(dd)
-                        TimeUnit.SECONDS.sleep(5)
-                        dot.clear()
-                    }
-                    dps.unlock(this)
-
-                }
-            } catch (e: Exception) {
-                logger.error("Error ${e.message}")
-            } finally {
-                //dps.unlock(this)
-                logger.info("Finally")
-            }
-        }
-        */
+      
 
 
     }

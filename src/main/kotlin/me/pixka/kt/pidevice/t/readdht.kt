@@ -10,18 +10,17 @@ import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
-import java.util.*
 
 @Component
 @Profile("pi")
-class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogService,val dbcfg:DbconfigService) {
+class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogService, val dbcfg: DbconfigService) {
     val hlimit = BigDecimal("100")
     var old: Dhtvalue? = null
-    @Scheduled(initialDelay = 3000,fixedDelay = 60000)
+    @Scheduled(initialDelay = 3000, fixedDelay = 60000)
     fun read() {
 
-        var canread = dbcfg.findorcreate("readdht","true").value
-        if(!canread.equals("true")) {
+        var canread = dbcfg.findorcreate("readdht", "true").value
+        if (!canread.equals("true")) {
             logger.info("Not run read dht")
             return
         }
@@ -42,15 +41,12 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
                 {
 
 
-                    if(old==null) {
+                    if (old == null) {
                         o = service.save(o)
                         logger.debug("Save New ${o}")
                         old = o
-                    }
-                    else
-                    {
-                        if(checkvaluetosave(o.t!!, old!!.t!!) || checkvaluetosave(o.h!!,old!!.h!!) )
-                        {
+                    } else {
+                        if (checkvaluetosave(o.t!!, old!!.t!!) || checkvaluetosave(o.h!!, old!!.h!!)) {
 
                             o = service.save(o)
                             logger.debug("Save Value change over rang  ${o}")
@@ -68,7 +64,6 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
         }
 
 
-
     }
 
 
@@ -79,9 +74,13 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
 
         var over05 = result.abs()
         logger.debug("Diff ${over05}")
-        if (over05.compareTo(rangertosave) > 0)
+        if (over05.compareTo(rangertosave) > 0) {
+            logger.debug("Value diff Have to save")
             return true
 
+        }
+
+        logger.debug("Not save value")
         return false // not over rang
 
     }
