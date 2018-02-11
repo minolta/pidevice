@@ -39,11 +39,19 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
             jobid = pijob.id
 
             logger.debug("Startworker ${pijob.id}")
+            try {
+                setport(ports!!)
+            } catch (e: Exception) {
+                logger.error("Set port error ${e.message}")
+            }
 
-            setport(ports!!)
             TimeUnit.SECONDS.sleep(runtime!!)
             logger.debug("Run time: ${runtime}")
-            resetport(ports!!)
+            try {
+                resetport(ports!!)
+            } catch (e: Exception) {
+                logger.error("Error reset Port ${e.message}")
+            }
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
 
@@ -80,6 +88,7 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
 
                 var sn = port.status?.name
                 if (sn?.indexOf("low") != -1) {
+
                     gpio.setPort(pin!!, false)
                     //pin.setState(false)
                 } else {

@@ -19,8 +19,8 @@ class TaskService(val context: ApplicationContext) {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
 
     val queue = ThreadPoolExecutor(5, 10, 30,
-    TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
-    ThreadPoolExecutor.CallerRunsPolicy())
+            TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
+            ThreadPoolExecutor.CallerRunsPolicy())
 
     fun run(work: PijobrunInterface) {
 
@@ -28,10 +28,10 @@ class TaskService(val context: ApplicationContext) {
 
 
         var forrun = checkalreadyrun(work)
-
+        logger.debug("CheckJOB job can run ? ${forrun}")
         if (forrun != null) {
             runinglist.add(forrun)
-
+            logger.debug("CheckJOB Run this JOB: ${forrun.getPijobid()}")
             //pool.submit(forrun as Runnable)
             pool.submit(forrun as Runnable)
             /*
@@ -44,7 +44,7 @@ class TaskService(val context: ApplicationContext) {
         var tp = threadpool as ThreadPoolExecutor
         logger.debug("Queue size :${tp.queue.size} Running size : ${tp.activeCount}  Job in buffer [${runinglist.size}] ")
         */
-        logger.debug("Jobs in List  ${runinglist.size} ThreadInfo")
+        logger.debug("CheckJOB Jobs in List  ${runinglist.size} ThreadInfo")
 
     }
 
@@ -54,19 +54,23 @@ class TaskService(val context: ApplicationContext) {
      */
     fun checkalreadyrun(w: PijobrunInterface): PijobrunInterface? {
 
+        logger.debug("CheckJOB runing size: ${runinglist.size}")
         if (runinglist.size > 0) {
+            logger.debug("CheckJOB have thread run ${runinglist.size}")
             for (b in runinglist) {
-                logger.debug("Check Run status ${b}")
-                if (b.runStatus()) {
-                    if (b.getPijobid().equals(w.getPijobid())) {
-
-                        logger.debug("New run id:${w.getPijobid()} Runing list ${b.getPijobid()}")
-                        logger.debug("Reject run ${w}")
+                logger.debug("CheckJOB runstatus ${b.runStatus()} id: ${w.getPijobid()}")
+                logger.debug("CheckJOB ${b.getPijobid()} == ${w.getPijobid()}")
+                if (b.getPijobid().toInt() == w.getPijobid().toInt()) {
+                    if (b.runStatus()) {
+                        logger.debug("CheckJOB New run id:${w.getPijobid()} Runing list ${b.getPijobid()}")
+                        logger.debug("CheckJOB Reject run ${w}")
                         return null //ถ้าเจอเหมือน null
                     }
                 }
+                logger.debug("CheckJOB Next Check")
             }
-            logger.debug("This job can run ${w}")
+
+            logger.debug("CheckJOB This jobcanrun ${w}")
             return w //ถ้าไม่เจอ return w ไป exec
         } else {
             return w
@@ -80,7 +84,7 @@ class TaskService(val context: ApplicationContext) {
     }
 
     @Scheduled(initialDelay = 2000,
-            fixedDelay = 5000)
+            fixedDelay = 20000)
     fun removefinished() {
         logger.debug("Start Remove job finished size: ${runinglist.size}")
         try {
