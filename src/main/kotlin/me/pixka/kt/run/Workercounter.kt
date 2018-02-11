@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorService, val dps: DisplayService) : Runnable, PijobrunInterface {
 
     var run: Long? = null
-    var timeout :Long ?=10000 //สำหรับหมดเวลา
+    var timeout: Long? = 10000 //สำหรับหมดเวลา
     var startdate: Date? = null
     var runtime: Date? = null
     var completerun: Int? = 0 //เวลาที่ run ไปแล้ว
@@ -95,8 +95,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                 } else {
                     logger.error("Value not in range range ${pijob.tlow} <= ${v} => ${pijob.thigh} ")
                     timeoutcount++
-                    if(timeoutcount >= timeout?.toInt()!!)
-                    {
+                    if (timeoutcount >= timeout?.toInt()!!) {
                         logger.error("Time out count exit ${timeoutcount}")
                         break
                     }
