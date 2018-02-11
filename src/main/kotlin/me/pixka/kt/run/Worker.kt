@@ -44,10 +44,20 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
 
             logger.debug("Startworker ${pijob.id}")
 
-            setport(ports!!)
+            try {
+                setport(ports!!)
+            }catch (e:Exception)
+            {
+                logger.error("Set port error ${e.message}")
+            }
             TimeUnit.SECONDS.sleep(runtime!!)
             logger.debug("Run time: ${runtime}")
-            resetport(ports)
+            try {
+                resetport(ports)
+            }catch(e:Exception)
+            {
+                logger.error("Error reset PORT ${e.message}")
+            }
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
             //end task
