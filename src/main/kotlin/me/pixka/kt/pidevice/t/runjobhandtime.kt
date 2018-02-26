@@ -11,37 +11,33 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-
-/*
-* ใช้สำหรับ หาค่า meทางานด้าน H
-* */
+import java.util.*
 
 @Component
 @Profile("pi")
-class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
-                , val pjs: PijobService, val js: JobService,
-                val gpios: GpioService) {
-
+class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
+                 , val pjs: PijobService, val js: JobService,
+                 val gpios: GpioService) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     fun run() {
 
 
-        logger.info("Start RUN JOB By H")
+        RunjobByH.logger.info("Start RUN JOB By HT HbyT")
 
-        var HJOB = js.findByName("H")
+        var HJOB = js.findByName("HT")
 
         if (HJOB == null) {
-            logger.error("H Job not found ")
+            RunjobByH.logger.error("HT Job not found HbyT ")
             return
         }
         var lasth = dhts.last()
-        logger.debug("Last dhtvalue : ${lasth}")
+        RunjobByH.logger.debug("Last dhtvalue HbyT : ${lasth}")
         if (lasth != null) {
-            var jobs = pjs.findByH(lasth.h!!, HJOB.id)
-
+            var jobs = pjs.findByHBytime(lasth.h!!, pjs.datetoLong(Date()), HJOB.id)
+            logger.debug("Found !! HbyT  ${jobs!!.size}")
             if (jobs != null) {
-                logger.debug("Found H Job ${jobs.size}")
+                RunjobByH.logger.debug("Found H Job HbyT ${jobs.size}")
                 exec(jobs)
             }
         }
@@ -57,7 +53,8 @@ class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
         }
     }
 
+
     companion object {
-        internal var logger = LoggerFactory.getLogger(RunjobByH::class.java)
+        internal var logger = LoggerFactory.getLogger(RunjobByHT::class.java)
     }
 }

@@ -148,11 +148,11 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             item.job = newjob(item.job!!)
             item.ds18sensor = newdssensor(item.ds18sensor!!)
             item.desdevice = newotherdevice(item.desdevice!!)
-            Loadpijob.logger.debug("Item for new pijob ${item}")
+            logger.debug("Item for new pijob ${item}")
             var p: Pijob = service.newpijob(item)
 
 
-            Loadpijob.logger.debug("P after newpijob ${p}")
+            logger.debug("P after newpijob ${p}")
             // ตัวของเราเอง
             p.pidevice = null
             p.pidevice_id = null

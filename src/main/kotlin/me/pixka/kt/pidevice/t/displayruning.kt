@@ -36,7 +36,7 @@ class Displayruning(val dps: DisplayService) {
                 }
                 //  TimeUnit.SECONDS.sleep(1)
             } else {
-                logger.error("Display device Busy")
+              //  logger.error("Display device Busy")
             }
         } catch (e: Exception) {
             logger.error("Error: ${e.message}")

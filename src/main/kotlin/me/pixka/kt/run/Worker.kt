@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
  * ใช้สำหรับ Run pijob
  */
 @Profile("pi")
-class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterface {
+open class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterface {
     override fun getPijobid(): Long {
         return pijob.id
     }
@@ -82,7 +82,7 @@ class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterf
 
     }
 
-    fun setport(ports: List<Portstatusinjob>) {
+    open fun setport(ports: List<Portstatusinjob>) {
         try {
             logger.debug("Gpio : ${gpio}")
 
