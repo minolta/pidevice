@@ -16,8 +16,14 @@ class NameControl() {
     @Throws(Exception::class)
     fun value(): String? {
         val bufferedReader: BufferedReader = File("/home/pi/name").bufferedReader()
-
         val inputString = bufferedReader.use { it.readText() }
         return inputString
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = "/version", method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun version(): String? {
+        return "1.0.1-STABLE"
     }
 }
