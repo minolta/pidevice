@@ -5,8 +5,11 @@ import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.Message
+import me.pixka.kt.pibase.s.MessagetypeService
 import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.d.Devicecheckin
+import me.pixka.pibase.d.PiDevice
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DevicecheckinService
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -64,7 +67,7 @@ class Checkin(val c: CheckinTask) {
 
 @Component
 class CheckinTask(val configfile: Configfilekt, val erl: ErrorlogService, val io: Piio, val http: HttpControl,
-                  val ds: DevicecheckinService, val dbcfg: DbconfigService) {
+                  val ds: DevicecheckinService, val dbcfg: DbconfigService,val mtservice:MessagetypeService) {
     var target: String? = null
     var host: String? = null
 
@@ -99,11 +102,17 @@ class CheckinTask(val configfile: Configfilekt, val erl: ErrorlogService, val io
 
             re = http.postJson(target!!, i)
             logger.info("[checkin] Checkin already ")
+
+            /**
+             * Test Add message
+             */
+            testmessage()
+
             val mapper = ObjectMapper()
 
             val entity = re.entity
             val responseString = EntityUtils.toString(entity, "UTF-8")
-           // logger.debug("checkin response:  ${responseString}")
+            // logger.debug("checkin response:  ${responseString}")
 
             var ci = mapper.readValue(responseString, Devicecheckin::class.java)
             ci.pidevice = null
@@ -119,9 +128,30 @@ class CheckinTask(val configfile: Configfilekt, val erl: ErrorlogService, val io
         return null
     }
 
+    fun testmessage() {
+        var mess = Message()
+        var p = PiDevice()
+        p.mac = io.wifiMacAddress()
+        mess.pidevice = p
+        mess.message = " test Message"
+        mess.messagedate = Date()
+        mess.messagetype = mtservice.findOrCreate("Test")
+        logger.info("Push to server")
+        var re = http.postJson(System.getProperty("piserver") + "/message/add", mess)
+        logger.debug("checkininfo ${re}")
+    }
+
     fun setup() {
-        host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        target = host + dbcfg.findorcreate("checkintarget", ":5002/checkin").value
+
+
+        host = System.getProperty("piserver")
+
+        if (host == null) {
+            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        }
+
+        target = host + "/checkin"
+        logger.debug("checkininfo Check in target ${target}")
 
     }
 

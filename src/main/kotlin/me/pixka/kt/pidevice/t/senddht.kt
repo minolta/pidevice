@@ -127,9 +127,11 @@ class SenddhtTask(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt
     }
 
     fun setup() {
-        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        target = host + dbcfg.findorcreate("serverdhtaddtarget", ":5002/dht/add/").value!!
-        checkserver = host + dbcfg.findorcreate("servercheck", ":5002/run").value!!
+        var host = System.getProperty("piserver")
+        if (host == null)
+            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        target = host + "/dht/add/"
+        checkserver = host + "/run"
     }
 
     companion object {

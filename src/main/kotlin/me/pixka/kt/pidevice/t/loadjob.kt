@@ -105,9 +105,15 @@ class LoadjobTask(val service: JobService,
     }
 
     fun setup() {
+
         logger.debug("[loadmainjob] setup()")
-        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        target = host + dbcfg.findorcreate("serviceloadmainjob", ":5002/job/lists/0/1000").value!!
+        System.getProperty("piserver")
+
+        var host = System.getProperty("piserver")
+        if (host == null)
+            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+
+        target = host + "/job/lists/0/1000"
     }
 
     companion object {

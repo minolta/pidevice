@@ -110,8 +110,11 @@ class LoadPortTask(val service: PortnameService,
 
     private fun setup() {
         logger.debug("[Portname] setup")
-        var host = cfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        target = host + cfg.findorcreate("serviceloadportname", ":5002/portname/lists/0/1000").value!!
+
+        var host = System.getProperty("piserver")
+        if (host == null)
+            host = cfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+        target = host + "/portname/lists/0/1000"
     }
 
     companion object {

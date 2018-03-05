@@ -295,9 +295,13 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
 
     fun setup() {
 
-        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        target = host + dbcfg.findorcreate("serverloadpijob", ":5002/pijob/lists").value!!
-        targetloadstatus = host + dbcfg.findorcreate("serverloadpijobportstate", ":5002/portstatusinjob/lists").value!!
+        var host = System.getProperty("piserver")
+
+        if (host == null)
+            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+
+        target = host + "/pijob/lists"
+        targetloadstatus = host + "/portstatusinjob/lists"
     }
 
 

@@ -129,10 +129,13 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
 
     fun setup() {
         logger.debug("Setup...")
-        var host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        target = host + dbcfg.findorcreate("serverds18addtarget", ":5002/ds18value/add").value
+        var host = System.getProperty("piserver")
+        if (host == null)
+            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+
+        target = host + "/ds18value/add"
         logger.debug("Target ${target}")
-        checkserver = host + dbcfg.findorcreate("servercheck", ":5002/run").value
+        checkserver = host + "/run"
         logger.debug("Check ${checkserver}")
     }
 
