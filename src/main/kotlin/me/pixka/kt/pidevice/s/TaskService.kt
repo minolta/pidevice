@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.s
 import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.ExecutorService
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
+@Profile("pi","lite")
 class TaskService(val context: ApplicationContext) {
     //val executor = Executors.newFixedThreadPool(50)
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่

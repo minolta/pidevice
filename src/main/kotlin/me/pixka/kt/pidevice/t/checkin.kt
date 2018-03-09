@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
+import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Message
 import me.pixka.kt.pibase.s.MessagetypeService
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class Checkin(val c: CheckinTask) {
 
 
@@ -66,8 +67,9 @@ class Checkin(val c: CheckinTask) {
 }
 
 @Component
-class CheckinTask(val configfile: Configfilekt, val erl: ErrorlogService, val io: Piio, val http: HttpControl,
-                  val ds: DevicecheckinService, val dbcfg: DbconfigService,val mtservice:MessagetypeService) {
+@Profile("pi","lite")
+class CheckinTask(val erl: ErrorlogService, val io: Piio, val http: HttpControl,
+                  val ds: DevicecheckinService, val dbcfg: DbconfigService, val mtservice: MessagetypeService, val ips: IptableServicekt) {
     var target: String? = null
     var host: String? = null
 
@@ -99,20 +101,20 @@ class CheckinTask(val configfile: Configfilekt, val erl: ErrorlogService, val io
             // สำหรับ ให้
             // Server
             // ใช้สำหรับติดต่อกับเรา
-
+            logger.debug("checkin ${i.ip}")
             re = http.postJson(target!!, i)
             logger.info("[checkin] Checkin already ")
 
             /**
              * Test Add message
              */
-            testmessage()
+            //  testmessage()
 
             val mapper = ObjectMapper()
 
             val entity = re.entity
             val responseString = EntityUtils.toString(entity, "UTF-8")
-            // logger.debug("checkin response:  ${responseString}")
+            logger.debug("checkin response:  ${responseString}")
 
             var ci = mapper.readValue(responseString, Devicecheckin::class.java)
             ci.pidevice = null

@@ -18,7 +18,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class LoadPortnameTask(val task: LoadPortTask) {
 
 

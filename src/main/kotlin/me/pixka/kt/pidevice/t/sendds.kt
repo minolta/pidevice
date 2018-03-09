@@ -20,7 +20,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class Sendds(val task: SenddsTask) {
 
 
@@ -58,6 +58,7 @@ class Sendds(val task: SenddsTask) {
 }
 
 @Component
+@Profile("pi","lite")
 class SenddsTask(val io: Piio, val service: Ds18valueService,
                  val http: HttpControl, val cfg: Configfilekt,
                  val err: ErrorlogService, val dbcfg: DbconfigService) {

@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class LoadMainJobTask(val task: LoadjobTask) {
 
 
@@ -59,6 +59,7 @@ class LoadMainJobTask(val task: LoadjobTask) {
 }
 
 @Component
+@Profile("pi","lite")
 class LoadjobTask(val service: JobService,
                   val dbcfg: DbconfigService,
                   val http: HttpControl, val err: ErrorlogService) {

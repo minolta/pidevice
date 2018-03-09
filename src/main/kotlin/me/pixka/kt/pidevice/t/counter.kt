@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.t
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.run.PijobrunInterface
 import me.pixka.kt.run.Workercounter
@@ -23,7 +24,7 @@ import java.util.concurrent.Future
 class CounterOther(val context: ApplicationContext,
                    val pijobService: PijobService,
                    val js: JobService, val io: Piio,
-                   val ss: SensorService, val gpio: GpioService,val dps:DisplayService) {
+                   val ss: SensorService, val gpio: GpioService,val dps:DisplayService,val ms:MessageService) {
     var pool = context.getBean("pool") as ExecutorService
 
     var runjobs = ArrayList<runInfo>()
@@ -46,7 +47,7 @@ class CounterOther(val context: ApplicationContext,
             if (canrun.size > 0) {
                 for (job in canrun) {
                     logger.debug("Start task job ${job.id}")
-                    var task = Workercounter(job, gpio,ss,dps)
+                    var task = Workercounter(job, gpio,ss,dps,ms)
                     var f = pool.submit(task)
                     logger.debug("Future ${f}")
                     var run = runInfo(task, f, Date())

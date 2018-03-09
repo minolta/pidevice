@@ -2,6 +2,7 @@ package me.pixka.kt.run
 
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.pibase.d.Pijob
 import org.joda.time.DateTime
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Profile("pi")
-class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorService, val dps: DisplayService) : Runnable, PijobrunInterface {
+class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorService, val dps: DisplayService, val ms: MessageService) : Runnable, PijobrunInterface {
 
     var run: Long? = null
     var timeout: Long? = 10000 //สำหรับหมดเวลา
@@ -43,7 +44,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
         this.pijob = pijob
     }
 
-
+    var messageto = false
     override fun run() {
 
         logger.debug("Start run counter job ID ***${pijob.id}***")
@@ -70,6 +71,11 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                         run = pijob.runtime //เวลาในการ run เอ็นวินาที
                         finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
                     }
+                    if (!messageto) {
+                        messageto = true
+                        ms.message("Start Counter 90  Close : ${finishrun}", "info")
+                    }
+
                     //runtime = Date()
 
                     var rt = DateTime()
@@ -83,6 +89,8 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                     completerun = r.seconds
                     if (r.seconds >= havetorun) {
                         logger.debug("End run counter job ID ***${pijob.id}***")
+                        messageto = false
+                        ms.message("Interrup ", "info")
                         isRun = false
                         break
                     }
@@ -97,6 +105,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                     timeoutcount++
                     if (timeoutcount >= timeout?.toInt()!!) {
                         logger.error("Time out count exit ${timeoutcount}")
+                        ms.message("Tmp is under rang exits count", "error")
                         break
                     }
 

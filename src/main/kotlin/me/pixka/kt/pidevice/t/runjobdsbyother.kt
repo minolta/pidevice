@@ -1,6 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.DSOTHERWorker
@@ -58,7 +59,7 @@ class Finddsjobbyother(val task: RunotherTask) {
 class RunotherTask(var pjs: PijobService, var js: JobService,
                    val ts: TaskService,
                    val gpios: GpioService,
-                   val ss: SensorService) {
+                   val ss: SensorService,val ms:MessageService) {
     @Async("aa")
     fun run(): Future<Boolean>?  {
         logger.debug("Start run DSOTHER")
@@ -87,7 +88,7 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
         //หลังจากได้ job ที่อยู่ในเงือนไขที่จะทำงานแล้วก็ส่งไปทำงาน
         if (jobforrun.size > 0)
             for (r in jobforrun) {
-                var w = DSOTHERWorker(r, gpios)
+                var w = DSOTHERWorker(r, gpios,ms)
                 ts.run(w)
             }
 

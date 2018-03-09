@@ -1,6 +1,8 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.HWorker
 import me.pixka.pibase.d.Pijob
@@ -17,10 +19,10 @@ import org.springframework.stereotype.Component
 * */
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
                 , val pjs: PijobService, val js: JobService,
-                val gpios: GpioService) {
+                val gpios: GpioService,val ms:MessageService,val io: Piio) {
 
 
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
@@ -52,7 +54,7 @@ class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
     fun exec(jobs: List<Pijob>) {
 
         for (j in jobs) {
-            var work = HWorker(j, gpios) //เปลียนเป็น hwork
+            var work = HWorker(j, gpios,ms,io) //เปลียนเป็น hwork
             ts.run(work)
         }
     }

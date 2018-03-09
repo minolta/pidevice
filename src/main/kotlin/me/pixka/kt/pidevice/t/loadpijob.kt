@@ -19,7 +19,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class Loadpijob(val task: LoadpijobTask) {
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
@@ -53,6 +53,7 @@ class Loadpijob(val task: LoadpijobTask) {
 }
 
 @Component
+@Profile("pi","lite")
 class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService, val dbcfg: DbconfigService
                     , val io: Piio, val http: HttpControl,
                     val psijs: PortstatusinjobService, val ls: LogistateService,
@@ -250,6 +251,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             ref.copy(item)
             ref.portname = ps.findorcreate(item.portname?.name!!)
             ref.status = ls.findorcreate(item.status?.name!!)
+            ref.enable = item.enable
             return psijs.save(ref)
         } catch (e: Exception) {
             logger.error("loadpijob edit error : " + e.message)

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogService, val dbcfg: DbconfigService) {
     val hlimit = BigDecimal("100")
     var old: Dhtvalue? = null

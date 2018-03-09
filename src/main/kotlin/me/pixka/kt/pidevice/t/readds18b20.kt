@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
-@Profile("pi")
+@Profile("pi","lite")
 class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorService, val err: ErrorlogService, val dbcfg: DbconfigService) {
 
     var oldvalue = ArrayList<dsbuf>()

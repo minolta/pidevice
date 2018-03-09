@@ -2,7 +2,9 @@ package me.pixka.kt.run
 
 import com.pi4j.io.gpio.GpioPinDigitalOutput
 import com.pi4j.io.gpio.PinState
+import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.d.Portstatusinjob
 import org.slf4j.LoggerFactory
@@ -12,8 +14,8 @@ import java.util.concurrent.TimeUnit
 /**
  * ใช้สำหรับ Run pijob
  */
-@Profile("pi")
-open class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterface {
+@Profile("pi","lite")
+open class Worker(var pijob: Pijob, var gpio: GpioService, val ms: MessageService, val io: Piio) : Runnable, PijobrunInterface {
     override fun getPijobid(): Long {
         return pijob.id
     }
@@ -43,26 +45,25 @@ open class Worker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunI
             jobid = pijob.id
 
             logger.debug("Startworker ${pijob.id}")
-
+            ms.message("Start work id:${pijob.id} ", "info")
             try {
                 setport(ports!!)
-            }catch (e:Exception)
-            {
+            } catch (e: Exception) {
                 logger.error("Set port error ${e.message}")
             }
             TimeUnit.SECONDS.sleep(runtime!!)
             logger.debug("Run time: ${runtime}")
             try {
                 resetport(ports)
-            }catch(e:Exception)
-            {
+            } catch (e: Exception) {
                 logger.error("Error reset PORT ${e.message}")
+                ms.message("Error : ${e.message}", "error")
             }
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
             //end task
-
             logger.debug("End job ${pijob.id}")
+            ms.message("End job ${pijob.id}", "info")
         } catch (e: Exception) {
             logger.error("WOrking :${e.message}")
 

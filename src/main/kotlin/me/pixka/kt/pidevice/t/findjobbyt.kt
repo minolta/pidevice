@@ -1,6 +1,8 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pidevice.o.DS18obj
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Worker
@@ -23,7 +25,7 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("pi")
 class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService, var dsobj: DS18obj) {
+                             val ts: TaskService, var dsobj: DS18obj,val ms:MessageService,val io:Piio) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 12000)
     fun run() {
@@ -64,7 +66,7 @@ class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpio
 
     fun runpiJob(runs: ArrayList<Pijob>) {
         for (r in runs) {
-            var w = Worker(r, gpios)
+            var w = Worker(r, gpios,ms,io)
             ts.run(w)
         }
     }
