@@ -51,7 +51,11 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
 
         for (j in jobs) {
             var work = HWorker(j, gpios,ms,io) //เปลียนเป็น hwork
-            ts.run(work)
+
+            if(ts.run(work))
+            {
+                ms.message("Run H by time id : ${work.getPijobid()}" ,"runjob")
+            }
         }
     }
 

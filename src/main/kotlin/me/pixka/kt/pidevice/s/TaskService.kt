@@ -24,11 +24,9 @@ class TaskService(val context: ApplicationContext) {
             TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
             ThreadPoolExecutor.CallerRunsPolicy())
 
-    fun run(work: PijobrunInterface) {
+    fun run(work: PijobrunInterface): Boolean {
 
         val pool = context.getBean("pool") as ExecutorService
-
-
         var forrun = checkalreadyrun(work)
         logger.debug("CheckJOB job can run ? ${forrun}")
         if (forrun != null) {
@@ -42,11 +40,17 @@ class TaskService(val context: ApplicationContext) {
             */
             logger.debug("Run ${forrun.getPijobid()} Buffer size ${runinglist.size}")
         }
+        else
+        {
+            //มี job นี้ run อยู่แล้ว
+            return false
+        }
         /*
         var tp = threadpool as ThreadPoolExecutor
         logger.debug("Queue size :${tp.queue.size} Running size : ${tp.activeCount}  Job in buffer [${runinglist.size}] ")
         */
         logger.debug("CheckJOB Jobs in List  ${runinglist.size} ThreadInfo")
+        return true
 
     }
 
@@ -56,7 +60,7 @@ class TaskService(val context: ApplicationContext) {
      */
     fun checkalreadyrun(w: PijobrunInterface): PijobrunInterface? {
 
-        logger.debug("CheckJOB runing size: ${runinglist.size}")
+        logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")
         if (runinglist.size > 0) {
             logger.debug("CheckJOB have thread run ${runinglist.size}")
             for (b in runinglist) {
@@ -75,6 +79,7 @@ class TaskService(val context: ApplicationContext) {
             logger.debug("CheckJOB This jobcanrun ${w}")
             return w //ถ้าไม่เจอ return w ไป exec
         } else {
+            logger.debug("CheckJOB This jobcanrun ${w}")
             return w
         }
 

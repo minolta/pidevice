@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("pi")
 class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService, var dsobj: DS18obj,val ms:MessageService,val io:Piio) {
+                             val ts: TaskService, var dsobj: DS18obj, val ms: MessageService, val io: Piio) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 12000)
     fun run() {
@@ -66,7 +66,16 @@ class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpio
 
     fun runpiJob(runs: ArrayList<Pijob>) {
         for (r in runs) {
-            var w = Worker(r, gpios,ms,io)
+
+            if (r.runwithid != null) { //ต้อง Run job อื่นด้วย
+                var withjob = pjs.findByRefid(r.runwithid)
+                if (withjob != null) {
+                    var w = Worker(withjob, gpios, io)
+                    logger.debug("Have Other job runwith this job ${withjob}")
+                    ts.run(w)
+                }
+            }
+            var w = Worker(r, gpios, io)
             ts.run(w)
         }
     }

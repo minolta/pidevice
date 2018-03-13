@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * ใช้สำหรับ Run pijob
  */
 @Profile("pi","lite")
-open class Worker(var pijob: Pijob, var gpio: GpioService, val ms: MessageService, val io: Piio) : Runnable, PijobrunInterface {
+open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio) : Runnable, PijobrunInterface {
     override fun getPijobid(): Long {
         return pijob.id
     }
@@ -45,7 +45,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val ms: MessageServic
             jobid = pijob.id
 
             logger.debug("Startworker ${pijob.id}")
-            ms.message("Start work id:${pijob.id} ", "info")
+          //  ms.message("Start work id:${pijob.id} ", "info")
             try {
                 setport(ports!!)
             } catch (e: Exception) {
@@ -57,13 +57,13 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val ms: MessageServic
                 resetport(ports)
             } catch (e: Exception) {
                 logger.error("Error reset PORT ${e.message}")
-                ms.message("Error : ${e.message}", "error")
+          //      ms.message("Error : ${e.message}", "error")
             }
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
             //end task
             logger.debug("End job ${pijob.id}")
-            ms.message("End job ${pijob.id}", "info")
+          //  ms.message("End job ${pijob.id}", "info")
         } catch (e: Exception) {
             logger.error("WOrking :${e.message}")
 

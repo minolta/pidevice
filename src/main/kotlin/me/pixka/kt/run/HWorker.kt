@@ -9,7 +9,7 @@ import me.pixka.pibase.d.Portstatusinjob
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.TimeUnit
 @Profile("pi","lite")
-class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: Piio) : Worker(pj, gi, m, i) {
+class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: Piio) : Worker(pj, gi,i) {
 
     override fun setport(ports: List<Portstatusinjob>) {
         var runtime = pijob.runtime
@@ -23,7 +23,7 @@ class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: 
                     var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
                     logger.debug("Pin: ${pin}")
 
-                    m.message("Open Port ${pin} in ${runtime} sec ", "info")
+                 //   m.message("Open Port ${pin} in ${runtime} sec ", "info")
                     //save old state
                     //  var b = Pinbackup(pin, pin.state)
                     //   pinbackuplist.add(b)
