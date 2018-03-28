@@ -5,8 +5,8 @@ import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.DS18value
 import me.pixka.ktbase.io.Configfilekt
-import me.pixka.pibase.d.DS18value
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.Ds18valueService
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -20,7 +20,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class Sendds(val task: SenddsTask) {
 
 
@@ -58,7 +58,7 @@ class Sendds(val task: SenddsTask) {
 }
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class SenddsTask(val io: Piio, val service: Ds18valueService,
                  val http: HttpControl, val cfg: Configfilekt,
                  val err: ErrorlogService, val dbcfg: DbconfigService) {

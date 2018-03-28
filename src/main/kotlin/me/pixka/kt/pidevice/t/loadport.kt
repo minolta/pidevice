@@ -5,7 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
-import me.pixka.pibase.d.Portname
+import me.pixka.kt.pibase.d.Portname
 import me.pixka.pibase.s.PortnameService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -18,7 +18,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class LoadPortnameTask(val task: LoadPortTask) {
 
 

@@ -1,10 +1,10 @@
 package me.pixka.kt.run
 
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
-import me.pixka.pibase.d.Pijob
 import org.joda.time.DateTime
 import org.joda.time.Interval
 import org.joda.time.Period
@@ -27,6 +27,9 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
     var finishrun: Date? = null //เวลาที่ เสร็จ
     var isRun = true
     var period: Period? = null
+    override fun getPJ(): Pijob {
+        return pijob
+    }
 
     override fun getPijobid(): Long {
         return pijob.id

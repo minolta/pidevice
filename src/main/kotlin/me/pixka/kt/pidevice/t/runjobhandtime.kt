@@ -1,11 +1,11 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.HWorker
-import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
                  , val pjs: PijobService, val js: JobService,
                  val gpios: GpioService, val ms: MessageService, val io: Piio) {
@@ -50,11 +50,10 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
     fun exec(jobs: List<Pijob>) {
 
         for (j in jobs) {
-            var work = HWorker(j, gpios,ms,io) //เปลียนเป็น hwork
+            var work = HWorker(j, gpios, ms, io) //เปลียนเป็น hwork
 
-            if(ts.run(work))
-            {
-                ms.message("Run H by time id : ${work.getPijobid()}" ,"runjob")
+            if (ts.run(work)) {
+                ms.message("Run H by time id : ${work.getPijobid()}", "runjob")
             }
         }
     }

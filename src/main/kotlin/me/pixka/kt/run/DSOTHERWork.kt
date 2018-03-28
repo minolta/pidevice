@@ -1,17 +1,21 @@
 package me.pixka.kt.run
 
+import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
-import me.pixka.pibase.d.Pijob
-import me.pixka.pibase.d.Portstatusinjob
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.TimeUnit
 
 @Profile("pi")
-class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService,val ms:MessageService) : Runnable, PijobrunInterface {
+class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService, val ms: MessageService) : Runnable, PijobrunInterface {
     override fun getPijobid(): Long {
         return pijob.id
+    }
+
+    override fun getPJ(): Pijob {
+        return pijob
     }
 
     override fun runStatus(): Boolean {
@@ -40,7 +44,7 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService,val ms:MessageServic
             jobid = pijob.id
 
             logger.debug("Startworker ${pijob.id}")
-            ms.message("Start DSOTER Worker","info")
+            ms.message("Start DSOTER Worker", "info")
             try {
                 setport(ports!!)
             } catch (e: Exception) {
@@ -60,7 +64,7 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService,val ms:MessageServic
             //end task
 
             logger.debug("End job DSOTHER ${pijob.id}")
-            ms.message("End DSOTER Worker","info")
+            ms.message("End DSOTER Worker", "info")
         } catch (e: Exception) {
             logger.error("DSOTHER ${e.message}")
         }

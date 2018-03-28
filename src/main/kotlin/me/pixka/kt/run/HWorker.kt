@@ -2,14 +2,15 @@ package me.pixka.kt.run
 
 import com.pi4j.io.gpio.GpioPinDigitalOutput
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
-import me.pixka.pibase.d.Pijob
-import me.pixka.pibase.d.Portstatusinjob
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.TimeUnit
-@Profile("pi","lite")
-class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: Piio) : Worker(pj, gi,i) {
+
+@Profile("pi", "lite")
+class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: Piio) : Worker(pj, gi, i) {
 
     override fun setport(ports: List<Portstatusinjob>) {
         var runtime = pijob.runtime
@@ -18,12 +19,15 @@ class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: 
 
             for (port in ports) {
 
-                if (port.enable != null && port.enable == true) {
+                if (port.enable == null || port.enable == false) {
+                    //ถ้า port เป็น null หรือ enable ==  flase ช้ามไปเลยไม่ต้องทำงาน
+                    logger.debug("Not set Port : ${port}")
+                } else {
                     logger.debug("Port for pijob ${port}")
                     var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
                     logger.debug("Pin: ${pin}")
 
-                 //   m.message("Open Port ${pin} in ${runtime} sec ", "info")
+                    //   m.message("Open Port ${pin} in ${runtime} sec ", "info")
                     //save old state
                     //  var b = Pinbackup(pin, pin.state)
                     //   pinbackuplist.add(b)
@@ -43,6 +47,7 @@ class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: 
                     gpio.resettoDefault(pin)
                 }
             }
+
         } catch (e: Exception) {
             logger.error("Set port ${e.message}")
             throw e

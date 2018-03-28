@@ -1,7 +1,7 @@
 package me.pixka.kt.pidevice.c
 
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.pibase.d.DS18value
+import me.pixka.kt.pibase.d.DS18value
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.Ds18valueService
 import org.slf4j.LoggerFactory

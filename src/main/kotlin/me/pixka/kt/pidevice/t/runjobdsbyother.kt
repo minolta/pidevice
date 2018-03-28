@@ -1,12 +1,12 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.kt.pibase.d.DS18value
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.DSOTHERWorker
-import me.pixka.pibase.d.DS18value
-import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
@@ -59,9 +59,9 @@ class Finddsjobbyother(val task: RunotherTask) {
 class RunotherTask(var pjs: PijobService, var js: JobService,
                    val ts: TaskService,
                    val gpios: GpioService,
-                   val ss: SensorService,val ms:MessageService) {
+                   val ss: SensorService, val ms: MessageService) {
     @Async("aa")
-    fun run(): Future<Boolean>?  {
+    fun run(): Future<Boolean>? {
         logger.debug("Start run DSOTHER")
         var DSOTHER = js.findByName("DSOTHER")
 
@@ -88,7 +88,7 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
         //หลังจากได้ job ที่อยู่ในเงือนไขที่จะทำงานแล้วก็ส่งไปทำงาน
         if (jobforrun.size > 0)
             for (r in jobforrun) {
-                var w = DSOTHERWorker(r, gpios,ms)
+                var w = DSOTHERWorker(r, gpios, ms)
                 ts.run(w)
             }
 

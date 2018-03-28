@@ -1,20 +1,24 @@
 package me.pixka.kt.run
 
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.SensorService
-import me.pixka.pibase.d.Pijob
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
 
 @Profile("pi")
-class DSDPWorker (
+class DSDPWorker(
         val ss: SensorService,
         val dps: DisplayService,
         var pijob: Pijob) : Runnable, PijobrunInterface {
 
+
+    override fun getPJ(): Pijob {
+        return pijob
+    }
 
     override fun getPijobid(): Long {
         return pijob.id
@@ -63,9 +67,8 @@ class DSDPWorker (
                     }
                     dps.lockdisplay(this)
                     var d = df.format(dsvalue.t)
-                    if(d.length >4)
-                    {
-                        d=  "*"+d100.format(dsvalue.t)
+                    if (d.length > 4) {
+                        d = "*" + d100.format(dsvalue.t)
 
                     }
                     dps.dot.print(d)

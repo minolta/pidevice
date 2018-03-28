@@ -1,13 +1,13 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.run.PijobrunInterface
 import me.pixka.kt.run.Workercounter
-import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
@@ -24,7 +24,7 @@ import java.util.concurrent.Future
 class CounterOther(val context: ApplicationContext,
                    val pijobService: PijobService,
                    val js: JobService, val io: Piio,
-                   val ss: SensorService, val gpio: GpioService,val dps:DisplayService,val ms:MessageService) {
+                   val ss: SensorService, val gpio: GpioService, val dps: DisplayService, val ms: MessageService) {
     var pool = context.getBean("pool") as ExecutorService
 
     var runjobs = ArrayList<runInfo>()
@@ -47,7 +47,7 @@ class CounterOther(val context: ApplicationContext,
             if (canrun.size > 0) {
                 for (job in canrun) {
                     logger.debug("Start task job ${job.id}")
-                    var task = Workercounter(job, gpio,ss,dps,ms)
+                    var task = Workercounter(job, gpio, ss, dps, ms)
                     var f = pool.submit(task)
                     logger.debug("Future ${f}")
                     var run = runInfo(task, f, Date())
@@ -118,18 +118,15 @@ class CounterOther(val context: ApplicationContext,
                 logger.debug("Value: ${value}")
                 if (value != null) {
 
-                    var v  = value.t?.toInt()
+                    var v = value.t?.toInt()
 
                     if (v!! >= low!! && v <= high!!) {
                         //ถ้าอยู่ในช่วงจะทำการนับ
                         buf.add(job)
-                    }
-                    else
-                    {
+                    } else {
                         logger.error("Value not in range  ${low} < ${value.t} > ${high}")
                     }
-                }
-                else{
+                } else {
                     logger.error("Value is null ${job}")
                 }
 

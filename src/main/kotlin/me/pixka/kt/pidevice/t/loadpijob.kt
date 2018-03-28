@@ -6,7 +6,7 @@ import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.pibase.d.*
+import me.pixka.kt.pibase.d.*
 import me.pixka.pibase.s.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -19,7 +19,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class Loadpijob(val task: LoadpijobTask) {
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
@@ -53,7 +53,7 @@ class Loadpijob(val task: LoadpijobTask) {
 }
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService, val dbcfg: DbconfigService
                     , val io: Piio, val http: HttpControl,
                     val psijs: PortstatusinjobService, val ls: LogistateService,

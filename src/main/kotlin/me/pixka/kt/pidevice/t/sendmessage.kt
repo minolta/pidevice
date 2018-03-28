@@ -6,9 +6,8 @@ import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Message
+import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.s.MessageService
-import me.pixka.ktbase.io.Configfilekt
-import me.pixka.pibase.d.PiDevice
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
@@ -20,7 +19,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class Sendmessage(val task: SendmessageTask) {
 
 
@@ -59,7 +58,7 @@ class Sendmessage(val task: SendmessageTask) {
 
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class SendmessageTask(val io: Piio, val service: MessageService,
                       val http: HttpControl,
                       val err: ErrorlogService, val dbcfg: DbconfigService) {
@@ -101,7 +100,7 @@ class SendmessageTask(val io: Piio, val service: MessageService,
                         var forsend = Message()
                         forsend.messagedate = item.messagedate
                         forsend.messagetype = item.messagetype
-                        forsend.message  = item.message
+                        forsend.message = item.message
                         var p = PiDevice()
                         p.mac = io.wifiMacAddress()
                         forsend.pidevice = p

@@ -6,11 +6,10 @@ import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.Devicecheckin
 import me.pixka.kt.pibase.d.Message
+import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.s.MessagetypeService
-import me.pixka.ktbase.io.Configfilekt
-import me.pixka.pibase.d.Devicecheckin
-import me.pixka.pibase.d.PiDevice
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DevicecheckinService
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -27,7 +26,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class Checkin(val c: CheckinTask) {
 
 
@@ -67,7 +66,7 @@ class Checkin(val c: CheckinTask) {
 }
 
 @Component
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class CheckinTask(val erl: ErrorlogService, val io: Piio, val http: HttpControl,
                   val ds: DevicecheckinService, val dbcfg: DbconfigService, val mtservice: MessagetypeService, val ips: IptableServicekt) {
     var target: String? = null
