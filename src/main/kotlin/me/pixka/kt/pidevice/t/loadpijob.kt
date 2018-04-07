@@ -115,9 +115,13 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
     fun newotherdevice(pd: PiDevice): PiDevice? {
 
         try {
+
             var other = pds.findByMac(pd.mac!!)
+            logger.debug("New Other device ${pd} Have already in device")
             if (other == null) {
-                var p = pds.create(pd.mac!!)
+
+                var p = pds.create(pd.mac!!,pd.id)
+                logger.debug("not found in this device create new ${pd} new obj ${p}")
                 return p
             }
 

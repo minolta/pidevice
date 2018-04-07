@@ -72,6 +72,7 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
 
         //ค้นหางานที่ต้องอ่านค่า DS จากตัวอื่น
         var jobs = pjs.findDSOTHERJob(DSOTHER.id)
+        logger.debug("Found other job(s) ${jobs}")
         var jobforrun = ArrayList<Pijob>()
         if (jobs != null) {
             for (job in jobs) {
@@ -108,31 +109,35 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
         var desid = job.desdevice_id
         var sensorid = job.ds18sensor_id
 
-
+        logger.debug("Check other job can run ${job}")
         if (desid != null) {//ถ้าระบุ desid ให้ทำงานได้
 
             var dsvalue: DS18value? = null
             if (sensorid != null) {//ถ้าระบุ sensor id ด้วย ให้ อ่าน จาก sensor ด้วย
                 dsvalue = ss.readDsOther(desid, sensorid)
+                logger.debug("Read Sensor ${sensorid} from other device ${desid} result ${dsvalue}")
             } else {
                 //ถ้าไม่ระบุให้อ่านจาก Default sensor
                 dsvalue = readDsOther(desid)
+                logger.debug("Read default sensor from Other ${desid}")
             }
 
 
             if (dsvalue != null) {
+            logger.debug("Have result from other ${dsvalue}")
                 var tlow = job.tlow
                 var thigh = job.thigh
                 var v = dsvalue.t
-
+                logger.debug("Check Value in ranger ? ")
                 if (v?.compareTo(tlow)!! >= 0 && v.compareTo(thigh) <= 0) {
+                    logger.debug("Other job can run ${job}")
                     return job
                 }
             }
 
 
         }
-
+        logger.error("Not found other job for run")
         return null
     }
 

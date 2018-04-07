@@ -25,6 +25,8 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
     var runtime: Date? = null
     var completerun: Int? = 0 //เวลาที่ run ไปแล้ว
     var finishrun: Date? = null //เวลาที่ เสร็จ
+    var next3: Date? = null
+
     var isRun = true
     var period: Period? = null
     override fun getPJ(): Pijob {
@@ -73,6 +75,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                         timeout = pijob.waittime //
                         run = pijob.runtime //เวลาในการ run เอ็นวินาที
                         finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
+                        next3 = DateTime().plusSeconds(pijob.runtime?.toInt()!!- 7200).toDate() //เวลาเสร็จ
                     }
                     if (!messageto) {
                         messageto = true
@@ -146,7 +149,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
             try {
                 logger.debug("Start lock display ")
                 var display = dps.lockdisplay(this)
-                display.showMessage("Counter in ${completerun} Sec Close AT: ${df.format(finishrun)} ")
+                display.showMessage("Counter in ${completerun}  Next gas 3 ${df.format(next3)} Sec Close AT: ${df.format(finishrun)}  ")
                 logger.debug("Display ok.")
             } catch (e: Exception) {
                 logger.error("Error: ${e.message}")

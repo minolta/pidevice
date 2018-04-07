@@ -4,6 +4,7 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
+import me.pixka.kt.pidevice.s.Checkwaterservice
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.HWorker
 import me.pixka.pibase.s.DhtvalueService
@@ -19,7 +20,8 @@ import java.util.*
 @Profile("pi", "lite")
 class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
                  , val pjs: PijobService, val js: JobService,
-                 val gpios: GpioService, val ms: MessageService, val io: Piio) {
+                 val gpios: GpioService, val ms: MessageService, val io: Piio,
+                 val cws: Checkwaterservice) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     fun run() {
@@ -51,13 +53,39 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
 
         for (j in jobs) {
             var work = HWorker(j, gpios, ms, io) //เปลียนเป็น hwork
+            if (ts.checkalreadyrun(work) != null) {
+                var et = endtime(j)
+                logger.debug("End job time ${et}")
+                if (et != null && cws.can(et)) {
 
-            if (ts.run(work)) {
-                ms.message("Run H by time id : ${work.getPijobid()}", "runjob")
+                    if (ts.run(work)) {
+                        ms.message("Run H by time id : ${work.getPijobid()}", "runjob")
+                    }
+                } else {
+                    logger.error("Some device use water ")
+                }
             }
+
         }
     }
 
+    fun endtime(job: Pijob): Date? {
+        try {
+            var rt = job.runtime!! * 1000
+            //var wt = job.waittime!! * 1000
+            var ports = job.ports
+            var t = 1
+            if (ports != null) {
+                t = ports.size
+            }
+            //rt x t == เวลาการเปิดน้ำทั้งหมด
+            var n = Date(Date().time + (rt * t))
+            return n
+        } catch (e: Exception) {
+            logger.error("error ${e.message}")
+        }
+        return null
+    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(RunjobByHT::class.java)

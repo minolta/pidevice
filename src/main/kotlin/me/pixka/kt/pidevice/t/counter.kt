@@ -117,9 +117,7 @@ class CounterOther(val context: ApplicationContext,
                 var value = ss.readDsOther(desid!!, senid!!)
                 logger.debug("Value: ${value}")
                 if (value != null) {
-
                     var v = value.t?.toInt()
-
                     if (v!! >= low!! && v <= high!!) {
                         //ถ้าอยู่ในช่วงจะทำการนับ
                         buf.add(job)
