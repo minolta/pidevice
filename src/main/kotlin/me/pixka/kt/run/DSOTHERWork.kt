@@ -6,10 +6,23 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Profile("pi")
 class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService, val ms: MessageService) : Runnable, PijobrunInterface {
+    override fun state(): String? {
+        return state
+    }
+
+    override fun startRun(): Date? {
+        return startRun
+    }
+    var state:String? =" Crate "
+
+    var startRun: Date?=null
+
+
     override fun getPijobid(): Long {
         return pijob.id
     }
@@ -38,6 +51,8 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService, val ms: MessageServ
         try {
 
             isRun = true
+            startRun = Date()
+            state = " Star Run "+Date()
             var ports = pijob.ports
             var runtime = pijob.runtime
             var waittime = pijob.waittime
@@ -46,18 +61,22 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService, val ms: MessageServ
             logger.debug("Startworker ${pijob.id}")
             ms.message("Start DSOTER Worker", "info")
             try {
+                state = "Start set port"
                 setport(ports!!)
             } catch (e: Exception) {
+                state = "Set port error ${e.message}"
                 logger.error("Set port error ${e.message}")
             }
-
+            state = " Run time : ${runtime}"
             TimeUnit.SECONDS.sleep(runtime!!)
             logger.debug("Run time: ${runtime}")
             try {
+                state = "Reset port"
                 resetport(ports!!)
             } catch (e: Exception) {
                 logger.error("Error reset Port ${e.message}")
             }
+            state = " Wait time: ${waittime}"
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
 
@@ -69,6 +88,7 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService, val ms: MessageServ
             logger.error("DSOTHER ${e.message}")
         }
 
+        state = " Run complate "
         isRun = false
     }
 

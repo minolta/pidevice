@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.s.SensorService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import java.text.DecimalFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Profile("pi")
@@ -14,7 +15,16 @@ class DSDPWorker(
         val ss: SensorService,
         val dps: DisplayService,
         var pijob: Pijob) : Runnable, PijobrunInterface {
+    override fun state(): String? {
+        return state
+    }
 
+    var state:String ? = " Create "
+    override fun startRun(): Date? {
+        return startRun
+    }
+
+    var startRun: Date? = null
 
     override fun getPJ(): Pijob {
         return pijob
@@ -102,6 +112,17 @@ class DSDPWorker(
         }
 
         return false
+    }
+
+    override fun hashCode(): Int {
+        var result = ss.hashCode()
+        result = 31 * result + dps.hashCode()
+        result = 31 * result + pijob.hashCode()
+        result = 31 * result + isRun.hashCode()
+        result = 31 * result + (gpio?.hashCode() ?: 0)
+        result = 31 * result + df.hashCode()
+        result = 31 * result + d100.hashCode()
+        return result
     }
 
     companion object {

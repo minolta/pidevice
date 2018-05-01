@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.t.ThreadInfo
+import me.pixka.kt.run.PijobrunInterface
 import me.pixka.pi.io.Dotmatrix
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
@@ -13,7 +14,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.web.bind.annotation.*
 import java.io.BufferedReader
 import java.io.File
-import java.util.ArrayList
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -120,7 +121,7 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
                 ThreadInfo.logger.debug("Runs id : " + run.getPijobid().toString() + " " + run.runStatus())
 
                 var info = "Runs id : " + run.getPijobid().toString() + " " + run.runStatus()
-                var r = Runobj(info, run.getPJ())
+                var r = Runobj(info, run.getPJ(), run.startRun(),run.state())
                 buf.add(r)
             }
         }
@@ -148,6 +149,6 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
     }
 }
 
-class Runobj(var info: String? = null, var pijob: Pijob? = null)
+class Runobj(var info: String? = null, var pijob: Pijob? = null, var startRun: Date? = null,var state:String?=null)
 
 class ShowThread(var info: HashMap<String, String>? = null, var runs: ArrayList<Runobj>? = null)

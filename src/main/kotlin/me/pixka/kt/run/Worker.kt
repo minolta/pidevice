@@ -8,6 +8,7 @@ import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 /**
@@ -15,6 +16,15 @@ import java.util.concurrent.TimeUnit
  */
 @Profile("pi", "lite")
 open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio) : Runnable, PijobrunInterface {
+    override fun state(): String? {
+        return state
+    }
+
+    override fun startRun(): Date? {
+        return startrun
+    }
+    var state:String?= " Create "
+    var startrun : Date? = null
     override fun getPijobid(): Long {
         return pijob.id
     }
@@ -42,6 +52,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio) : Runna
     override fun run() {
         try {
             isRun = true
+            startrun = Date()
             var ports = pijob.ports
             var runtime = pijob.runtime
             var waittime = pijob.waittime
@@ -60,18 +71,22 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio) : Runna
 
 
                 try {
+                    state = "Run Set  ports"
                     setport(ports!!)
                 } catch (e: Exception) {
                     logger.error("Set port error ${e.message}")
                 }
+                state = " Run Time ${runtime}"
                 TimeUnit.SECONDS.sleep(runtime!!)
                 logger.debug("Run time: ${runtime}")
                 try {
+                    state = " Reset port"
                     resetport(ports)
                 } catch (e: Exception) {
                     logger.error("Error reset PORT ${e.message}")
                     //      ms.message("Error : ${e.message}", "error")
                 }
+                state = "Wait ${waittime}"
                 TimeUnit.SECONDS.sleep(waittime!!)
                 logger.debug("Wait time: ${waittime}")
                 //end task
