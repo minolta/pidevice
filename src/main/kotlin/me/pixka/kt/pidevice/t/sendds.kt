@@ -97,7 +97,7 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
                 var re: CloseableHttpResponse? = null
                 try {
                     val info = Infoobj()
-
+                    info.token = System.getProperty("token")
                     // info.ip = io.wifiIpAddress()
                     info.mac = io.wifiMacAddress()
                     info.ds18value = item

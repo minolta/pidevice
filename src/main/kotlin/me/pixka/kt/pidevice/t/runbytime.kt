@@ -34,16 +34,14 @@ class RunjobByTime(val dhts: DhtvalueService, val ts: TaskService
             logger.error("Time Job not found rumbytime ")
             return
         }
-        var lasth = dhts.last()
-        logger.debug("Last dhtvalue rumbytime : ${lasth}")
-        if (lasth != null) {
-            var jobs = pjs.findByTime(Date(), JOB.id)
-            logger.debug("Found !! rumbytime  ${jobs!!.size}")
-            if (jobs != null) {
-                logger.debug("Found Time Job rumbytime ${jobs.size}")
-                exec(jobs)
-            }
+
+        var jobs = pjs.findByTime(Date(), JOB.id)
+        logger.debug("Found !! rumbytime  ${jobs!!.size}")
+        if (jobs != null) {
+            logger.debug("Found Time Job rumbytime ${jobs.size}")
+            exec(jobs)
         }
+
 
         //  sensorService.readDhtvalue()
     }
