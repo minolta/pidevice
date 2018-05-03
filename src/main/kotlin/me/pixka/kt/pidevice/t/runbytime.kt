@@ -9,6 +9,7 @@ import me.pixka.kt.run.Worker
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -20,7 +21,7 @@ import java.util.*
 @Profile("pi", "lite")
 class RunjobByTime(val dhts: DhtvalueService, val ts: TaskService
                    , val pjs: PijobService, val js: JobService,
-                   val gpios: GpioService, val ms: MessageService, val io: Piio) {
+                   val gpios: GpioService, val ms: MessageService, val io: Piio,val ps:PortstatusinjobService) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     fun run() {
@@ -49,7 +50,7 @@ class RunjobByTime(val dhts: DhtvalueService, val ts: TaskService
     fun exec(jobs: List<Pijob>) {
 
         for (j in jobs) {
-            var work = Worker(j, gpios, io) //เปลียนเป็น hwork
+            var work = Worker(j, gpios, io,ps) //เปลียนเป็น hwork
 
             if (ts.run(work)) {
                 ms.message("Run rumbytime id : ${work.getPijobid()}", "runjob")

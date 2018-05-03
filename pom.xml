@@ -26,6 +26,7 @@
         <kotlin.version>1.2.31</kotlin.version>
         <hibernate.version>5.2.12.Final</hibernate.version>
         <pi4j.version>1.2-SNAPSHOT</pi4j.version>
+        <jackson.version>2.9.5</jackson.version>
     </properties>
     <!--
     <repositories>
@@ -118,7 +119,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
-            <version>2.9.2</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>

@@ -6,11 +6,12 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.TimeUnit
 
 @Profile("pi", "lite")
-class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: Piio) : Worker(pj, gi, i) {
+class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: Piio, val ppp: PortstatusinjobService) : Worker(pj, gi, i, ppp) {
 
     override fun setport(ports: List<Portstatusinjob>) {
         var runtime = pijob.runtime

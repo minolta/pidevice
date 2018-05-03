@@ -9,6 +9,7 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.DSOTHERWorker
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
@@ -58,7 +59,7 @@ class Finddsjobbyother(val task: RunotherTask) {
 @Profile("pi")
 class RunotherTask(var pjs: PijobService, var js: JobService,
                    val ts: TaskService,
-                   val gpios: GpioService,
+                   val gpios: GpioService,val ps:PortstatusinjobService,
                    val ss: SensorService, val ms: MessageService) {
     @Async("aa")
     fun run(): Future<Boolean>? {
@@ -89,7 +90,7 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
         //หลังจากได้ job ที่อยู่ในเงือนไขที่จะทำงานแล้วก็ส่งไปทำงาน
         if (jobforrun.size > 0)
             for (r in jobforrun) {
-                var w = DSOTHERWorker(r, gpios, ms)
+                var w = DSOTHERWorker(r, gpios, ms,ps)
                 ts.run(w)
             }
 

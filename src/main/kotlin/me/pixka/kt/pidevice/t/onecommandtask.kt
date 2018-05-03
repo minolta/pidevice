@@ -14,6 +14,7 @@ import me.pixka.kt.run.Worker
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -26,7 +27,7 @@ import java.io.IOException
 class Runonecommand(val dhts: DhtvalueService, val ts: TaskService
                     , val pjs: PijobService, val js: JobService,
                     val gpios: GpioService,
-                    val ms: MessageService, val io: Piio, val http: HttpControl) {
+                    val ms: MessageService, val io: Piio, val http: HttpControl,val ps:PortstatusinjobService) {
 
 
     @Scheduled(initialDelay = 5000, fixedDelay = 1000)
@@ -37,12 +38,12 @@ class Runonecommand(val dhts: DhtvalueService, val ts: TaskService
         if (ones != null)
             for (o in ones) {
                 var pijob = pjs.findByRefid(o.pijob_id)
-                var worker = Worker(pijob, gpios, io)
+                var worker = Worker(pijob, gpios, io,ps)
                 logger.debug("Run  ${pijob} in onecommand")
                 ts.run(worker)
                 if (pijob.runwithid != null) {
                     var runwith = pjs.findByRefid(pijob.runwithid)
-                    var w = Worker(runwith, gpios, io)
+                    var w = Worker(runwith, gpios, io,ps)
                     ts.run(w)
                     logger.debug("Run With ==> ${w} in onecommand")
                 }
@@ -71,7 +72,7 @@ class Runonecommand(val dhts: DhtvalueService, val ts: TaskService
     fun exec(jobs: List<Pijob>) {
 
         for (j in jobs) {
-            var work = HWorker(j, gpios, ms, io) //เปลียนเป็น hwork
+            var work = HWorker(j, gpios, ms, io,ps) //เปลียนเป็น hwork
             ts.run(work)
         }
     }

@@ -8,7 +8,7 @@ import java.io.File
 
 @RestController
 @Profile("pi", "lite")
-class ResetControl(val portstatusinjobService: PortstatusinjobService,val pijobService: PijobService,val ps:PideviceService,val ss:DS18sensorService)
+class ResetControl(val portstatusinjobService: PortstatusinjobService,val pijobService: PijobService,val ps:PideviceService,val ss:DS18sensorService,val js:JobService)
 {
 
 
@@ -22,6 +22,7 @@ class ResetControl(val portstatusinjobService: PortstatusinjobService,val pijobS
         pijobService.clear()
         ps.clear()
         ss.clear()
+        js.clear()
         return true
     }
 

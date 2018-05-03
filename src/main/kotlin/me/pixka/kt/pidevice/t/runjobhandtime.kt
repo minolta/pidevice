@@ -10,6 +10,7 @@ import me.pixka.kt.run.HWorker
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -21,7 +22,7 @@ import java.util.*
 class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
                  , val pjs: PijobService, val js: JobService,
                  val gpios: GpioService, val ms: MessageService, val io: Piio,
-                 val cws: Checkwaterservice) {
+                 val cws: Checkwaterservice,val ps:PortstatusinjobService) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     fun run() {
@@ -52,7 +53,7 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
     fun exec(jobs: List<Pijob>) {
 
         for (j in jobs) {
-            var work = HWorker(j, gpios, ms, io) //เปลียนเป็น hwork
+            var work = HWorker(j, gpios, ms, io,ps) //เปลียนเป็น hwork
             if (ts.checkalreadyrun(work) != null) {
                 var et = endtime(j)
                 logger.debug("End job time ${et}")
@@ -73,7 +74,8 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
         try {
             var rt = job.runtime!! * 1000
             //var wt = job.waittime!! * 1000
-            var ports = job.ports
+            var ports = ps.findByPijobid(job.id)
+                    //job.ports
             var t = 1
             if (ports != null) {
                 t = ports.size

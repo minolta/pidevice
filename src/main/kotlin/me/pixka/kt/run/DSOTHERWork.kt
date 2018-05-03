@@ -4,13 +4,16 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Profile("pi")
-class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService, val ms: MessageService) : Runnable, PijobrunInterface {
+class DSOTHERWorker(var pijob: Pijob,
+                    var gpio: GpioService,
+                    val ms: MessageService,val ps:PortstatusinjobService) : Runnable, PijobrunInterface {
     override fun state(): String? {
         return state
     }
@@ -53,7 +56,8 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService, val ms: MessageServ
             isRun = true
             startRun = Date()
             state = " Star Run "+Date()
-            var ports = pijob.ports
+            var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
+                    //pijob.ports
             var runtime = pijob.runtime
             var waittime = pijob.waittime
             jobid = pijob.id

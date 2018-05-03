@@ -11,6 +11,7 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Worker
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("pi")
 class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService, var dsobj: DS18obj, val ms: MessageService, val io: Piio) {
+                             val ts: TaskService,val ps:PortstatusinjobService, var dsobj: DS18obj, val ms: MessageService, val io: Piio) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 12000)
     fun run() {
@@ -70,12 +71,12 @@ class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpio
             if (r.runwithid != null) { //ต้อง Run job อื่นด้วย
                 var withjob = pjs.findByRefid(r.runwithid)
                 if (withjob != null) {
-                    var w = Worker(withjob, gpios, io)
+                    var w = Worker(withjob, gpios, io,ps)
                     logger.debug("Have Other job runwith this job ${withjob}")
                     ts.run(w)
                 }
             }
-            var w = Worker(r, gpios, io)
+            var w = Worker(r, gpios, io,ps)
             ts.run(w)
         }
     }

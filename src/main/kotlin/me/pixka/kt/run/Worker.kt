@@ -6,6 +6,7 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import java.util.*
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit
  * ใช้สำหรับ Run pijob
  */
 @Profile("pi", "lite")
-open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio) : Runnable, PijobrunInterface {
+open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio,val ps:PortstatusinjobService) : Runnable, PijobrunInterface {
     override fun state(): String? {
         return state
     }
@@ -53,7 +54,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio) : Runna
         try {
             isRun = true
             startrun = Date()
-            var ports = pijob.ports
+            var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
             var runtime = pijob.runtime
             var waittime = pijob.waittime
             jobid = pijob.id
