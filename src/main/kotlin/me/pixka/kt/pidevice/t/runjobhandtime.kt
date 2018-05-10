@@ -33,16 +33,16 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
         var HJOB = js.findByName("HT")
 
         if (HJOB == null) {
-            RunjobByH.logger.error("HT Job not found HbyT ")
+            logger.error("HT Job not found HbyT ")
             return
         }
         var lasth = dhts.last()
-        RunjobByH.logger.debug("Last dhtvalue HbyT : ${lasth}")
+        logger.debug("Last dhtvalue HbyT : ${lasth}")
         if (lasth != null) {
             var jobs = pjs.findByHBytime(lasth.h!!, pjs.datetoLong(Date()), HJOB.id)
             logger.debug("Found !! HbyT  ${jobs!!.size}")
             if (jobs != null) {
-                RunjobByH.logger.debug("Found H Job HbyT ${jobs.size}")
+                logger.debug("Found H Job HbyT ${jobs.size}")
                 exec(jobs)
             }
         }
@@ -60,7 +60,7 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
                 if (et != null && cws.can(et)) {
 
                     if (ts.run(work)) {
-                        ms.message("Run H by time id : ${work.getPijobid()}", "runjob")
+                        ms.message("Run H by time id : ${j.refid}", "runjob")
                     }
                 } else {
                     logger.error("Some device use water ")

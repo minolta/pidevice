@@ -22,6 +22,7 @@ class Checkwaterservice(val http: HttpControl, val io: Piio) {
         var wi = Waterinfo()
         wi.mac = io.wifiMacAddress()
         wi.enduse = enddate
+
         var t = System.getProperty("piserver") + "/waterinfo"
         logger.debug("Call : ${t}")
         var entity: HttpEntity? = null
@@ -37,14 +38,23 @@ class Checkwaterservice(val http: HttpControl, val io: Piio) {
             if (entity != null) {
                 val response = EntityUtils.toString(entity)
                 logger.debug("Can use water  : " + response)
-
                 val ret = mapper.readValue(response, Usewaterinformation::class.java)
+                logger.debug("waterinformation ${ret}")
+
+                //ถ้าไม่มีข้อมูล
+                if(ret.status != null && ret.status==500) {
+                    logger.error("Some one use water ${ret}")
+                    return false
+                }
+                logger.debug("suw Can use water Start use ${Date()} end ${ret.enduse}")
                 return true
             }
 
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("Convert error : ${e.message}")
         }
+
+
         logger.error("Can not use water")
         return false
     }

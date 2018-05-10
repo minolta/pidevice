@@ -25,7 +25,7 @@ import java.util.*
 @Profile("pi", "lite")
 class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
                 , val pjs: PijobService, val js: JobService,
-                val gpios: GpioService,val ps :PortstatusinjobService,
+                val gpios: GpioService, val ps: PortstatusinjobService,
                 val ms: MessageService, val io: Piio, val cws: Checkwaterservice) {
 
 
@@ -45,9 +45,9 @@ class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
         logger.debug("Last dhtvalue : ${lasth}")
         if (lasth != null) {
             var jobs = pjs.findByH(lasth.h!!, HJOB.id)
-
+            logger.debug("Found H job ${jobs}")
             if (jobs != null) {
-                logger.debug("Found H Job ${jobs.size}")
+                logger.debug("H jobsize:${jobs.size}")
                 exec(jobs)
             }
         }
@@ -63,14 +63,12 @@ class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
             var ports = ps.findByPijobid(job.id)
             //job.ports
             var t = 1
-            if (ports != null) {
-                t = ports.size
-            }
+            t = ports.size
+
             //rt x t == เวลาการเปิดน้ำทั้งหมด
             var n = Date(Date().time + (rt * t))
             return n
-        }catch(e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error("${e.message}")
         }
 
@@ -81,18 +79,21 @@ class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
 
 
         for (j in jobs) {
-            var work = HWorker(j, gpios, ms, io,ps) //เปลียนเป็น hwork
-            if(ts.checkalreadyrun(work)!=null) {
+            var work = HWorker(j, gpios, ms, io, ps) //เปลียนเป็น hwork
+            if (ts.checkalreadyrun(work) != null) {
                 var et = endtime(j)
-                logger.debug("End job time ${et}")
+                logger.debug("endjobtime -> ${et}")
 
                 if (et != null && cws.can(et)) {
+                    ms.message("Run hjobid:${j.refid} ${j}", "run")
+                    logger.debug("runhjobid ${j}")
                     ts.run(work)
                 } else {
                     logger.error("Some device use water ")
                 }
             }
         }
+        logger.debug("End exechjob")
     }
 
     companion object {

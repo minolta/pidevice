@@ -32,26 +32,24 @@ class TaskService(val context: ApplicationContext) {
         if (forrun != null) {
             runinglist.add(forrun)
             logger.debug("CheckJOB Run this JOB: ${forrun.getPijobid()}")
-            //pool.submit(forrun as Runnable)
             pool.submit(forrun as Runnable)
-            /*
-            var t = Thread(forrun as Runnable)
-            t.start()
-            */
             logger.debug("Run ${forrun.getPijobid()} Buffer size ${runinglist.size}")
+            return true
         }
         else
         {
             //มี job นี้ run อยู่แล้ว
+            logger.error("Have This job run already ${forrun}")
             return false
         }
         /*
         var tp = threadpool as ThreadPoolExecutor
         logger.debug("Queue size :${tp.queue.size} Running size : ${tp.activeCount}  Job in buffer [${runinglist.size}] ")
         */
+        /*
         logger.debug("CheckJOB Jobs in List  ${runinglist.size} ThreadInfo")
         return true
-
+*/
     }
 
 
@@ -68,8 +66,7 @@ class TaskService(val context: ApplicationContext) {
                 logger.debug("CheckJOB ${b.getPijobid()} == ${w.getPijobid()}")
                 if (b.getPijobid().toInt() == w.getPijobid().toInt()) {
                     if (b.runStatus()) {
-                        logger.debug("CheckJOB New run id:${w.getPijobid()} Runing list ${b.getPijobid()}")
-                        logger.debug("CheckJOB Reject run ${w}")
+                        logger.error("CheckJOB Reject run ${w}")
                         return null //ถ้าเจอเหมือน null
                     }
                 }

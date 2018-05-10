@@ -63,7 +63,7 @@ class DSOTHERWorker(var pijob: Pijob,
             jobid = pijob.id
 
             logger.debug("Startworker ${pijob.id}")
-            ms.message("Start DSOTER Worker", "info")
+            ms.message("Start DSOTER Worker Run job id:${pijob.refid}", "info")
             try {
                 state = "Start set port"
                 setport(ports!!)

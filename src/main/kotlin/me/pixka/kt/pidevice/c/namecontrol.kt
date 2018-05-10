@@ -25,7 +25,7 @@ import kotlin.collections.HashMap
 @Profile("pi", "lite")
 class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, val context: ApplicationContext) {
 
-    val version = "1.0.3"
+    val version = "1.0.6"
     @CrossOrigin
     @RequestMapping(value = "/name", method = arrayOf(RequestMethod.GET))
     @ResponseBody

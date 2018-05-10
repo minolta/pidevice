@@ -73,7 +73,10 @@ class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpio
                 if (withjob != null) {
                     var w = Worker(withjob, gpios, io,ps)
                     logger.debug("Have Other job runwith this job ${withjob}")
-                    ts.run(w)
+                    if(ts.run(w))
+                    {
+                        ms.message("Run DS job id:${withjob.refid}","runds")
+                    }
                 }
             }
             var w = Worker(r, gpios, io,ps)

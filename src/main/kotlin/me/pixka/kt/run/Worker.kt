@@ -73,7 +73,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio,val ps:P
 
                 try {
                     state = "Run Set  ports"
-                    setport(ports!!)
+                    setport(ports)
                 } catch (e: Exception) {
                     logger.error("Set port error ${e.message}")
                 }
