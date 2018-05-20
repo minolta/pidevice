@@ -70,6 +70,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
             var value = ss.readDsOther(desid!!, sensorid!!)
 
             logger.debug("Read value : ${value}")
+            state = "Read value :${value}"
             if (value != null) {
                 state = "Start run"
 
@@ -79,6 +80,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                 if (v!! >= l!! && v!! <= h!!) {
                     state = "Have Job to run"
                     logger.debug("Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}")
+                    state = "Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}"
                     if (startdate == null) {
                         startdate = Date()
                         timeout = pijob.waittime //
@@ -89,6 +91,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                     if (!messageto) {
                         messageto = true
                         ms.message("Start Counter 90  Close : ${finishrun}", "info")
+                        state = "Start Count end at ${finishrun} "
                     }
 
                     //runtime = Date()
@@ -105,8 +108,9 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                     if (r.seconds >= havetorun) {
                         logger.debug("End run counter job ID ***${pijob.id}***")
                         messageto = false
-                        ms.message("Interrup ", "info")
+                        ms.message("Interrup Counter", "info")
                         isRun = false
+                        state = "Counter is in terrup"
                         break
                     }
 
@@ -144,6 +148,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
     fun display() {
         logger.debug("Display Counter info Compilete run ${completerun} in sec end run AT: ${finishrun}  ")
         var count = 0
+        state = "Run ${completerun} Close at: ${finishrun}"
         while (dps.lock) {
 
             TimeUnit.MILLISECONDS.sleep(100)
@@ -160,6 +165,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                 logger.debug("Start lock display ")
                 var display = dps.lockdisplay(this)
                 display.showMessage("Counter in ${completerun}  Next gas 3 ${df.format(next3)} Sec Close AT: ${df.format(finishrun)}  ")
+                ms.message("Counter in ${completerun}  Next gas 3 ${df.format(next3)} Sec Close AT: ${df.format(finishrun)} ","counterinfo")
                 logger.debug("Display ok.")
             } catch (e: Exception) {
                 logger.error("Error: ${e.message}")

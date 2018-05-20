@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.math.BigDecimal
 
 
 @Component
@@ -49,9 +50,34 @@ class Runcooldown(val js: JobService, val pjs: PijobService,
     fun exe(jobs: List<Pijob>) {
 
         for (pj in jobs) {
-            var c = CDWorker(pj, ss, gpios, m, i, ppp)
-            ts.run(c)
+            var checkvar = readDs(pj)
+
+            if (checkvar == null || checkvar.compareTo(pj.tlow) < 0) {
+                logger.error("Not in ranger job not start ${pj}")
+                continue
+            } else {
+                logger.debug("Cool job can run")
+
+                var c = CDWorker(pj, ss, gpios, m, i, ppp,pjs)
+                ts.run(c)
+            }
         }
+    }
+
+    fun readDs(pijob: Pijob): BigDecimal? {
+
+        var desid = pijob.desdevice_id
+        var sensorid = pijob.ds18sensor_id
+
+        var value = i.readDs18(pijob.ds18sensor?.name!!)
+        if (value == null) {
+            var dsvalue = ss.readDsOther(desid!!, sensorid!!)
+            if (dsvalue != null) {
+                value = dsvalue.t
+            }
+        }
+
+        return value
     }
 
     companion object {

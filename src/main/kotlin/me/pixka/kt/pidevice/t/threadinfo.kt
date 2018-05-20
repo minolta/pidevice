@@ -30,18 +30,18 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService, val ms: 
         logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
 
         if (tt.activeCount > 0) {
-            var mes = ""
+            var mes = ArrayList<String>()
             for (run in tsk.runinglist) {
                 logger.debug("Runs id : " + run.getPijobid().toString() + " " + run.runStatus())
 
                 var pj = run.getPJ()
                 var job = pj.job
-                mes += "ID ${run.getPJ().refid} ${run.getPJ()} status: ${run.runStatus()}  | "
+                mes.add("ID ${run.getPJ().refid} ${run.getPJ()} status: ${run.runStatus()}")
 
 
             }
 
-            ms.message(mes, "threadinfo")
+            ms.tojsonmessage(mes, "threadinfo")
 
             logger.info("Job in device ->${mes}")
         }
