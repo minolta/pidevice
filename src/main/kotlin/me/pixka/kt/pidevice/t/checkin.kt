@@ -117,9 +117,9 @@ class CheckinTask(val erl: ErrorlogService, val io: Piio, val http: HttpControl,
 
             var ci = mapper.readValue(responseString, Devicecheckin::class.java)
             ci.pidevice = null
-            var v = ds.save(ci)
+           // var v = ds.save(ci)
             logger.debug("[checkin] update password checkin ok..")
-            return v
+            return ci
         } catch (e: Exception) {
             logger.error("[checkin] Can not checkin ${e.message}")
         } finally {

@@ -10,6 +10,7 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.HWorker
+import me.pixka.kt.run.PijobrunInterface
 import me.pixka.kt.run.Worker
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
@@ -50,6 +51,17 @@ class Runonecommand(val dhts: DhtvalueService, val ts: TaskService
 
             }
 
+    }
+    fun selectWorker(o:Onecommand): PijobrunInterface?
+    {
+        var pijob = pjs.findByRefid(o.pijob_id)
+        var jobname = pijob.job?.name
+        if(jobname?.indexOf("DS",0)!=null)
+        {
+            return Worker(pijob, gpios, io,ps)
+        }
+
+        return null
     }
 
     fun loadCommand(mac: String): List<Onecommand>? {
