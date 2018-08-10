@@ -1,17 +1,16 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.pibase.s.Ds18valueService
+import me.pixka.kt.pibase.d.PressurevalueService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
-
 @Component
-class CleanDsvalue(val ds: Ds18valueService) {
+class CleanPressure(val ps: PressurevalueService) {
 
     @Scheduled(fixedDelay = 60 * 60 * 1000)
     fun clean() {
-        ds.cleanToserver()
+        ps.clean()
         logger.debug("Clean DS value ")
     }
 

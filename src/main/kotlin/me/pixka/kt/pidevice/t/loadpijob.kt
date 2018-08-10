@@ -6,7 +6,7 @@ import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.pibase.d.*
+import me.pixka.kt.pibase.d.*
 import me.pixka.pibase.s.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -19,7 +19,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi")
+@Profile("pi", "lite")
 class Loadpijob(val task: LoadpijobTask) {
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
@@ -53,6 +53,7 @@ class Loadpijob(val task: LoadpijobTask) {
 }
 
 @Component
+@Profile("pi", "lite")
 class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService, val dbcfg: DbconfigService
                     , val io: Piio, val http: HttpControl,
                     val psijs: PortstatusinjobService, val ls: LogistateService,
@@ -114,9 +115,13 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
     fun newotherdevice(pd: PiDevice): PiDevice? {
 
         try {
+
             var other = pds.findByMac(pd.mac!!)
+            logger.debug("New Other device ${pd} Have already in device")
             if (other == null) {
-                var p = pds.create(pd.mac!!)
+
+                var p = pds.create(pd.mac!!,pd.id)
+                logger.debug("not found in this device create new ${pd} new obj ${p}")
                 return p
             }
 
@@ -250,6 +255,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             ref.copy(item)
             ref.portname = ps.findorcreate(item.portname?.name!!)
             ref.status = ls.findorcreate(item.status?.name!!)
+            ref.enable = item.enable
             return psijs.save(ref)
         } catch (e: Exception) {
             logger.error("loadpijob edit error : " + e.message)

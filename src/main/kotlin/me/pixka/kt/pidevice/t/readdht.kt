@@ -3,7 +3,7 @@ package me.pixka.kt.pidevice.t
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.pibase.d.Dhtvalue
+import me.pixka.kt.pibase.d.Dhtvalue
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
-@Profile("pi")
+@Profile("pi", "lite")
 class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogService, val dbcfg: DbconfigService) {
     val hlimit = BigDecimal("100")
     var old: Dhtvalue? = null

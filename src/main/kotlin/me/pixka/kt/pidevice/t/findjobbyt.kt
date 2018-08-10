@@ -1,14 +1,17 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.DS18sensor
+import me.pixka.kt.pibase.d.DS18value
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pidevice.o.DS18obj
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Worker
-import me.pixka.pibase.d.DS18sensor
-import me.pixka.pibase.d.DS18value
-import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -23,7 +26,7 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("pi")
 class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService, var dsobj: DS18obj) {
+                             val ts: TaskService,val ps:PortstatusinjobService, var dsobj: DS18obj, val ms: MessageService, val io: Piio) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 12000)
     fun run() {
@@ -64,7 +67,19 @@ class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpio
 
     fun runpiJob(runs: ArrayList<Pijob>) {
         for (r in runs) {
-            var w = Worker(r, gpios)
+
+            if (r.runwithid != null) { //ต้อง Run job อื่นด้วย
+                var withjob = pjs.findByRefid(r.runwithid)
+                if (withjob != null) {
+                    var w = Worker(withjob, gpios, io,ps)
+                    logger.debug("Have Other job runwith this job ${withjob}")
+                    if(ts.run(w))
+                    {
+                        ms.message("Run DS job id:${withjob.refid}","runds")
+                    }
+                }
+            }
+            var w = Worker(r, gpios, io,ps)
             ts.run(w)
         }
     }

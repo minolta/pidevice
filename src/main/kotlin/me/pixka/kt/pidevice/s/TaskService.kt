@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.s
 import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.ExecutorService
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
+@Profile("pi","lite")
 class TaskService(val context: ApplicationContext) {
     //val executor = Executors.newFixedThreadPool(50)
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
@@ -22,30 +24,32 @@ class TaskService(val context: ApplicationContext) {
             TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
             ThreadPoolExecutor.CallerRunsPolicy())
 
-    fun run(work: PijobrunInterface) {
+    fun run(work: PijobrunInterface): Boolean {
 
         val pool = context.getBean("pool") as ExecutorService
-
-
         var forrun = checkalreadyrun(work)
         logger.debug("CheckJOB job can run ? ${forrun}")
         if (forrun != null) {
             runinglist.add(forrun)
             logger.debug("CheckJOB Run this JOB: ${forrun.getPijobid()}")
-            //pool.submit(forrun as Runnable)
             pool.submit(forrun as Runnable)
-            /*
-            var t = Thread(forrun as Runnable)
-            t.start()
-            */
             logger.debug("Run ${forrun.getPijobid()} Buffer size ${runinglist.size}")
+            return true
+        }
+        else
+        {
+            //มี job นี้ run อยู่แล้ว
+            logger.error("Have This job run already ${forrun}")
+            return false
         }
         /*
         var tp = threadpool as ThreadPoolExecutor
         logger.debug("Queue size :${tp.queue.size} Running size : ${tp.activeCount}  Job in buffer [${runinglist.size}] ")
         */
+        /*
         logger.debug("CheckJOB Jobs in List  ${runinglist.size} ThreadInfo")
-
+        return true
+*/
     }
 
 
@@ -54,7 +58,7 @@ class TaskService(val context: ApplicationContext) {
      */
     fun checkalreadyrun(w: PijobrunInterface): PijobrunInterface? {
 
-        logger.debug("CheckJOB runing size: ${runinglist.size}")
+        logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")
         if (runinglist.size > 0) {
             logger.debug("CheckJOB have thread run ${runinglist.size}")
             for (b in runinglist) {
@@ -62,8 +66,7 @@ class TaskService(val context: ApplicationContext) {
                 logger.debug("CheckJOB ${b.getPijobid()} == ${w.getPijobid()}")
                 if (b.getPijobid().toInt() == w.getPijobid().toInt()) {
                     if (b.runStatus()) {
-                        logger.debug("CheckJOB New run id:${w.getPijobid()} Runing list ${b.getPijobid()}")
-                        logger.debug("CheckJOB Reject run ${w}")
+                        logger.error("CheckJOB Reject run ${w}")
                         return null //ถ้าเจอเหมือน null
                     }
                 }
@@ -73,6 +76,7 @@ class TaskService(val context: ApplicationContext) {
             logger.debug("CheckJOB This jobcanrun ${w}")
             return w //ถ้าไม่เจอ return w ไป exec
         } else {
+            logger.debug("CheckJOB This jobcanrun ${w}")
             return w
         }
 

@@ -3,7 +3,7 @@ package me.pixka.kt.pidevice.t
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.pibase.d.DS18value
+import me.pixka.kt.pibase.d.DS18value
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.Ds18valueService
 import org.slf4j.LoggerFactory
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
-@Profile("pi")
+@Profile("pi", "lite")
 class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorService, val err: ErrorlogService, val dbcfg: DbconfigService) {
 
     var oldvalue = ArrayList<dsbuf>()

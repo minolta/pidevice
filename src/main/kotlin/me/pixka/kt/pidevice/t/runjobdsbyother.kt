@@ -1,13 +1,15 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.kt.pibase.d.DS18value
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.DSOTHERWorker
-import me.pixka.pibase.d.DS18value
-import me.pixka.pibase.d.Pijob
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
@@ -57,10 +59,10 @@ class Finddsjobbyother(val task: RunotherTask) {
 @Profile("pi")
 class RunotherTask(var pjs: PijobService, var js: JobService,
                    val ts: TaskService,
-                   val gpios: GpioService,
-                   val ss: SensorService) {
+                   val gpios: GpioService,val ps:PortstatusinjobService,
+                   val ss: SensorService, val ms: MessageService) {
     @Async("aa")
-    fun run(): Future<Boolean>?  {
+    fun run(): Future<Boolean>? {
         logger.debug("Start run DSOTHER")
         var DSOTHER = js.findByName("DSOTHER")
 
@@ -71,6 +73,7 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
 
         //ค้นหางานที่ต้องอ่านค่า DS จากตัวอื่น
         var jobs = pjs.findDSOTHERJob(DSOTHER.id)
+        logger.debug("Found other job(s) ${jobs}")
         var jobforrun = ArrayList<Pijob>()
         if (jobs != null) {
             for (job in jobs) {
@@ -87,7 +90,7 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
         //หลังจากได้ job ที่อยู่ในเงือนไขที่จะทำงานแล้วก็ส่งไปทำงาน
         if (jobforrun.size > 0)
             for (r in jobforrun) {
-                var w = DSOTHERWorker(r, gpios)
+                var w = DSOTHERWorker(r, gpios, ms,ps)
                 ts.run(w)
             }
 
@@ -107,31 +110,35 @@ class RunotherTask(var pjs: PijobService, var js: JobService,
         var desid = job.desdevice_id
         var sensorid = job.ds18sensor_id
 
-
+        logger.debug("Check other job can run ${job}")
         if (desid != null) {//ถ้าระบุ desid ให้ทำงานได้
 
             var dsvalue: DS18value? = null
             if (sensorid != null) {//ถ้าระบุ sensor id ด้วย ให้ อ่าน จาก sensor ด้วย
                 dsvalue = ss.readDsOther(desid, sensorid)
+                logger.debug("Read Sensor ${sensorid} from other device ${desid} result ${dsvalue}")
             } else {
                 //ถ้าไม่ระบุให้อ่านจาก Default sensor
                 dsvalue = readDsOther(desid)
+                logger.debug("Read default sensor from Other ${desid}")
             }
 
 
             if (dsvalue != null) {
+            logger.debug("Have result from other ${dsvalue}")
                 var tlow = job.tlow
                 var thigh = job.thigh
                 var v = dsvalue.t
-
+                logger.debug("Check Value in ranger ? ")
                 if (v?.compareTo(tlow)!! >= 0 && v.compareTo(thigh) <= 0) {
+                    logger.debug("Other job can run ${job}")
                     return job
                 }
             }
 
 
         }
-
+        logger.error("Not found other job for run")
         return null
     }
 

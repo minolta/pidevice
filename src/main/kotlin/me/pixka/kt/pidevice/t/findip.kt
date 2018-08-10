@@ -167,7 +167,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val es: Error
         try {
             for (i in buf) {
                 //  logger.debug("find iptables : ${i}")
-                if (i != null && i.mac != null) {
+                if (i.mac != null) {
 
                     //      logger.debug("I for find ADDRESS: ${i.mac} Service is ${service}")
 
@@ -181,8 +181,24 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val es: Error
                         ii.mac = i.mac
                         newIptable(ii)
                     } else {
-                        service?.updateiptable(ii, i.ip!!)
+                        service.updateiptable(ii, i.ip!!)
                     }
+                }
+                else
+                {
+                    logger.info("Saveme: ${i}")
+                    //me device
+                    var ii: Iptableskt? = service?.findByMac("")
+                    //      logger.debug("Address  Found: ${ii}")
+                    if (ii == null) {
+                        ii = Iptableskt()
+                        ii.ip = i.ip
+                        ii.mac = i.mac
+                        newIptable(ii)
+                    } else {
+                        service.updateiptable(ii, i.ip!!)
+                    }
+
                 }
             }
 

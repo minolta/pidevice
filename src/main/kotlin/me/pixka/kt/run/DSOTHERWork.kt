@@ -1,16 +1,37 @@
 package me.pixka.kt.run
 
+import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
-import me.pixka.pibase.d.Pijob
-import me.pixka.pibase.d.Portstatusinjob
+import me.pixka.kt.pibase.s.MessageService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Profile("pi")
-class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, PijobrunInterface {
+class DSOTHERWorker(var pijob: Pijob,
+                    var gpio: GpioService,
+                    val ms: MessageService,val ps:PortstatusinjobService) : Runnable, PijobrunInterface {
+    override fun state(): String? {
+        return state
+    }
+
+    override fun startRun(): Date? {
+        return startRun
+    }
+    var state:String? =" Crate "
+
+    var startRun: Date?=null
+
+
     override fun getPijobid(): Long {
         return pijob.id
+    }
+
+    override fun getPJ(): Pijob {
+        return pijob
     }
 
     override fun runStatus(): Boolean {
@@ -33,35 +54,45 @@ class DSOTHERWorker(var pijob: Pijob, var gpio: GpioService) : Runnable, Pijobru
         try {
 
             isRun = true
-            var ports = pijob.ports
+            startRun = Date()
+            state = " Star Run "+Date()
+            var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
+                    //pijob.ports
             var runtime = pijob.runtime
             var waittime = pijob.waittime
             jobid = pijob.id
 
             logger.debug("Startworker ${pijob.id}")
+            ms.message("Start DSOTER Worker Run job id:${pijob.refid}", "info")
             try {
+                state = "Start set port"
                 setport(ports!!)
             } catch (e: Exception) {
+                state = "Set port error ${e.message}"
                 logger.error("Set port error ${e.message}")
             }
-
+            state = " Run time : ${runtime}"
             TimeUnit.SECONDS.sleep(runtime!!)
             logger.debug("Run time: ${runtime}")
             try {
+                state = "Reset port"
                 resetport(ports!!)
             } catch (e: Exception) {
                 logger.error("Error reset Port ${e.message}")
             }
+            state = " Wait time: ${waittime}"
             TimeUnit.SECONDS.sleep(waittime!!)
             logger.debug("Wait time: ${waittime}")
 
             //end task
 
             logger.debug("End job DSOTHER ${pijob.id}")
+            ms.message("End DSOTER Worker", "info")
         } catch (e: Exception) {
             logger.error("DSOTHER ${e.message}")
         }
 
+        state = " Run complate "
         isRun = false
     }
 

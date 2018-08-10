@@ -5,7 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
-import me.pixka.pibase.d.Job
+import me.pixka.kt.pibase.d.Job
 import me.pixka.pibase.s.JobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Component
-@Profile("pi")
+@Profile("pi", "lite")
 class LoadMainJobTask(val task: LoadjobTask) {
 
 
@@ -59,6 +59,7 @@ class LoadMainJobTask(val task: LoadjobTask) {
 }
 
 @Component
+@Profile("pi", "lite")
 class LoadjobTask(val service: JobService,
                   val dbcfg: DbconfigService,
                   val http: HttpControl, val err: ErrorlogService) {

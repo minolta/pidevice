@@ -1,9 +1,10 @@
 package me.pixka.kt.run
 
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
-import me.pixka.pibase.d.Pijob
 import org.joda.time.DateTime
 import org.joda.time.Interval
 import org.joda.time.Period
@@ -16,16 +17,29 @@ import java.util.concurrent.TimeUnit
 
 
 @Profile("pi")
-class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorService, val dps: DisplayService) : Runnable, PijobrunInterface {
+class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorService, val dps: DisplayService, val ms: MessageService) : Runnable, PijobrunInterface {
+    override fun state(): String? {
+        return state
+    }
 
+    override fun startRun(): Date? {
+        return startRun
+    }
+    var state:String?= " Create "
+    var startRun: Date? = null
     var run: Long? = null
     var timeout: Long? = 10000 //สำหรับหมดเวลา
     var startdate: Date? = null
     var runtime: Date? = null
     var completerun: Int? = 0 //เวลาที่ run ไปแล้ว
     var finishrun: Date? = null //เวลาที่ เสร็จ
+    var next3: Date? = null
+
     var isRun = true
     var period: Period? = null
+    override fun getPJ(): Pijob {
+        return pijob
+    }
 
     override fun getPijobid(): Long {
         return pijob.id
@@ -43,11 +57,12 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
         this.pijob = pijob
     }
 
-
+    var messageto = false
     override fun run() {
 
         logger.debug("Start run counter job ID ***${pijob.id}***")
         var timeoutcount = 0
+        startRun = Date()
         while (true) {
             var desid = pijob.desdevice_id
             var sensorid = pijob.ds18sensor_id
@@ -55,21 +70,30 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
             var value = ss.readDsOther(desid!!, sensorid!!)
 
             logger.debug("Read value : ${value}")
+            state = "Read value :${value}"
             if (value != null) {
-
+                state = "Start run"
 
                 var v = value.t?.toInt()
                 var l = pijob.tlow?.toInt()
                 var h = pijob.thigh?.toInt()
                 if (v!! >= l!! && v!! <= h!!) {
-
+                    state = "Have Job to run"
                     logger.debug("Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}")
+                    state = "Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}"
                     if (startdate == null) {
                         startdate = Date()
                         timeout = pijob.waittime //
                         run = pijob.runtime //เวลาในการ run เอ็นวินาที
                         finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
+                        next3 = DateTime().plusSeconds(pijob.runtime?.toInt()!! - 7200).toDate() //เวลาเสร็จ
                     }
+                    if (!messageto) {
+                        messageto = true
+                        ms.message("Start Counter 90  Close : ${finishrun}", "info")
+                        state = "Start Count end at ${finishrun} "
+                    }
+
                     //runtime = Date()
 
                     var rt = DateTime()
@@ -83,7 +107,10 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                     completerun = r.seconds
                     if (r.seconds >= havetorun) {
                         logger.debug("End run counter job ID ***${pijob.id}***")
+                        messageto = false
+                        ms.message("Interrup Counter", "info")
                         isRun = false
+                        state = "Counter is in terrup"
                         break
                     }
 
@@ -97,6 +124,8 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
                     timeoutcount++
                     if (timeoutcount >= timeout?.toInt()!!) {
                         logger.error("Time out count exit ${timeoutcount}")
+                        ms.message("Tmp is under rang exits count", "error")
+                        state = "Value out of rang stop counter"
                         break
                     }
 
@@ -119,6 +148,7 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
     fun display() {
         logger.debug("Display Counter info Compilete run ${completerun} in sec end run AT: ${finishrun}  ")
         var count = 0
+        state = "Run ${completerun} Close at: ${finishrun}"
         while (dps.lock) {
 
             TimeUnit.MILLISECONDS.sleep(100)
@@ -134,7 +164,8 @@ class Workercounter(var pijob: Pijob, var gpio: GpioService, val ss: SensorServi
             try {
                 logger.debug("Start lock display ")
                 var display = dps.lockdisplay(this)
-                display.showMessage("Counter in ${completerun} Sec Close AT: ${df.format(finishrun)} ")
+                display.showMessage("Counter in ${completerun}  Next gas 3 ${df.format(next3)} Sec Close AT: ${df.format(finishrun)}  ")
+                ms.message("Counter in ${completerun}  Next gas 3 ${df.format(next3)} Sec Close AT: ${df.format(finishrun)} ","counterinfo")
                 logger.debug("Display ok.")
             } catch (e: Exception) {
                 logger.error("Error: ${e.message}")
