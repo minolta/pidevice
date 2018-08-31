@@ -59,7 +59,7 @@ class Read18b20s(val ds: Ds18valueService, val io: Piio, val dss: DS18sensorServ
 
     fun checkvaluetosave(src: BigDecimal, des: BigDecimal): Boolean {
 
-        var rangertosave = BigDecimal(dbcfg.findorcreate("dsvaluerangtosave", "0.5").value)
+        var rangertosave = BigDecimal(dbcfg.findorcreate("dsvaluerangtosave", "0.1").value)
         var result = src.subtract(des)
 
         var over05 = result.abs()
