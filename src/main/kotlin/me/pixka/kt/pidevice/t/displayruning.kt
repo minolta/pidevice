@@ -8,6 +8,9 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
+/**
+ * ใช้สำหรับ บอกว่า Device ยัง run app อยู่
+ */
 @Component
 @Profile("pi")
 class Displayruning(val dps: DisplayService) {
