@@ -37,14 +37,14 @@ class PideviceApplication {
 
     @Bean(name = arrayOf("longrun"))
     fun longrun(): Executor {
-        return ThreadPoolExecutor(5, 20, 30,
+        return ThreadPoolExecutor(5, 25, 30,
                 TimeUnit.HOURS, LinkedBlockingDeque<Runnable>(50),
                 ThreadPoolExecutor.CallerRunsPolicy())
 
     }
-    @Bean
+    @Bean(name = arrayOf("pool"))
     fun pool(): ExecutorService? {
-        val threadpool = ThreadPoolExecutor(10, 15, 30,
+        val threadpool = ThreadPoolExecutor(15, 25, 30,
                 TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
                 ThreadPoolExecutor.CallerRunsPolicy())
 

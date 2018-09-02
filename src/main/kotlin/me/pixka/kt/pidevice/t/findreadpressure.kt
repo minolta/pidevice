@@ -16,10 +16,11 @@ import org.springframework.stereotype.Component
 
 @Component
 @Profile("pi")
-class Findreadpressure(val pideviceService: PideviceService,val ps: PressurevalueService, val js: JobService, val pjs: PijobService, val http: HttpControl, val ips: IptableServicekt) {
+class Findreadpressure(val pideviceService: PideviceService, val ps: PressurevalueService,
+                       val js: JobService, val pjs: PijobService, val http: HttpControl, val ips: IptableServicekt) {
 
     val om = ObjectMapper()
-    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
+    @Scheduled(initialDelay = 10000, fixedDelay = 5000)
     fun find() {
         logger.info("Start read Pressure")
 
@@ -33,13 +34,12 @@ class Findreadpressure(val pideviceService: PideviceService,val ps: Pressurevalu
                     var value = read(j)
                     if (value != null) {
                         logger.debug("Save Pressure")
-                    try {
-                        value.device = pideviceService.findByMac(value.device?.mac!!)
-                        ps.save(value)
-                    }catch (e:Exception)
-                    {
-                        logger.error("Save Error: ${e.message}")
-                    }
+                        try {
+                            value.device = pideviceService.findByMac(value.device?.mac!!)
+                            ps.save(value)
+                        } catch (e: Exception) {
+                            logger.error("Save Error: ${e.message}")
+                        }
                     } else
                         logger.error("Pressure is null ${value}")
                 }

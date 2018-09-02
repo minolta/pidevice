@@ -25,7 +25,6 @@ class LoadPortnameTask(val task: LoadPortTask) {
     @Scheduled(initialDelay = 5000, fixedDelay = 60000)
     fun run() {
         logger.info("starttask Start loadportname")
-
         var f = task.run()
         var count = 0
         while (true) {
@@ -79,13 +78,16 @@ class LoadPortTask(val service: PortnameService,
 
         try {
             for (item in list) {
-                var j: Portname? = service.findByRefid(item.id)
-                if (j == null) {
+                var j: Portname? = service.findorcreate(item.name!!)
 
+                logger.debug("Port: ${j?.name}")
+
+              /*  if (j == null) {
                     j = service.create(item)
                     j = service.save(j)
                     logger.debug("[savetodevice Portname] Save :  " + j!!)
                 }
+                */
             }
         } catch (e: Exception) {
             logger.error("savetodevice Portname error : " + e.message)
