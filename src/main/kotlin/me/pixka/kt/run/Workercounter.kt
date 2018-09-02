@@ -27,13 +27,6 @@ import java.util.concurrent.TimeUnit
 class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
                     var gpio: GpioService, val ss: SensorService, val dps: DisplayService,
                     val ms: MessageService, val io: Piio, val dss: DS18sensorService) : Runnable, PijobrunInterface {
-    override fun state(): String? {
-        return state
-    }
-
-    override fun startRun(): Date? {
-        return startRun
-    }
 
     var state: String? = " Create "
     var startRun: Date? = null
@@ -47,6 +40,16 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
 
     var isRun = true
     var period: Period? = null
+
+    override fun state(): String? {
+        return state
+    }
+
+    override fun startRun(): Date? {
+        return startRun
+    }
+
+
     override fun getPJ(): Pijob {
         return pijob
     }
