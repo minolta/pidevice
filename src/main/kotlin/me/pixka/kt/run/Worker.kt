@@ -16,7 +16,8 @@ import java.util.concurrent.TimeUnit
  * ใช้สำหรับ Run pijob
  */
 @Profile("pi", "lite")
-open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps: PortstatusinjobService) : Runnable, PijobrunInterface {
+open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps: PortstatusinjobService)
+    : Runnable, PijobrunInterface {
     override fun state(): String? {
         return state
     }
@@ -118,8 +119,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
 
 
                     state = "Wait ${waittime} Loop ${i}"
-                }
-                else
+                } else
                     state = "Not Check port is low and wait LOOP:${i}"
 
                 TimeUnit.SECONDS.sleep(waittime!!)
@@ -222,6 +222,27 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
     }
 
 
+    fun runPorts(pijob: Pijob) {
+        var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
+        logger.debug("Start run port ${ports}")
+        var runtime = pijob.runtime
+        var nextrun = pijob.waittime
+        if (ports.size > 0) {
+            setport(ports)
+            if (runtime != null)
+                TimeUnit.SECONDS.sleep(runtime)
+            resetport(ports)
+
+            if (nextrun != null)
+                TimeUnit.SECONDS.sleep(nextrun)
+
+
+            logger.debug("Run port is end")
+
+
+        }
+
+    }
 }
 
 class Pinbackup(var pin: GpioPinDigitalOutput, var pinstate: PinState)

@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
-@Profile("pi","lite")
+@Profile("pi", "lite")
 class TaskService(val context: ApplicationContext) {
     //val executor = Executors.newFixedThreadPool(50)
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
@@ -35,9 +35,7 @@ class TaskService(val context: ApplicationContext) {
             pool.submit(forrun as Runnable)
             logger.debug("Run ${forrun.getPijobid()} Buffer size ${runinglist.size}")
             return true
-        }
-        else
-        {
+        } else {
             //มี job นี้ run อยู่แล้ว
             logger.error("Have This job run already ${forrun}")
             return false

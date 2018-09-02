@@ -1,6 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
@@ -8,8 +9,10 @@ import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.run.PijobrunInterface
 import me.pixka.kt.run.Workercounter
+import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
+import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Profile
@@ -22,8 +25,8 @@ import java.util.concurrent.Future
 @Component
 @Profile("pi")
 class CounterOther(val context: ApplicationContext,
-                   val pijobService: PijobService,
-                   val js: JobService, val io: Piio,
+                   val pijobService: PijobService, val dss: DS18sensorService,
+                   val js: JobService, val io: Piio, val ps: PortstatusinjobService,
                    val ss: SensorService, val gpio: GpioService, val dps: DisplayService, val ms: MessageService) {
     var pool = context.getBean("pool") as ExecutorService
 
@@ -47,7 +50,7 @@ class CounterOther(val context: ApplicationContext,
             if (canrun.size > 0) {
                 for (job in canrun) {
                     logger.debug("Start task job ${job.id}")
-                    var task = Workercounter(job, gpio, ss, dps, ms)
+                    var task = Workercounter(job, ps, gpio, ss, dps, ms, io, dss)
                     var f = pool.submit(task)
                     logger.debug("Future ${f}")
                     var run = runInfo(task, f, Date())
@@ -114,8 +117,23 @@ class CounterOther(val context: ApplicationContext,
                 var high = job.thigh?.toInt()
                 var senid = job.ds18sensor_id
                 var desid = job.desdevice_id
-                var value = ss.readDsOther(desid!!, senid!!)
-                logger.debug("Value: ${value}")
+                var value: DS18value? = null
+
+                var localsensor = dss.find(job.ds18sensor_id)
+                logger.debug("Found local sensor ? ${localsensor}")
+                if (localsensor != null) {
+                    var v = io.readDs18(localsensor.name!!)
+                    value = DS18value()
+                    value.t = v
+
+
+                }
+
+                if (value == null)
+                    value = ss.readDsOther(desid!!, senid!!)
+
+
+                logger.debug(" FIND Value: ${value}")
                 if (value != null) {
                     var v = value.t?.toInt()
                     if (v!! >= low!! && v <= high!!) {
