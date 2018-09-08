@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.*
 
 /**
  * ใช้สำหรับ อ่านค่า temp ทุกอย่าง
@@ -53,6 +54,7 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
                             var d = i.ds18sensor
                             if (d != null) {
                                 d = dss.findorcreate(d.name!!)
+                                logger.debug(" Found Sensod ${d}")
                             }
                             else
                             {
@@ -60,6 +62,7 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
                             }
                             value.ds18sensor = d
                             value.pidevice = i.desdevice
+                            value.valuedate = Date()
                             dvs.save(value)
                         }
                     } catch (e: Exception) {
