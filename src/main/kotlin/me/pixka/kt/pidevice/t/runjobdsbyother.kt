@@ -28,13 +28,13 @@ class Finddsjobbyother(val task: RunotherTask) {
     @Scheduled(initialDelay = 10000, fixedDelay = 5000)
     fun find() {
 
-        Loadpijob.logger.info("Start read other")
+        logger.info("Start read other")
         var f = task.run()
 
         var count = 0
         while (true) {
             if (f!!.isDone) {
-                logger.info("Load pi job end")
+                logger.info("Read Temp from other")
                 break
 
             }
