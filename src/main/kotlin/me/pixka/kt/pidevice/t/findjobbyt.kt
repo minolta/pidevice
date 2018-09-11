@@ -22,13 +22,17 @@ import org.springframework.stereotype.Component
 จะต้องอ่านค่า DS18B20 แล้วทำการหา ข้อมูล job ที่ตรงออกมา
 ทุก sensor ใน device
  **/
-
+//**************************************
+// ไม่ใช้แล้ว Run ใช้ Rundsjob
+//**************************************
 @Component
 @Profile("pi")
 class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService,val ps:PortstatusinjobService, var dsobj: DS18obj, val ms: MessageService, val io: Piio) {
+                             val ts: TaskService,val ps:PortstatusinjobService, var dsobj: DS18obj,
+                             val ms: MessageService, val io: Piio) {
 
-    @Scheduled(initialDelay = 5000, fixedDelay = 12000)
+    //ไม่ใช้แล้วใช้ตัวอื่นแทน
+   // @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     fun run() {
         logger.info("Run Find JOB for run ds18b20")
         var DSJOB = js.findByName("DS")
@@ -64,6 +68,7 @@ class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpio
 
         logger.debug("End Run")
     }
+
 
     fun runpiJob(runs: ArrayList<Pijob>) {
         for (r in runs) {

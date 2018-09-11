@@ -61,31 +61,40 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
      * ใช้สำหรับอ่านข้อมูล ความร้อนโดยที่จะอ่าน local  ถ้าไม่มีให้อ่าน จาก ที่อื่นแทน
      */
     fun readTmpByjob(job: Pijob): BigDecimal? {
-        var desid = job.desdevice_id
-        var sensorid = job.ds18sensor_id
-        var value: DS18value? = null
-        logger.debug("Read tmp By pijob ${job} #readtmpbyjob")
+        try {
+            var desid = job.desdevice_id
+            var sensorid = job.ds18sensor_id
+            var value: DS18value? = null
+            logger.debug("Read tmp By pijob ${job} #readtmpbyjob")
 
-        var localsensor = dss.find(job.ds18sensor_id)
-        logger.debug("Found local sensor ? ${localsensor}")
-        if (localsensor != null) {
-            var v = io.readDs18(localsensor.name!!)
-            value = DS18value()
-            value.t = v
+            var localsensor = dss.find(job.ds18sensor_id)
+            logger.debug("Found local sensor ? ${localsensor} #readtmpbyjob")
+            if (localsensor != null) {
+                logger.debug("Read Temp from ${localsensor} ")
+                var v = io.readDs18(localsensor.name!!)
+                value = DS18value()
+                value.t = v
+                logger.debug("Read Temp from ${localsensor}  get ${v} return ${value} #readtmpbyjob")
+                if (v != null)
+                    return v
+            }
+
+            if (value == null)
+                value = ss.readDsOther(desid!!, sensorid!!)
+
+
+            if (value != null) {
+                return value.t
+            }
+
+        }
+        catch (e:Exception)
+        {
+            logger.error(e.message)
         }
 
-        if (value == null)
-            value = ss.readDsOther(desid!!, sensorid!!)
 
-
-        if (value != null) {
-            return value.t
-        }
-
-
-
-
-        logger.error("Not found other job for run")
+        logger.error("Not found other job for run #readtmpbyjob")
         return null
     }
 

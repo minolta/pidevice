@@ -20,7 +20,8 @@ import java.util.*
 
 @Component
 @Profile("pi")
-class Findip(val service: IptableServicekt, val cfg: Configfilekt, val es: ErrorlogService, val dbcfg: DbconfigService) {
+class Findip(val service: IptableServicekt, val cfg: Configfilekt,
+             val es: ErrorlogService, val dbcfg: DbconfigService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)
     }
