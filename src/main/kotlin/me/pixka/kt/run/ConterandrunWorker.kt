@@ -25,7 +25,6 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
     : Worker(pj, gi, i, ppp) {
     var run: Long? = null
     var runtime: Date? = null
-
     var startdate: Date? = null
     var timeout: Long = 10000 //สำหรับหมดเวลา
     var currenttimeout: Long = 0
@@ -34,6 +33,7 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
     var runcomplete = false
     override fun run() {
         logger.debug("Start run this job")
+        state = "Start run " + Date()
         runcomplete = false
         getTime()
         while (true) {
@@ -62,12 +62,12 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
                 var h = pijob.thigh?.toFloat()
 
                 logger.debug("Value for check ${l} > ${v} < ${h}")
+                state = "Value for check ${l} > ${v} < ${h}"
                 if (v != null && l != null && h != null) {
                     var c = check(v, l, h)
                     if (c) {
                         var completewait = checkrun()
                         if (completewait) {
-
                             state = "Run complete"
                             runcomplete = true
                             break
@@ -102,55 +102,87 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
      * Run port จะเอาค่า run กับ timeout จาก Hlow และ HHigh
      */
     fun runPort(pijob: Pijob) {
-        var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
-        logger.debug("Start run port ${ports}")
-        var runtime = pijob.hlow?.toLong()
-        var nextrun = pijob.hhigh?.toLong()
-        if (ports != null && ports.size > 0) {
-            setport(ports)
-            if (runtime != null)
-                TimeUnit.SECONDS.sleep(runtime)
-            resetport(ports)
-            if (nextrun != null)
-                TimeUnit.SECONDS.sleep(nextrun)
+        try {
+            var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
+            logger.debug("Start run port ${ports}")
+            var runtime = pijob.hlow?.toLong()
+            var nextrun = pijob.hhigh?.toLong()
+            if (ports != null && ports.size > 0) {
+                setport(ports)
+                if (runtime != null) {
+                    state = "Run time ${runtime}"
+                    logger.debug("Run to ${runtime}")
+                    TimeUnit.SECONDS.sleep(runtime)
+                    logger.debug("Next run")
+                }
+
+                resetport(ports)
+                if (nextrun != null) {
+                    logger.debug("Wait time ${nextrun}")
+                    state = "Wait time ${nextrun}"
+                    TimeUnit.SECONDS.sleep(nextrun)
+                }
+                state = "Run port is end"
+                logger.debug("Run port is end")
 
 
-            logger.debug("Run port is end")
-
-
-        } else {
-            logger.debug("Not have port to run")
+            } else {
+                logger.debug("Not have port to run")
+            }
+        } catch (e: Exception) {
+            logger.error("run PORT ${e.message}")
+            throw e
         }
 
     }
 
     fun getTime() {
-        if (startdate == null) {
-            startdate = Date()
-            timeout = pijob.waittime!! //
-            run = pijob.runtime //เวลาในการ run เอ็นวินาที
-            finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
+        try {
+            if (startdate == null) {
+                startdate = Date()
+                timeout = pijob.waittime!! //
+                run = pijob.runtime //เวลาในการ run เอ็นวินาที
+                finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
+                logger.debug("Counter info START : ${startdate} RUN TIME: ${run} End run ${finishrun} open port ${pijob.hlow}")
+                state = "Counter info START : ${startdate} RUN TIME: ${run} End run ${finishrun} open port ${pijob.hlow}"
+            }
+        } catch (e: Exception) {
+            logger.error("GETTIME: ${e.message}")
+            state = "Error ${e.message}"
+            isRun = false
+            throw e
         }
     }
 
     fun checkrun(): Boolean {
 
-        var rt = DateTime()
-        var st = DateTime(startdate)
+        try {
+            state = "Check run is complete"
+            var rt = DateTime()
+            var st = DateTime(startdate)
 
-        runtime = rt.toDate()
-        period = Interval(st, rt).toPeriod() //ช่วงเวลา
+            runtime = rt.toDate()
+            period = Interval(st, rt).toPeriod() //ช่วงเวลา
 
-
-        var r = Seconds.secondsBetween(st, rt)
-        logger.debug("Run in ${r}")
-        var havetorun = run?.toInt()!!
-        if (r.seconds >= havetorun) {
-            logger.debug("Wait timeout")
-            return true
+            var r = Seconds.secondsBetween(st, rt)
+            logger.debug("Run in ${r}")
+            state = "Run in ${r} timeout ${run}"
+            var havetorun = run?.toInt()!!
+            if (r.seconds >= havetorun) {
+                logger.debug("Wait timeout")
+                state = "End wait Run set port"
+                return true
+            }
+            logger.debug("Still run this job")
+            state = "Still wait ${Date()}"
+            return false
+        } catch (e: Exception) {
+            logger.error("Checktime ${e.message}")
+            state = "Checktime ${e.message}"
+            isRun = false
+            throw e
         }
-        logger.debug("Still run this job")
-        return false
+
 
     }
 

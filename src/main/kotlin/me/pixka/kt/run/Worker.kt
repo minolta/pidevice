@@ -164,26 +164,28 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
     }
 
     fun resetport(ports: List<Portstatusinjob>?) {
-
-        if (ports != null)
-            for (port in ports) {
-                if (!port.status?.name.equals("check")) {
-                    var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
-                    logger.debug("Reset pin ${pin}")
-                    gpio.resettoDefault(pin)
-                    logger.debug("Reset Port to default")
+        try {
+            if (ports != null)
+                for (port in ports) {
+                    if (!port.status?.name.equals("check")) {
+                        var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
+                        logger.debug("Reset pin ${pin}")
+                        state = "Reset pin ${pin}"
+                        gpio.resettoDefault(pin)
+                        logger.debug("Reset Port to default")
+                    }
                 }
-            }
-
+        } catch (e: Exception) {
+            logger.error("Reset port ${e.message}")
+            state = "Resetport ${e.message}"
+            throw e
+        }
     }
 
     open fun setport(ports: List<Portstatusinjob>) {
         try {
             logger.debug("Gpio : ${gpio}")
-
-
             for (port in ports) {
-
                 if (port.enable == null || port.enable == false || port.status?.name.equals("check")!!) {//ถ้า Enable == null หรือ false ให้ไปทำงาน port ต่อไปเลย
                     logger.error("Not set port ${port}")
                 } else {

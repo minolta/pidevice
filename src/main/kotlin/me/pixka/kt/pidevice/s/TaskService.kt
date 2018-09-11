@@ -6,10 +6,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.LinkedBlockingDeque
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 /**
  * ใช้สำหรับ run task ต่างๆ
@@ -83,6 +80,30 @@ class TaskService(val context: ApplicationContext) {
 
 
         return null
+    }
+
+
+    fun runAsyn(f: Future<Any>, timeout: Int): Any? {
+        var count = 0
+        while (true) {
+            if (f.isDone) {
+                logger.info("Run commplete")
+                return f.get()
+                break
+            }
+            TimeUnit.SECONDS.sleep(1)
+            count++
+
+            if (count > timeout) {
+                f.cancel(true)
+                logger.error("Timeout")
+                return null
+
+            }
+
+        }
+
+
     }
 
     @Scheduled(initialDelay = 2000,
