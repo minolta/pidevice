@@ -17,13 +17,13 @@ import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
 class Findreadpressure(val pideviceService: PideviceService, val ps: PressurevalueService,
                        val js: JobService, val pjs: PijobService,
-                       val http: HttpControl, val ips: IptableServicekt,val ts:TaskService) {
+                       val http: HttpControl, val ips: IptableServicekt, val ts: TaskService,
+                       val rp:readP) {
 
     val om = ObjectMapper()
     @Scheduled(initialDelay = 10000, fixedDelay = 5000)
@@ -40,35 +40,10 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
 
                     var f = readAsyn(j)
                     logger.debug("Read pi job task ${f}")
-                    var value:PressureValue? = null
+                    var value: PressureValue? = null
 
-                    if(f!=null)
-                        value = ts.runAsyn(f,5) as PressureValue
-
-                    /*
-                    var count = 0
-                    while (true) {
-                        if (f!!.isDone) {
-                            logger.info("Run commplete")
-                            value = f.get()
-                            break
-                        }
-                        TimeUnit.SECONDS.sleep(1)
-                        count++
-
-                        if (count > 5) {
-                            f.cancel(true)
-                            logger.error("Timeout")
-                        }
-
-                    }
-                    */
-
-
-
-
-
-
+                    if (f != null)
+                        value = ts.runAsyn(f, 5) as PressureValue
                     if (value != null) {
                         logger.debug("Save Pressure")
                         try {
@@ -79,8 +54,6 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
                         }
                     } else
                         logger.error("Pressure is null ${value}")
-
-
 
 
                 }
@@ -110,44 +83,13 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
 
     }
 
-    @Async("aa")
-    fun readAsyn(j:Pijob): Future<Any>?
-    {
-        var des = j.desdevice
-        if (des == null) {
-            logger.error("Device not found ${des}")
-            return null
-        }
 
-        var url = "/pressure"
+    fun readAsyn(j: Pijob): Future<Any>? {
+        logger.debug("Start read asyn ID:${j.id}")
+        var f =  rp.readAsyn(j)
+        logger.debug("Return  ID:${j.id} ==> ${f} ")
+        return f
 
-        var ip = ips.findByMac(des.mac!!)
-        if (ip != null) {
-            var ipstring = ip.ip
-            var re = ""
-            try {
-
-                var u = "http://${ipstring}${url}"
-                logger.debug("Read pressure ${u}")
-                re = http.get(u)
-            } catch (e: Exception) {
-                logger.error(e.message)
-                throw e
-            }
-            try {
-                logger.debug("Pase value")
-                var ps = om.readValue<PressureValue>(re, PressureValue::class.java)
-                logger.debug("Pressure value ${ps}")
-                return AsyncResult(ps)
-            } catch (e: Exception) {
-                logger.error(e.message)
-                throw  e
-
-            }
-
-        }
-        logger.error("Can not find ip")
-        throw Exception("Can not find ip")
     }
 
     //ใช้สำหรับอ่าน node mcu ค่าแรงดัน
@@ -194,6 +136,63 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Findreadpressure::class.java)
+    }
+
+}
+
+
+@Component
+class readP(val ips: IptableServicekt,val http:HttpControl)
+{
+    val om = ObjectMapper()
+    @Async("aa")
+    fun readAsyn(j: Pijob): Future<Any>? {
+        logger.debug("Start read asyn")
+        try {
+            var des = j.desdevice
+            if (des == null) {
+                logger.error("Device not found ${des}")
+                return null
+            }
+
+            var url = "/pressure"
+
+            var ip = ips.findByMac(des.mac!!)
+            if (ip != null) {
+                var ipstring = ip.ip
+                var re = ""
+                try {
+
+                    var u = "http://${ipstring}${url}"
+                    logger.debug("Read pressure ${u}")
+                    re = http.get(u)
+                    logger.debug("Return ${re}")
+                } catch (e: Exception) {
+                    logger.error(e.message)
+                    throw e
+                }
+                try {
+                    logger.debug("Pase value")
+                    var ps = om.readValue<PressureValue>(re, PressureValue::class.java)
+                    logger.debug("Pressure value ${ps}")
+                    return AsyncResult(ps)
+                } catch (e: Exception) {
+                    logger.error(e.message)
+                    throw  e
+
+                }
+
+            }
+            logger.error("Can not find ip")
+            throw Exception("Can not find ip")
+
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+    }
+    companion object {
+        internal var logger = LoggerFactory.getLogger(readP::class.java)
     }
 
 }

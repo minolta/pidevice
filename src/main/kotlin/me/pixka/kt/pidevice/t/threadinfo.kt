@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadPoolExecutor
 @Profile("pi")
 class ThreadInfo(val context: ApplicationContext, val tsk: TaskService, val ms: MessageService) {
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 3000)
     fun checkThread() {
         var t = context.getBean("taskScheduler") as ThreadPoolTaskScheduler
         var tp = context.getBean("pool") as ExecutorService
@@ -24,29 +24,18 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService, val ms: 
         val queue = t.scheduledThreadPoolExecutor
         val s = queue.queue
 
-        logger.info("Scheduler active count: ${t.activeCount} pool size: ${t.poolSize}  Queue size:${s.size} ")
+        logger.info("#threadinfo SS A: ${t.activeCount} PS: ${t.poolSize}  QS:${s.size} " +
+                " C:${s.remainingCapacity()} CP:${queue.completedTaskCount}")
         var tt = tp as ThreadPoolExecutor
+        logger.info("#threadinfo TT A: ${tt.activeCount} PS: ${tt.poolSize}  QS: ${tt.queue.size} " +
+                " PSM : ${tt.corePoolSize}  ${tt.maximumPoolSize} C: ${tt.completedTaskCount}")
+        logger.info("#threadinfo AA A: ${aa.activeCount} PS: ${aa.poolSize}  QS:${aa.queue.size} " +
+                "QMS: ${aa.maximumPoolSize}  CP:${aa.completedTaskCount}")
 
-        logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
-
-        if (tt.activeCount > 0) {
-            var mes = ArrayList<String>()
-            for (run in tsk.runinglist) {
-                logger.debug("Runs id : " + run.getPijobid().toString() + " " + run.runStatus())
-
-                var pj = run.getPJ()
-                var job = pj.job
-                mes.add("ID ${run.getPJ().refid} ${run.getPJ()} status: ${run.runStatus()}")
+        logger.info("#threadinfo ----------------------------------------------------------------")
 
 
-            }
 
-            ms.tojsonmessage(mes, "threadinfo")
-
-            logger.info("Job in device ->${mes}")
-        }
-
-        logger.info("Asyn AT: ${aa.activeCount} pool size: ${aa.poolSize}  Queue size:${aa.queue}  c:${aa.completedTaskCount}")
 
         /*
          var o = s.iterator()

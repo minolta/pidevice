@@ -24,27 +24,32 @@ class PideviceApplication {
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
         taskScheduler.poolSize = 100
+        taskScheduler.threadNamePrefix ="SS-"
+
+
         return taskScheduler
     }
 
     @Bean(name = arrayOf("aa"))
     fun threadPoolTaskExecutor(): Executor {
-        return ThreadPoolExecutor(10, 20, 30,
+        return ThreadPoolExecutor(10, 100, 1,
                 TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
                 ThreadPoolExecutor.CallerRunsPolicy())
 
     }
 
+    /*
     @Bean(name = arrayOf("longrun"))
     fun longrun(): Executor {
-        return ThreadPoolExecutor(5, 25, 30,
+        return ThreadPoolExecutor(5, 100, 30,
                 TimeUnit.HOURS, LinkedBlockingDeque<Runnable>(50),
                 ThreadPoolExecutor.CallerRunsPolicy())
 
     }
+    */
     @Bean(name = arrayOf("pool"))
     fun pool(): ExecutorService? {
-        val threadpool = ThreadPoolExecutor(20, 25, 30,
+        val threadpool = ThreadPoolExecutor(20, 100, 1,
                 TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
                 ThreadPoolExecutor.CallerRunsPolicy())
 
