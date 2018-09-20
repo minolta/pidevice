@@ -84,26 +84,30 @@ class TaskService(val context: ApplicationContext) {
 
 
     fun runAsyn(f: Future<Any>, timeout: Int): Any? {
-        var count = 0
-        while (true) {
-            if (f.isDone) {
-                logger.info("Run commplete")
-                return f.get()
-                break
+        try {
+            var count = 0
+            while (true) {
+                if (f.isDone) {
+                    logger.info("Run commplete")
+                    return f.get()
+                    break
+                }
+                TimeUnit.SECONDS.sleep(1)
+                count++
+
+                if (count > timeout) {
+                    f.cancel(true)
+                    logger.error("Timeout")
+                    return null
+
+                }
+
             }
-            TimeUnit.SECONDS.sleep(1)
-            count++
 
-            if (count > timeout) {
-                f.cancel(true)
-                logger.error("Timeout")
-                return null
-
-            }
-
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
         }
-
-
     }
 
     @Scheduled(initialDelay = 2000,

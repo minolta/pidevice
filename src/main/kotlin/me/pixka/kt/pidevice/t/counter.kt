@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.PijobrunInterface
 import me.pixka.kt.run.Workercounter
 import me.pixka.pibase.s.DS18sensorService
@@ -19,7 +20,6 @@ import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 
 @Component
@@ -27,19 +27,39 @@ import java.util.concurrent.Future
 class CounterOther(val context: ApplicationContext,
                    val pijobService: PijobService, val dss: DS18sensorService,
                    val js: JobService, val io: Piio, val ps: PortstatusinjobService,
+                   val ts: TaskService,
                    val ss: SensorService, val gpio: GpioService, val dps: DisplayService, val ms: MessageService) {
-    var pool = context.getBean("pool") as ExecutorService
+    // var pool = context.getBean("pool") as ExecutorService
 
     var runjobs = ArrayList<runInfo>()
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun run() {
         logger.debug("Start find Counter job")
-        var counter = js.findByName("Counter")
 
-        logger.debug("JOB for run ${counter}")
-        var jobs = pijobService.findByCounter(counter.id)
+        var jobs = loadjob()
         var torun = find(jobs!!)
 
+
+        if (torun != null) {
+
+            for (job in torun) {
+                logger.debug("Start task job ${job.id}")
+                var task = Workercounter(job, ps, gpio, ss, dps, ms, io, dss)
+
+                if (!ts.run(task)) {
+                    logger.error("Reject job #threadinfo ${task}")
+                }
+
+                //var f = pool.submit(task)
+                //logger.debug("Future ${f}")
+                //var run = runInfo(task, f, Date())
+
+
+                //runjobs.add(run)
+            }
+
+        }
+        /*
 
         logger.debug("To run ${torun}")
         if (torun != null) {
@@ -59,6 +79,8 @@ class CounterOther(val context: ApplicationContext,
 
             }
         }
+        */
+
     }
 
     /**
@@ -72,6 +94,18 @@ class CounterOther(val context: ApplicationContext,
             if (f?.isDone!!) {
                 runjobs.remove(run)
             }
+        }
+    }
+
+    fun loadjob(): List<Pijob>? {
+        try {
+            var counter = js.findByName("Counter")
+            logger.debug("JOB for run ${counter}")
+            var jobs = pijobService.findByCounter(counter.id)
+            return jobs
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
         }
     }
 

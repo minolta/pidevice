@@ -19,8 +19,9 @@ import java.util.concurrent.ThreadPoolExecutor
 class Sendthreadinfo(val context: ApplicationContext, val tsk: TaskService, val ms: MessageService,
                      val io: Piio, val http: HttpControl) {
 
-    @Scheduled(fixedDelay = 15000)
+    //@Scheduled(fixedDelay = 15000)
     fun run() {
+
         var t = context.getBean("taskScheduler") as ThreadPoolTaskScheduler
         var tp = context.getBean("pool") as ExecutorService
         var aa = context.getBean("aa") as ThreadPoolExecutor
