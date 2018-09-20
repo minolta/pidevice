@@ -25,7 +25,6 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
             logger.error("Device not found ${des}")
             return null
         }
-
         var url = "/pressure"
 
         var ip = ips.findByMac(des.mac!!)
@@ -64,37 +63,53 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
         try {
             var desid = job.desdevice_id
             var sensorid = job.ds18sensor_id
+
+
             var value: DS18value? = null
-            logger.debug("Read tmp By pijob ${job} #readtmpbyjob")
+            try {
+                logger.debug("1 Read tmp By pijob ${job} #readtmpbyjob")
+                value = ss.readDsOther(desid!!, sensorid!!)
+                logger.debug("2 Read tmp other #readtmpbyjob [${value}]")
+                if(value!=null)
+                {
+                    return value.t
+                }
+            } catch (e: Exception) {
+                logger.error("3 Readother ${e.message}  ")
+            }
 
             var localsensor = dss.find(job.ds18sensor_id)
-            logger.debug("Found local sensor ? ${localsensor} #readtmpbyjob")
-            if (localsensor != null) {
-                logger.debug("Read Temp from ${localsensor} ")
-                var v = io.readDs18(localsensor.name!!)
+            logger.debug("4 Found local sensor ? ${localsensor} #readtmpbyjob")
+
+            if (localsensor != null && value == null) {
+                logger.debug("5 Read Temp from ${localsensor} ")
+                var v = null
+                try {
+                    var v = io.readDs18(localsensor.name!!)
+                } catch (e: Exception) {
+                    logger.error("6 ${e.message}")
+                }
                 value = DS18value()
                 value.t = v
-                logger.debug("Read Temp from ${localsensor}  get ${v} return ${value} #readtmpbyjob")
+                logger.debug("7 Read Temp from ${localsensor}  get ${v} return ${value} #readtmpbyjob")
                 if (v != null)
                     return v
             }
 
-            if (value == null)
-                value = ss.readDsOther(desid!!, sensorid!!)
+
+
 
 
             if (value != null) {
                 return value.t
             }
 
-        }
-        catch (e:Exception)
-        {
-            logger.error(e.message)
+        } catch (e: Exception) {
+            logger.error("8 ${e.message}")
         }
 
 
-        logger.error("Not found other job for run #readtmpbyjob")
+        logger.error("9 Not found other job for run #readtmpbyjob")
         return null
     }
 

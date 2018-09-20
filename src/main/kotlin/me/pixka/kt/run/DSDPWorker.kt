@@ -18,16 +18,17 @@ import kotlin.Comparator
 @Profile("pi")
 //@Component
 class DSDPWorker(val ss: SensorService, val dps: DisplayService, var pijob: Pijob) : Runnable, PijobrunInterface {
+    var startRun: Date? = null
+    var state: String? = " Create "
     override fun state(): String? {
         return state
     }
 
-    var state: String? = " Create "
+
     override fun startRun(): Date? {
         return startRun
     }
 
-    var startRun: Date? = null
 
     override fun getPJ(): Pijob {
         return pijob
