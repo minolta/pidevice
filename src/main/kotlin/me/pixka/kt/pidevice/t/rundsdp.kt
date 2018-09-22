@@ -1,17 +1,20 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
+import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
@@ -21,7 +24,8 @@ import java.util.concurrent.TimeUnit
 @Component
 @Profile("pi")
 class RunDSDP(val pjs: PijobService, val js: JobService,
-              val ts: TaskService, val ss: SensorService, val dps: DisplayService, val rs: ReadUtil) {
+              val ts: TaskService, val ss: SensorService, val dss: DS18sensorService,
+              val io: Piio, val dps: DisplayService, val rs: ReadUtil) {
 
     val ex = ThreadPoolExecutor(
             2,
@@ -32,7 +36,7 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
             ThreadPoolExecutor.AbortPolicy() // <-- It will abort if timeout exceeds
     )
 
-    @Scheduled(initialDelay = 2000, fixedDelay = 5000)
+    @Scheduled(initialDelay = 2000, fixedDelay = 2000)
     fun run() {
 
         var jobs = loadjob()
@@ -41,10 +45,20 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
             for (job in jobs) {
                 logger.debug("Run ${job.id}")
 
-                var v = ss.readDsOther(job.desdevice_id!!, job.ds18sensor_id!!)
+                var v: DS18value? = null
+                try {
+                    v = ss.readDsOther(job.desdevice_id!!, job.ds18sensor_id!!)
+                } catch (e: Exception) {
+                    logger.error("Read other error ${e.message}")
+                }
                 logger.debug("Value ${v}")
                 if (v != null) {
-                    var task = DPT(v, dps)
+                    var runtime = job.runtime
+                    var displaytime = 0L
+                    if (runtime != null) {
+                        displaytime = runtime.toLong()
+                    }
+                    var task = DPT(v, dps, displaytime)
                     var f = ex.submit(task)
                     logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} CP:${ex.completedTaskCount} / T:${ex.taskCount}")
                     try {
@@ -56,7 +70,33 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
                     }
 
                 } else {
-                    logger.error("Can not read ds18value")
+                    //logger.error("Can not read ds18value")
+                    //read loacl
+                    logger.debug("Read local  ID ${job.id}")
+                    var s = dss.find(job.ds18sensor_id)
+                    logger.debug("Found Sensor !! ${s}")
+                    if (s != null) {
+                        var tmp = io.readDs18(s.name!!)
+                        logger.debug("Read loacal value ${tmp}")
+                        // var tmp = rs.readTmpByjob(job)
+                        if (tmp != null) {
+                            var runtime = job.runtime
+                            var displaytime = 0L
+                            if (runtime != null) {
+                                displaytime = runtime.toLong()
+                            }
+                            var task = DPT(tmp, dps, displaytime)
+                            var f = ex.submit(task)
+                            logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} CP:${ex.completedTaskCount} / T:${ex.taskCount}")
+                            try {
+                                var re = f.get(10, TimeUnit.SECONDS)
+                                logger.debug("Run ok ${re} ${job.id}")
+                            } catch (e: Exception) {
+                                logger.error("1 ${e.message}")
+                                f.cancel(true)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -83,7 +123,12 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
 
 }
 
-class DPT(var value: DS18value, val dps: DisplayService) : Callable<Boolean> {
+class DPT(var value: DS18value?, val dps: DisplayService, var displaytime: Long) : Callable<Boolean> {
+    constructor(value: BigDecimal, dps: DisplayService, displaytime: Long) : this(null, dps, displaytime) {
+        vv = value
+    }
+
+    var vv: BigDecimal? = null
     var df = DecimalFormat("##.0")
     var d100 = DecimalFormat("###")
     override fun call(): Boolean {
@@ -92,32 +137,45 @@ class DPT(var value: DS18value, val dps: DisplayService) : Callable<Boolean> {
 
         var d = "0000"
         try {
-            df.format(value.t)
-            if (d.length > 4) {
-                d = "*" + d100.format(value.t)
+            var dd: BigDecimal? = null
+            if (value != null) {
+                d = df.format(value?.t)
+                if (d.length > 4) {
+                    d = "*" + d100.format(value?.t)
+                }
+                d = d.replace(".", "#")
+            } else if (vv != null) {
+                d = df.format(vv)
+                if (d.length > 4) {
+                    d = "*" + d100.format(value?.t)
+                }
+                d = d.replace(".", "-")
             }
+
+
         } catch (e: Exception) {
             logger.debug("ERROR ${e.message}")
             return false
         }
 
-        if (value != null) {
-            var count = 0
-            while (dps.lock) {
-                logger.debug("Wait for lock display")
-                TimeUnit.MILLISECONDS.sleep(200)
-                count++
-                if (count >= 20) {
-                    logger.error("Lock display time out")
-                    return false
-                }
-            }
-            dps.lockdisplay(this)
-            dps.dot.print(d)
-            dps.unlock(this)
-            logger.debug("EndDPT")
 
+        var count = 0
+        while (dps.lock) {
+            logger.debug("Wait for lock display")
+            TimeUnit.MILLISECONDS.sleep(200)
+            count++
+            if (count >= 20) {
+                logger.error("Lock display time out")
+                return false
+            }
         }
+        dps.lockdisplay(this)
+        dps.dot.print(d)
+        TimeUnit.SECONDS.sleep(displaytime)
+        dps.unlock(this)
+        logger.debug("EndDPT")
+
+
 
         logger.debug("DPT Run is ok")
         return true

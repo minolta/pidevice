@@ -38,7 +38,7 @@ class Sendds(val task: SenddsTask) {
                 TimeUnit.SECONDS.sleep(1)
                 count++
 
-                if (count > 30) {
+                if (count > (60*30)) {
                     f.cancel(true)
                     logger.error("Timeout")
                 }
