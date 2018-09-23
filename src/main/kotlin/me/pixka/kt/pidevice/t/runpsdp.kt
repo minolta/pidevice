@@ -55,7 +55,8 @@ class RunPSDP(val pjs: PijobService, val js: JobService,
 
                     var task = DPPS(ps.pressurevalue!!, dps, rt)
                     var f = ex.submit(task)
-                    logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} CP:${ex.completedTaskCount} / T:${ex.taskCount}")
+                    logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} " +
+                            "CP:${ex.completedTaskCount} / T:${ex.taskCount}")
                     try {
                         var re = f.get(10, TimeUnit.SECONDS)
                         logger.debug("Run ok ${re}")
@@ -101,15 +102,16 @@ class DPPS(var value: DS18value?, val dps: DisplayService, var displaytime: Long
         logger.info("Run DPPS")
 
 
-        var d = "00P0"
+        var d = "00@0"
         try {
             if (value != null) {
                 d = df.format(value?.t)
                 if (d.length > 4) {
                     d = "P" + d100.format(value?.t)
                 }
-                d = d.replace(".", "P")
+                d = d.replace(".", "@")
             } else if (vv != null) {
+                logger.debug("Pressure is : ${vv}")
                 if (vv?.compareTo(BigDecimal.ZERO)!! <= 0)
                     vv = BigDecimal.ZERO
                 d = df.format(vv)
@@ -117,7 +119,7 @@ class DPPS(var value: DS18value?, val dps: DisplayService, var displaytime: Long
                  if (d.length > 4) {
                      d = "P" + d100.format(vv)
                  }
-                d = d.replace(".", "P")
+                d = d.replace(".", "@")
             }
         } catch (e: Exception) {
             logger.debug("ERROR ${e.message}")
