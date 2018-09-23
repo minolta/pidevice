@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class RunDSDP(val pjs: PijobService, val js: JobService,
+class RunPSDP(val pjs: PijobService, val js: JobService,
               val ts: TaskService, val ss: SensorService, val dss: DS18sensorService,
               val io: Piio, val dps: DisplayService, val rs: ReadUtil) {
 
@@ -45,20 +45,15 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
             for (job in jobs) {
                 logger.debug("Run ${job.id}")
 
-                var v: DS18value? = null
-                try {
-                    v = ss.readDsOther(job.desdevice_id!!, job.ds18sensor_id!!)
-                } catch (e: Exception) {
-                    logger.error("Read other error ${e.message}")
-                }
-                logger.debug("Value ${v}")
-                if (v != null) {
+                var ps = rs.readPressureByjob(job)
+                if (ps != null) {
+                    var rt = 0L
                     var runtime = job.runtime
-                    var displaytime = 0L
                     if (runtime != null) {
-                        displaytime = runtime.toLong()
+                        rt = runtime.toLong()
                     }
-                    var task = DPT(v, dps, displaytime)
+
+                    var task = DPPS(ps.pressurevalue!!, dps, rt)
                     var f = ex.submit(task)
                     logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} CP:${ex.completedTaskCount} / T:${ex.taskCount}")
                     try {
@@ -68,35 +63,6 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
                         logger.error("1 ${e.message}")
                         f.cancel(true)
                     }
-
-                } else {
-                    //logger.error("Can not read ds18value")
-                    //read loacl
-                    logger.debug("Read local  ID ${job.id}")
-                    var s = dss.find(job.ds18sensor_id)
-                    logger.debug("Found Sensor !! ${s}")
-                    if (s != null) {
-                        var tmp = io.readDs18(s.name!!)
-                        logger.debug("Read loacal value ${tmp}")
-                        // var tmp = rs.readTmpByjob(job)
-                        if (tmp != null) {
-                            var runtime = job.runtime
-                            var displaytime = 0L
-                            if (runtime != null) {
-                                displaytime = runtime.toLong()
-                            }
-                            var task = DPT(tmp, dps, displaytime)
-                            var f = ex.submit(task)
-                            logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} CP:${ex.completedTaskCount} / T:${ex.taskCount}")
-                            try {
-                                var re = f.get(10, TimeUnit.SECONDS)
-                                logger.debug("Run ok ${re} ${job.id}")
-                            } catch (e: Exception) {
-                                logger.error("1 ${e.message}")
-                                f.cancel(true)
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -105,25 +71,25 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
     }
 
     fun loadjob(): List<Pijob>? {
-        var job = js.findByName("DSDP") //สำหรับแสดงผล
+        var job = js.findByName("DPPS") //สำหรับแสดงผล
 
         if (job == null) {
             logger.error("Job not found DSDP")
             return null
         }
 
-        var jobs = pjs.findByDSDP(job.id)
+        var jobs = pjs.findJob(job.id)
         return jobs as List<Pijob>?
 
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(RunDSDP::class.java)
+        internal var logger = LoggerFactory.getLogger(RunPSDP::class.java)
     }
 
 }
 
-class DPT(var value: DS18value?, val dps: DisplayService, var displaytime: Long) : Callable<Boolean> {
+class DPPS(var value: DS18value?, val dps: DisplayService, var displaytime: Long) : Callable<Boolean> {
     constructor(value: BigDecimal, dps: DisplayService, displaytime: Long) : this(null, dps, displaytime) {
         vv = value
     }
@@ -132,27 +98,27 @@ class DPT(var value: DS18value?, val dps: DisplayService, var displaytime: Long)
     var df = DecimalFormat("##.0")
     var d100 = DecimalFormat("###")
     override fun call(): Boolean {
-        logger.info("Run DPT")
+        logger.info("Run DPPS")
 
 
-        var d = "0000"
+        var d = "00P0"
         try {
-            var dd: BigDecimal? = null
             if (value != null) {
                 d = df.format(value?.t)
                 if (d.length > 4) {
-                    d = "*" + d100.format(value?.t)
+                    d = "P" + d100.format(value?.t)
                 }
-                d = d.replace(".", "#")
+                d = d.replace(".", "P")
             } else if (vv != null) {
+                if (vv?.compareTo(BigDecimal.ZERO)!! <= 0)
+                    vv = BigDecimal.ZERO
                 d = df.format(vv)
-                if (d.length > 4) {
-                    d = "*" + d100.format(vv)
-                }
-                d = d.replace(".", "-")
+
+                 if (d.length > 4) {
+                     d = "P" + d100.format(vv)
+                 }
+                d = d.replace(".", "P")
             }
-
-
         } catch (e: Exception) {
             logger.debug("ERROR ${e.message}")
             return false
@@ -174,19 +140,17 @@ class DPT(var value: DS18value?, val dps: DisplayService, var displaytime: Long)
             dps.dot.print(d)
             TimeUnit.SECONDS.sleep(displaytime)
             dps.unlock(this)
-            logger.debug("EndDPT")
-            logger.debug("DPT Run is ok")
+            logger.debug("EndDPPS")
+            logger.debug("DPPS Run is ok")
             return true
         } catch (e: Exception) {
-            logger.debug(e.message)
             dps.unlock(this)
+            logger.debug(e.message)
         }
-
-        return true
-
+        return false
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(DPT::class.java)
+        internal var logger = LoggerFactory.getLogger(DPPS::class.java)
     }
 }
