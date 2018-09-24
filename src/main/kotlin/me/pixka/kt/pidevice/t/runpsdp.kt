@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
@@ -112,10 +113,13 @@ class DPPS(var value: DS18value?, val dps: DisplayService, var displaytime: Long
                 d = d.replace(".", "@")
             } else if (vv != null) {
                 logger.debug("Pressure is : ${vv}")
+
+                var n = vv?.setScale(1,RoundingMode.HALF_UP)
                 if (vv?.compareTo(BigDecimal.ZERO)!! <= 0)
                     vv = BigDecimal.ZERO
-                d = df.format(vv)
+                d = df.format(n)
 
+                logger.debug("D ot display ${d}")
                  if (d.length > 4) {
                      d = "P" + d100.format(vv)
                  }

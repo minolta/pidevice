@@ -52,10 +52,8 @@ class RunPressure(val reader: ReadUtil, val js: JobService, val pjs: PijobServic
             logger.debug("Value Low ${pl} Value ${pv} High ${ph}")
             if (pv!! >= pl!! && pv <= ph!!) {
                 return Worker(j, gpio, io, ps)
-            }
-            else
-            {
-                logger.error("ERROR pressure not in rang")
+            } else {
+                logger.warn("ERROR pressure not in rang")
             }
 
         }

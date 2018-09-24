@@ -19,7 +19,7 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService, val ms: 
 
     @Scheduled(fixedDelay = 15000)
     fun checkThread() {
-      /*
+
         var t = context.getBean("taskScheduler") as ThreadPoolTaskScheduler
         var tp = context.getBean("pool") as ExecutorService
         var aa = context.getBean("aa") as ThreadPoolTaskExecutor
@@ -55,7 +55,7 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService, val ms: 
          {
              logger.info("run : ${run}")
          }*/
-         */
+
     }
 
     companion object {
