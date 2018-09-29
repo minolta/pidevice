@@ -36,7 +36,7 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
             ThreadPoolExecutor.AbortPolicy() // <-- It will abort if timeout exceeds
     )
 
-    @Scheduled(initialDelay = 2000, fixedDelay = 2000)
+    @Scheduled(initialDelay = 2000, fixedDelay = 5000)
     fun run() {
 
         var jobs = loadjob()

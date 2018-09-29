@@ -37,7 +37,7 @@ class RunPSDP(val pjs: PijobService, val js: JobService,
             ThreadPoolExecutor.AbortPolicy() // <-- It will abort if timeout exceeds
     )
 
-    @Scheduled(initialDelay = 2000, fixedDelay = 2000)
+    @Scheduled(initialDelay = 2000, fixedDelay = 5000)
     fun run() {
 
         var jobs = loadjob()
@@ -97,8 +97,8 @@ class DPPS(var value: DS18value?, val dps: DisplayService, var displaytime: Long
     }
 
     var vv: BigDecimal? = null
-    var df = DecimalFormat("##.0")
-    var d100 = DecimalFormat("###")
+    var df = DecimalFormat("#0.0")
+    var d100 = DecimalFormat("000")
     override fun call(): Boolean {
         logger.info("Run DPPS")
 

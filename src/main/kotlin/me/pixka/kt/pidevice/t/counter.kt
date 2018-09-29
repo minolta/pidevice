@@ -153,20 +153,25 @@ class CounterOther(val context: ApplicationContext,
                 var desid = job.desdevice_id
                 var value: DS18value? = null
 
-                var localsensor = dss.find(job.ds18sensor_id)
-                logger.debug("Found local sensor ? ${localsensor}")
-                if (localsensor != null) {
-                    var v = io.readDs18(localsensor.name!!)
-                    value = DS18value()
-                    value.t = v
 
-
+                try {
+                    value = ss.readDsOther(desid!!, senid!!)
+                    logger.debug("Other value ======>${value}")
+                } catch (e: Exception) {
+                    logger.error("Read other error ${e.message}")
                 }
 
-                if (value == null)
-                    value = ss.readDsOther(desid!!, senid!!)
+                if (value == null) {
+                    var localsensor = dss.find(job.ds18sensor_id)
+                    logger.debug("Found local sensor ? ${localsensor}")
+                    if (localsensor != null) {
+                        var v = io.readDs18(localsensor.name!!)
+                        value = DS18value()
+                        value.t = v
 
 
+                    }
+                }
                 logger.debug(" FIND Value: ${value}")
                 if (value != null) {
                     var v = value.t?.toInt()
