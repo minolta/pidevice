@@ -48,6 +48,7 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
                 break
             }
 
+
             var value = read.readTmpByjob(pj)
             //read(sensorid, desid)
             logger.debug("Read value : ${value}")
@@ -92,10 +93,16 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
             TimeUnit.SECONDS.sleep(1)
         }
 
+        try {
+            if (runcomplete) {
+                runPort(pijob)
 
-        if (runcomplete) {
-            runPort(pijob)
+
+            }
+        } catch (e: Exception) {
+            logger.error("Run port error Counter and run ${e.message}")
         }
+        this.isRun = false
     }
 
     /**
@@ -105,30 +112,40 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
         try {
             var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
             logger.debug("Start run port ${ports}")
+            var loop = pijob.runtime?.toInt()
+            if(loop==null || loop == 0)
+            {
+                loop = 1
+            }
             var runtime = pijob.hlow?.toLong()
             var nextrun = pijob.hhigh?.toLong()
-            if (ports != null && ports.size > 0) {
-                setport(ports)
-                if (runtime != null) {
-                    state = "Run time ${runtime}"
-                    logger.debug("Run to ${runtime}")
-                    TimeUnit.SECONDS.sleep(runtime)
-                    logger.debug("Next run")
+
+            for (i in 0..loop) {
+                if (ports != null && ports.size > 0) {
+                    setport(ports)
+                    if (runtime != null) {
+                        state = "Run time ${runtime}"
+                        logger.debug("Run to ${runtime}")
+                        TimeUnit.SECONDS.sleep(runtime)
+                        logger.debug("Next run")
+                    }
+
+                    resetport(ports)
+                    if (nextrun != null) {
+                        logger.debug("Wait time ${nextrun}")
+                        state = "Wait time ${nextrun}"
+                        TimeUnit.SECONDS.sleep(nextrun)
+                    }
+                    state = "Run port is end"
+                    logger.debug("Run port is end")
+
+
+                } else {
+                    logger.debug("Not have port to run")
                 }
-
-                resetport(ports)
-                if (nextrun != null) {
-                    logger.debug("Wait time ${nextrun}")
-                    state = "Wait time ${nextrun}"
-                    TimeUnit.SECONDS.sleep(nextrun)
-                }
-                state = "Run port is end"
-                logger.debug("Run port is end")
-
-
-            } else {
-                logger.debug("Not have port to run")
             }
+
+
         } catch (e: Exception) {
             logger.error("run PORT ${e.message}")
             throw e

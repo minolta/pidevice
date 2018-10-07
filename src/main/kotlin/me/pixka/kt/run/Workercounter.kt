@@ -9,7 +9,6 @@ import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
-import me.pixka.kt.pidevice.t.RunDSDP
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.joda.time.DateTime
@@ -165,6 +164,7 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
                         //  ms.message("Tmp is under rang exits count", "error")
                         state = "Value out of rang stop counter"
                         endcounter = false // เพราะนับไม่สุด
+                        isRun = false
                         break
                     }
 
@@ -189,6 +189,7 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
             logger.error("Error ${e.message}")
         }
 
+        isRun = false
 
     }
 
