@@ -38,44 +38,80 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
             for (i in jobs) {
 
                 logger.debug("Run job ${i}")
-                var value = checkLocal(i.ds18sensor!!)
+                if (i.ds18sensor != null) {
+                    var value = checkLocal(i.ds18sensor!!)
 
-                if (value != null) {
-                    logger.debug("Local value is ${value}")
-                    dvs.save(value)
+                    if (value != null) {
+                        logger.debug("Local value is ${value}")
+                        dvs.save(value)
 
-                } else {//ถ้าไม่เจอ local Sensor ต้องอ่านจากตัวอื่น
+                    } else {//ถ้าไม่เจอ local Sensor ต้องอ่านจากตัวอื่น
+                        try {
+                            value = ss.readDsOther(i.desdevice_id!!, i.ds18sensor_id)
+                            logger.debug("Read othre value ${value} ")
+                            if (value != null) {
+                                //   logger.debug("Value is ${value.t} PI:${value.pidevice} SENSOR:${value.ds18sensor} ")
+
+                                var d = i.ds18sensor
+                                if (d != null) {
+                                    d = dss.findorcreate(d.name!!)
+                                    logger.debug(" Found Sensor ${d}")
+                                } else {
+                                    logger.debug("Ds18Sensor not found")
+                                }
+                                value.ds18sensor = d
+                                value.pidevice = i.desdevice
+                                value.valuedate = Date()
+                                dvs.save(value)
+                                logger.info("Save DSOTHER")
+                            }
+                        } catch (e: Exception) {
+                            logger.error(e.message)
+                        }
+
+
+                    }
+                } else {
                     try {
-                        value = ss.readDsOther(i.desdevice_id!!, i.ds18sensor_id!!)
-                        logger.debug("Read othre value ${value} ")
+                        var value = readOther(i.desdevice_id!!, i.ds18sensor_id)
+                        logger.debug("Read other value ${value}")
                         if (value != null) {
-                            logger.debug("Value is ${value.t} PI:${value.pidevice} SENSOR:${value.ds18sensor} ")
+                            //   logger.debug("Value is ${value.t} PI:${value.pidevice} SENSOR:${value.ds18sensor} ")
 
                             var d = i.ds18sensor
                             if (d != null) {
                                 d = dss.findorcreate(d.name!!)
-                                logger.debug(" Found Sensod ${d}")
-                            }
-                            else
-                            {
+                                logger.debug(" Found Sensor ${d}")
+                            } else {
                                 logger.debug("Ds18Sensor not found")
+                                var des = i.desdevice
+                                d = dss.findorcreate(des?.mac!!)
+                                logger.debug("New Sensor ${d}")
                             }
+
                             value.ds18sensor = d
                             value.pidevice = i.desdevice
                             value.valuedate = Date()
                             dvs.save(value)
+                            logger.info("Save DSOTHER")
                         }
+
                     } catch (e: Exception) {
-                        logger.error(e.message)
+                        logger.error("Read other Error ${e.message}")
                     }
-
-
                 }
+
             }
 
         logger.debug("End #readtemp")
     }
 
+    fun readOther(desid: Long, sensor: Long?): DS18value? {
+        var r = ss.readDsOther(desid, sensor)
+        return r
+
+
+    }
 
     fun checkLocal(ds: DS18sensor): DS18value? {
         var value = io.readDs18value(ds.name!!)

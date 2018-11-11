@@ -72,124 +72,125 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
 
     var messageto = false
     override fun run() {
+        try {
+            logger.debug("Start runcounter job ID ***${pijob.id}***")
+            var timeoutcount = 0
+            startRun = Date()
+            var endcounter = false
+            while (true) {
+                var desid = pijob.desdevice_id
+                var sensorid = pijob.ds18sensor_id
+                //อ่านจาก DS เครื่องอื่น
+                var value: BigDecimal? = readValue(pijob)
 
-        logger.debug("Start run counter job ID ***${pijob.id}***")
-        var timeoutcount = 0
-        startRun = Date()
-        var endcounter = false
-        while (true) {
-            var desid = pijob.desdevice_id
-            var sensorid = pijob.ds18sensor_id
-            //อ่านจาก DS เครื่องอื่น
-            var value: BigDecimal? = readValue(pijob)
-/*
-            var localsensor = dss.find(sensorid)
-            logger.debug("find Sensor id : ${localsensor} Localhost Sensor ===============>  ${localsensor}")
-            if (localsensor != null) {
-                //ถ้าเจอ Senosr localhost
-                var v = io.readDs18(localsensor.name!!)
-                logger.debug("Value from ${localsensor} ${v}")
-                if (v != null) {
-                    value = DS18value()
-                    value.t = v
+                logger.debug("Read value : ${value}")
+                state = "Read value :${value}"
+                if (value != null) {
+                    //ถ้ามีข้อมูล
+                    state = "Start run"
+
+                    var inrange = checkrang(value)
+
+                    if (inrange) {
+                        //ถ้าข้อมูลอยู่ในช่วงที่กำหนด
+                        if (startdate == null) {
+                            startcounter()
+                        }
+
+                        var havetorun = run?.toInt()!!
+                        var runcomplete = findrun()
+                        completerun = runcomplete
+
+                        if (runcomplete >= havetorun) {
+                            endcounter = countok()
+                            break
+                        }
+                    } else {
+                        logger.error("Value not in range range ${pijob.tlow} <= ${value} => ${pijob.thigh} ")
+                        timeoutcount++
+                        if (timeoutcount >= timeout?.toInt()!!) {
+                            endcounter = timeout(timeoutcount)
+                            break
+                        }
+
+                    }
                 }
-            } else {
 
-
-            }
-
-
-            if (value == null)
-                value = ss.readDsOther(desid!!, sensorid!!)
-*/
-            logger.debug("Read value : ${value}")
-            state = "Read value :${value}"
-            if (value != null) {
-                //ถ้ามีข้อมูล
-                state = "Start run"
-
-                var v = value?.toInt()
-                var l = pijob.tlow?.toInt()
-                var h = pijob.thigh?.toInt()
-
-                if (v!! >= l!! && v!! <= h!!) {
-                    //ถ้าข้อมูลอยู่ในช่วงที่กำหนด
-                    state = "Have Job to run"
-                    logger.debug("Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}")
-                    state = "Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}"
-                    if (startdate == null) {
-                        startdate = Date()
-                        timeout = pijob.waittime //
-                        run = pijob.runtime //เวลาในการ run เอ็นวินาที
-                        finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
-                        next3 = DateTime().plusSeconds(pijob.runtime?.toInt()!! - 7200).toDate() //เวลาเสร็จ
-                    }
-                    if (!messageto) {
-                        messageto = true
-                        //  ms.message("Start Counter 90  Close : ${finishrun}", "info")
-                        state = "Start Count end at ${finishrun} "
-                    }
-
-                    //runtime = Date()
-
-                    var rt = DateTime()
-                    var st = DateTime(startdate)
-
-                    runtime = rt.toDate()
-                    period = Interval(st, rt).toPeriod() //ช่วงเวลา
-
-                    var r = Seconds.secondsBetween(st, rt)
-                    var havetorun = run?.toInt()!!
-                    completerun = r.seconds
-                    if (r.seconds >= havetorun) {
-                        logger.debug("End run counter job ID ***${pijob.id}***")
-                        messageto = false
-                        ms.message("Interrup Counter", "info")
-                        isRun = false
-                        state = "Counter is in interrup"
-                        endcounter = true
-                        break
-                    }
-
-                    //var c = rt.minus(startdate?.time!!) //เวลาที่ run ไปแล้ว
-
-
-                    //var d = startdate?.time!! - runtime?.time!! / 1000 // เวลาที่ทำงานไปแล้ว เป็นวินาที
-
-                } else {
-                    logger.error("Value not in range range ${pijob.tlow} <= ${v} => ${pijob.thigh} ")
-                    timeoutcount++
-                    if (timeoutcount >= timeout?.toInt()!!) {
-                        logger.error("Time out count exit ${timeoutcount}")
-                        //  ms.message("Tmp is under rang exits count", "error")
-                        state = "Value out of rang stop counter"
-                        endcounter = false // เพราะนับไม่สุด
-                        isRun = false
-                        break
-                    }
-
+                try {
+                    display()
+                } catch (e: Exception) {
+                    logger.error("Display error ${e.message}")
                 }
+                logger.debug("Counter Wait in 1 minits")
+                TimeUnit.MINUTES.sleep(1)
             }
-
 
             try {
-                display()
+                if (endcounter) {
+                    runPorts(pijob)
+                }
             } catch (e: Exception) {
-                logger.error("Display error ${e.message}")
+                logger.error("Error ${e.message}")
             }
-            logger.debug("Counter Wait in 1 minits")
-            TimeUnit.MINUTES.sleep(1)
-        }
 
-        try {
-            if (endcounter) {
-                runPorts(pijob)
-            }
+            isRun = false
         } catch (e: Exception) {
-            logger.error("Error ${e.message}")
+            logger.error("Have Error ${e.message}")
+            isRun = false
+
         }
 
         isRun = false
+
+
+    }
+
+    fun timeout(timeoutcount: Int): Boolean {
+        logger.error("Time out count exit ${timeoutcount}")
+        state = "Value out of rang stop counter"
+        isRun = false
+        return false
+    }
+
+    fun countok(): Boolean {
+        logger.debug("End run counter job ID ***${pijob.id}***")
+        messageto = false
+        isRun = false
+        state = "Counter is in interrup"
+        return true
+    }
+
+    fun findrun(): Int {
+        var rt = DateTime()
+        var st = DateTime(startdate)
+        runtime = rt.toDate()
+        period = Interval(st, rt).toPeriod() //ช่วงเวลา
+        var r = Seconds.secondsBetween(st, rt)
+        return r.seconds
+
+    }
+
+    fun startcounter() {
+        startdate = Date()
+        timeout = pijob.waittime //
+        run = pijob.runtime //เวลาในการ run เอ็นวินาที
+        finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
+        next3 = DateTime().plusSeconds(pijob.runtime?.toInt()!! - 7200).toDate() //เวลาเสร็จ
+    }
+
+    fun checkrang(value: BigDecimal): Boolean {
+        try {
+            var v = value.toFloat()
+            var l = pijob.tlow?.toFloat()
+            var h = pijob.thigh?.toFloat()
+
+            if (v >= l!! && v <= h!!)
+                return true
+
+        } catch (e: Exception) {
+            logger.error(e.message)
+        }
+        return false
 
     }
 

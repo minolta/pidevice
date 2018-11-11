@@ -106,7 +106,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return job
         } catch (e: Exception) {
             logger.error("loadpijob find job error ${e.message}")
-            err.n("loadpijob", "52-53", "${e.message}")
         }
 
         return null
@@ -120,7 +119,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             logger.debug("New Other device ${pd} Have already in device")
             if (other == null) {
 
-                var p = pds.create(pd.mac!!,pd.id)
+                var p = pds.create(pd.mac!!, pd.id)
                 logger.debug("not found in this device create new ${pd} new obj ${p}")
                 return p
             }
@@ -141,7 +140,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return dss
         } catch (e: Exception) {
             logger.error("loadpijob find ds sensor error ${e.message}")
-            err.n("loadpijob", "60-61", "${e.message}")
+            //   err.n("loadpijob", "60-61", "${e.message}")
         }
 
         return null
@@ -151,9 +150,20 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
 
         try {
             item.job = newjob(item.job!!)
-            item.ds18sensor = newdssensor(item.ds18sensor!!)
-            item.desdevice = newotherdevice(item.desdevice!!)
+            try {
+                item.ds18sensor = newdssensor(item.ds18sensor!!)
+            } catch (e: Exception) {
+                logger.error("Can not create Sensor")
+            }
+            try {
+                item.desdevice = newotherdevice(item.desdevice!!)
+            } catch (e: Exception) {
+                logger.error("Can not create Other Device")
+            }
+
             logger.debug("Item for new pijob ${item}")
+
+
             var p: Pijob = service.newpijob(item)
 
 
@@ -167,6 +177,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return p
         } catch (e: Exception) {
             logger.error("Can not create Pi job ${e.message}")
+            e.printStackTrace()
         }
         return null
     }

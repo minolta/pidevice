@@ -25,12 +25,13 @@ class Runcooldown(val js: JobService, val pjs: PijobService,
 
     @Scheduled(initialDelay = 2000, fixedDelay = 30000)
     fun run() {
+
         logger.info("Run Cooldown")
 
         var job = js.findByName("cooldown") //สำหรับแสดงผล
 
         if (job == null) {
-            RunDSDP.logger.error("JOB COOL DOWN NOT FOUND")
+            logger.error("JOB COOL DOWN NOT FOUND")
             return
         }
 

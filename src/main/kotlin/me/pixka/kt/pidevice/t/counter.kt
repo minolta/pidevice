@@ -34,30 +34,38 @@ class CounterOther(val context: ApplicationContext,
     var runjobs = ArrayList<runInfo>()
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun run() {
-        logger.debug("Start find Counter job")
+        try {
+            logger.debug("Start find Counter job")
 
-        var jobs = loadjob()
-        var torun = find(jobs!!)
+            var jobs = loadjob()
+            var torun = find(jobs!!)
 
 
-        if (torun != null) {
+            if (torun != null) {
+                logger.debug("counter for run ${torun.size}")
+                for (job in torun) {
+                    logger.debug("Start counterjob ${job.id}")
+                    var task = Workercounter(job, ps, gpio, ss, dps, ms, io, dss)
 
-            for (job in torun) {
-                logger.debug("Start task job ${job.id}")
-                var task = Workercounter(job, ps, gpio, ss, dps, ms, io, dss)
+                    if (!ts.run(task)) {
+                        logger.error("Reject job #threadinfo ${task}")
+                    } else {
+                        logger.info("runcounterjob ${task}")
+                    }
 
-                if (!ts.run(task)) {
-                    logger.error("Reject job #threadinfo ${task}")
+                    //var f = pool.submit(task)
+                    //logger.debug("Future ${f}")
+                    //var run = runInfo(task, f, Date())
+
+
+                    //runjobs.add(run)
                 }
 
-                //var f = pool.submit(task)
-                //logger.debug("Future ${f}")
-                //var run = runInfo(task, f, Date())
-
-
-                //runjobs.add(run)
+            } else {
+                logger.error("Not have job to runcounter")
             }
-
+        } catch (e: Exception) {
+            logger.error(e.message)
         }
         /*
 
@@ -92,6 +100,7 @@ class CounterOther(val context: ApplicationContext,
         for (run in runjobs) {
             var f = run.f
             if (f?.isDone!!) {
+                logger.info("Remove old job")
                 runjobs.remove(run)
             }
         }
@@ -132,7 +141,7 @@ class CounterOther(val context: ApplicationContext,
     fun injob(job: Pijob): Boolean {
         for (info in runjobs) {
             var p = info.job
-            if (p?.runStatus() == true && p?.getPijobid().toInt() == job.id.toInt())
+            if (p?.runStatus() == true && p.getPijobid().toInt() == job.id.toInt())
                 return true
         }
         return false
