@@ -14,9 +14,13 @@ import org.springframework.stereotype.Component
 @Component
 class Sendpressure(val service: PressurevalueService, val http: HttpControl) {
 
-    var target = "http://endpoint.pixka.me:5002/pressure/add"
+    var target = "http://endpoint.pixka.me:8081/pressure/add"
     @Scheduled(initialDelay = 1000, fixedDelay = 30000)
     fun send() {
+
+        var nt = System.getProperty("piserver")
+        if(nt!=null)
+            target = nt+"/pressure/add"
         var list = service.findNottoserver()
         if (list != null) {
             val mapper = ObjectMapper()
