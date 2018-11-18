@@ -94,7 +94,10 @@ class SenddhtTask(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt
                     val info = Infoobj()
 
                     //info.ip = io.wifiIpAddress()
-                    info.mac = io.wifiMacAddress()
+                    if (item.pidevice == null)
+                        info.mac = io.wifiMacAddress()
+                    else
+                        info.mac = item.pidevice!!.mac
                     info.dhtvalue = item
 
                     re = http.postJson(target, info)

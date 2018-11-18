@@ -26,7 +26,7 @@ class Displaydsvalues(val dps: DisplayService,
     @Scheduled(initialDelay = 5000, fixedDelay = 30000)
     fun run() {
         logger.info("Run Display DS 18b20 value")
-        var run = dbcfg.findorcreate("displaydsvalue", "true").value
+        var run = dbcfg.findorcreate("displaydsvalue", "false").value
         logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue

@@ -19,7 +19,7 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
     @Scheduled(initialDelay = 3000, fixedDelay = 60000)
     fun read() {
 
-        var canread = dbcfg.findorcreate("readdht", "true").value
+        var canread = dbcfg.findorcreate("readdht", "false").value
         if (!canread.equals("true")) {
             logger.info("Not run read dht")
             return
