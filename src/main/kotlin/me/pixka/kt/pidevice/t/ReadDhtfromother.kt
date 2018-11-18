@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi", "lite")
@@ -54,6 +55,9 @@ class ReadDhtfromother(val http: HttpControl,
                                 dhtvalue.pidevice = pidevice
                                 var d = dhts.save(dhtvalue)
                                 logger.info("Save otherdht ${d}")
+                                if (i.waittime != null)
+                                    TimeUnit.SECONDS.sleep(i.waittime!!.toLong())
+
                             }
 
                         }
