@@ -45,7 +45,7 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
             }
             else
             {
-                timeout = 0;
+                timeout--;
             }
             runtime--
             TimeUnit.SECONDS.sleep(1)

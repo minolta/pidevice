@@ -2,27 +2,41 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.kt.run.D1hjobWorker
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PideviceService
 import me.pixka.pibase.s.PijobService
+import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class Runhjobbyd1(val http: HttpControl,
-                  val pjs: PijobService,
+class Runhjobbyd1(val pjs: PijobService,
                   val js: JobService,
-                  val dhts: DhtvalueService,
-                  val pds: PideviceService,
-                  val ips: IptableServicekt) {
+                  val task: TaskService,
+                  val gpios: GpioService,
+                  val dhs: Dhtutil, val httpControl: HttpControl,
+                  val dhtvalueService: DhtvalueService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
 
+        var list = loadjob()
+        if (list != null)
+            logger.debug("Job for Runhjobbyd1 ${list.size}")
+        if (list != null) {
+            for (job in list) {
+                logger.debug("Run ${job}")
+                var t = D1hjobWorker(job, gpios, dhtvalueService, dhs, httpControl)
+                var run = task.run(t)
+                logger.debug("RunJOB ${run}")
+            }
+        }
     }
 
     fun loadjob(): List<Pijob>? {
@@ -34,5 +48,9 @@ class Runhjobbyd1(val http: HttpControl,
             return jobs
         }
         throw Exception("Not have JOB")
+    }
+
+    companion object {
+        internal var logger = LoggerFactory.getLogger(Runhjobbyd1::class.java)
     }
 }

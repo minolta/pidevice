@@ -49,11 +49,22 @@ class CountdownDisplayWorker(var pijob: Pijob,
             if (runtime % 60 == 0) {
                 display()
             }
+
+            if (!checkincondition()) {
+                timeout++
+                if (timeout >= 300) //ถ้าหลุดนานกว่า 5 นาที
+                {
+                    break
+                }
+            } else {
+                timeout--
+            }
         }
 
         isRun = false
 
-
+        if (pijob.waittime != null)
+            TimeUnit.SECONDS.sleep(pijob.waittime!!)
 
 
         logger.info("End countdowndisplay")
@@ -61,7 +72,7 @@ class CountdownDisplayWorker(var pijob: Pijob,
     }
 
     fun display() {
-        var task = DisplayTask(display,"Run ${runcount} Close AT:     ${df.format(closedate)}         ")
+        var task = DisplayTask(display, "Run ${runcount} Close AT:     ${df.format(closedate)}         ")
         queue.submit(task)
     }
 
@@ -203,12 +214,12 @@ class CountdownDisplayWorker(var pijob: Pijob,
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(CoundownWorkerii::class.java)
+        internal var logger = LoggerFactory.getLogger(CountdownDisplayWorker::class.java)
     }
 
 }
 
-class DisplayTask(val display: DisplayService,val msg:String) : Runnable {
+class DisplayTask(val display: DisplayService, val msg: String) : Runnable {
     override fun run() {
 
         try {
