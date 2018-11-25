@@ -6,7 +6,7 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.run.CDWorker
+import me.pixka.kt.run.CoundownWorkerii
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
@@ -52,14 +52,13 @@ class Runcooldown(val js: JobService, val pjs: PijobService,
 
         for (pj in jobs) {
             var checkvar = readDs(pj)
-
             if (checkvar == null || checkvar.compareTo(pj.tlow) < 0) {
                 logger.error("Not in ranger job not start ${pj}")
                 continue
             } else {
                 logger.debug("Cool job can run")
 
-                var c = CDWorker(pj, ss, gpios, m, i, ppp,pjs)
+                var c = CoundownWorkerii(pj,gpios,ss)
                 ts.run(c)
             }
         }

@@ -28,16 +28,20 @@ class CountdownDisplayWorker(var pijob: Pijob,
     val dn = SimpleDateFormat("yyyy/MM/dd")
     var closedate: Date? = null
     var runcount = 0
+    var state = ""
     var df = SimpleDateFormat("HH:mm:ss")
     override fun run() {
         if (!checkincondition()) {
             logger.error("Not in rang end this job")
+            state = "Not in rang end this job"
             return
         }
         logger.debug("Start countdown ")
+
         isRun = true
         setup()
         startDate = Date()
+        state = "Start countdown ${startDate}"
 
         var timeout = 0
 
@@ -59,20 +63,24 @@ class CountdownDisplayWorker(var pijob: Pijob,
             } else {
                 timeout--
             }
+
+            state = "Counter ${runtime}"
         }
 
         isRun = false
 
-        if (pijob.waittime != null)
+        if (pijob.waittime != null) {
+            state = " Run waittime ${pijob.waittime}"
             TimeUnit.SECONDS.sleep(pijob.waittime!!)
-
+        }
 
         logger.info("End countdowndisplay")
-
+        state = "End countdowndisplay"
     }
 
     fun display() {
         var task = DisplayTask(display, "Run ${runcount} Close AT:     ${df.format(closedate)}         ")
+        state = "Run ${runcount} Close AT:     ${df.format(closedate)}         "
         queue.submit(task)
     }
 
@@ -109,9 +117,11 @@ class CountdownDisplayWorker(var pijob: Pijob,
             c.add(Calendar.DATE, 1)  // number of days to add
             var nextdate = dn.format(c.time)
             var timetorun = d.parse(nextdate + " " + pijob.stimes)
+            state = "Next run ${timetorun}"
             return timetorun
         } catch (e: Exception) {
             logger.error("coundown getnextrun pares date ${e.message}")
+            state = "coundown getnextrun pares date ${e.message}"
         }
         return null
     }
@@ -171,11 +181,13 @@ class CountdownDisplayWorker(var pijob: Pijob,
         if (pijob != null && pijob.runtime != null) {
             runtime = pijob.runtime!!.toInt()
             closedate = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate()
-
             logger.debug("Runtime ${runtime} ${closedate}")
+            state = "Runtime ${runtime} ${closedate}"
         } else {
             isRun = false
+            state = "No runtime information"
             throw Exception("No runtime information")
+
         }
 
 
@@ -206,11 +218,11 @@ class CountdownDisplayWorker(var pijob: Pijob,
     }
 
     override fun startRun(): Date? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return startDate
     }
 
     override fun state(): String? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return state
     }
 
     companion object {

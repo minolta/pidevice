@@ -8,11 +8,14 @@ import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Service
 class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
@@ -70,8 +73,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
                 logger.debug("1 Read tmp By pijob ${job} #readtmpbyjob")
                 value = ss.readDsOther(desid!!, sensorid!!)
                 logger.debug("2 Read tmp other #readtmpbyjob [${value}]")
-                if(value!=null)
-                {
+                if (value != null) {
                     return value.t
                 }
             } catch (e: Exception) {
@@ -111,6 +113,57 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
 
         logger.error("9 Not found other job for run #readtmpbyjob")
         return null
+    }
+
+    /**
+     * ใช้สำหรับ อ่านค่า ktype จาก D1
+     */
+    fun readTfromD1Byjob(job: Pijob): DS18value? {
+
+        //mac to ip
+        try {
+            var ip = findip(job.desdevice!!.mac!!)
+            var url = "http://${ip}/ktype"
+            var get = HttpGetTask(url)
+            var ee = Executors.newSingleThreadExecutor()
+            var f = ee.submit(get)
+            var value = f.get(15, TimeUnit.SECONDS)
+            if (value != null)
+                return Stringtods18value(value)
+            else
+                throw Exception("Value is null")
+        } catch (e: Exception) {
+            logger.error("ReadTfromD1Byjob ${e.message}")
+            throw e
+        }
+
+
+    }
+
+    fun Stringtods18value(stringvalue: String): DS18value? {
+        try {
+            logger.debug("70 start convert")
+            val v = om.readValue<DS18value>(stringvalue, DS18value::class.java)
+            logger.debug("71 Stringtods18value : ${v}")
+            logger.debug("==========")
+            logger.debug("72 ${v}")
+            logger.debug("==========")
+            return v
+        } catch (e: Exception) {
+            logger.error("73 EStringtods18value Error: ${e.message}")
+            throw e
+        }
+    }
+
+    fun findip(mac: String): String? {
+        try {
+            var ip = ips.findByMac(mac)
+            return ip!!.ip
+
+        } catch (e: Exception) {
+            logger.error("Find IP ${e.message}")
+            throw e
+        }
     }
 
     companion object {

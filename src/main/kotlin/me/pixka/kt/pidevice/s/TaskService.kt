@@ -150,7 +150,14 @@ class TaskService(val context: ApplicationContext) {
             e.printStackTrace()
         }
 
-        logger.debug("Remove Already run size: ${runinglist.size}  ${runinglist}  ")
+        logger.debug("Remove Already run size: ${runinglist.size}    ")
+
+        logger.debug(" ======================================RUN===========================================  ")
+        for (run in runinglist) {
+            logger.debug("THREADISRUN ID: ${run.getPijobid()} Start date ${run.startRun()} Status :${run.state()} " +
+                    "is run ? : ${run.runStatus()}")
+        }
+        logger.debug("======================================================================================")
     }
 
     companion object {

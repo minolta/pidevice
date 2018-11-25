@@ -3,18 +3,21 @@ package me.pixka.kt.run
 import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
 class D1tjobWorker(var pijob: Pijob, var gpios: GpioService, val dhtvalueService: DhtvalueService,
-                   val dhts: Dhtutil, val httpControl: HttpControl)
+                   val readvalue: ReadUtil, val httpControl: HttpControl)
     : PijobrunInterface, Runnable {
     var isRun = false
-
+    var state = ""
+    var startrun: Date? = null
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -38,22 +41,24 @@ class D1tjobWorker(var pijob: Pijob, var gpios: GpioService, val dhtvalueService
     }
 
     override fun startRun(): Date? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return startrun
     }
 
     override fun state(): String? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return state
     }
 
     override fun run() {
-
+        startrun = Date()
         isRun = true
         try {
-            var dhtvalue = dhts.readByPijob(pijob)
-            logger.debug("DHTVALUE ${dhtvalue}")
-            if (dhtvalue != null) {
+            var ds18value = readvalue.readTfromD1Byjob(pijob)
 
-                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
+            logger.debug("DS18value ${ds18value}")
+            state = "DS18value [${ds18value}]"
+            if (ds18value != null) {
+
+                if (checkH(pijob.tlow?.toFloat()!!, pijob.thigh?.toFloat()!!, ds18value.t?.toFloat()!!)) {
                     logger.debug("Go!!")
                     go()
                     isRun = false
@@ -63,6 +68,7 @@ class D1tjobWorker(var pijob: Pijob, var gpios: GpioService, val dhtvalueService
         } catch (e: Exception) {
             isRun = false
             logger.error("ERROR ${e.message}")
+            state = "ERROR ${e.message}"
             throw e
         }
 
@@ -113,11 +119,16 @@ class D1tjobWorker(var pijob: Pijob, var gpios: GpioService, val dhtvalueService
                 try {
                     var url = findUrl(portname!!, runtime, waittime, value)
                     logger.debug("URL ${url}")
-                    httpControl.get(url)
+                    var get = HttpGetTask(url)
+                    var ee = Executors.newSingleThreadExecutor()
+                    var f = ee.submit(get)
+                    var value = f.get(5, TimeUnit.SECONDS)
+                    logger.debug("String from open [${value}]")
                     TimeUnit.SECONDS.sleep(runtime)
                     TimeUnit.SECONDS.sleep(waittime)
                 } catch (e: Exception) {
                     logger.error("Error ${e.message}")
+                    state = "ERROR set port ${e.message} "
                 }
 
             }
@@ -126,9 +137,9 @@ class D1tjobWorker(var pijob: Pijob, var gpios: GpioService, val dhtvalueService
 
     fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
         if (pijob.desdevice != null) {
-            var ip = dhts.mactoip(pijob.desdevice!!.mac!!)
+            var ip = readvalue.findip(pijob.desdevice!!.mac!!)
             if (ip != null) {
-                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
+                var url = "http://${ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
                 return url
             }
         }
