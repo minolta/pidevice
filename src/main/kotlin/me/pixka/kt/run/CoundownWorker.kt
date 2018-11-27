@@ -59,18 +59,22 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
             }
 
         }
+
+
         try {
             if (canrunport) {
                 runport()
             }
         } catch (e: Exception) {
             logger.error("Run port error ${e.message}")
+            state = "Error ${e.message}"
         }
 
 
 
         logger.info("End countdown")
         state = "End countdown"
+        isRun=false
 
     }
 
@@ -93,8 +97,10 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
             timetorun = pijob.timetorun!!.toInt()
 
 
+        logger.debug("Time to run ${timetorun}")
         var portlist = pijob.ports
 
+        logger.debug("Port to run ${portlist}")
         if (portlist != null) {
             while (timetorun > 0) {
                 timetorun--
@@ -111,7 +117,10 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
                         if (logic!!.toLowerCase().indexOf("false") != -1) {
                             l = false
                         }
+
+                        logger.debug("Port to run ${pin} logic ${logic} Run time: ${runtime} waittime: ${waittime}")
                         state = "set Pin ${pin} to ${l}"
+
                         gpios.setPort(pin!!, l)
                         state = "Run this port ${runtime} "
                         TimeUnit.SECONDS.sleep(runtime!!)
