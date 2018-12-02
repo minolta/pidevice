@@ -79,9 +79,17 @@ class CountdownDisplayWorker(var pijob: Pijob,
     }
 
     fun display() {
-        var task = DisplayTask(display, "Run ${runcount} Close AT:     ${df.format(closedate)}         ")
-        state = "Run ${runcount} Close AT:     ${df.format(closedate)}         "
-        queue.submit(task)
+        try {
+            var task = DisplayTask(display, "Run ${runcount} Close AT:     ${df.format(closedate)}         ")
+            logger.debug("Run ${runcount} Close AT:     ${df.format(closedate)}         ")
+            state = "Run ${runcount} Close AT:     ${df.format(closedate)}         "
+            var f = queue.submit(task)
+            f.get(5, TimeUnit.SECONDS)
+            logger.debug("Run display complete")
+        } catch (e: Exception) {
+            logger.error("Display Error ${e.message}")
+
+        }
     }
 
     //ใช้สำหรับหา ว่า จะปิดกี่โมงจาก Runtime
