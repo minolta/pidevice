@@ -71,7 +71,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
             var value: DS18value? = null
             try {
                 logger.debug("1 Read tmp By pijob ${job} #readtmpbyjob")
-                value = ss.readDsOther(desid!!, sensorid!!)
+                value = ss.readDsOther(desid!!, sensorid)
                 logger.debug("2 Read tmp other #readtmpbyjob [${value}]")
                 if (value != null) {
                     return value.t
@@ -97,11 +97,6 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
                 if (v != null)
                     return v
             }
-
-
-
-
-
             if (value != null) {
                 return value.t
             }

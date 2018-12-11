@@ -102,8 +102,7 @@ class DPPS(var value: DS18value?, val dps: DisplayService, var displaytime: Long
     override fun call(): Boolean {
         logger.info("Run DPPS")
 
-
-        var d = "00@0"
+        var d = "P000"
         try {
             if (value != null) {
                 d = df.format(value?.t)

@@ -4,6 +4,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pidevice.u.ReadUtil
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.*
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit
 /**
  * เป็นตัว run การนับว่าจะให้ทำอะไร
  */
-class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorService: SensorService)
+class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorService: SensorService, val readUtil: ReadUtil)
     : PijobrunInterface, Runnable {
 
     var runtime: Int = 0
@@ -34,8 +35,9 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
         var timeout = 0
         var canrunport = false
         //start run
-        while (runtime > 0) {
+        while (true) {
 
+            ///ถ้าขึ้นถึงก็เริ่มนับไปเลย
 
             if (!checkincondition()) {
                 timeout++
@@ -49,17 +51,31 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
             } else {
                 timeout--;
             }
-            runtime--
-            TimeUnit.SECONDS.sleep(1)
-            if (runtime <= 0) {//ถ้า นับมาจนครบ ก็เริ่มทำงาน
+
+            if (checkruncomplete()) {
                 canrunport = true
                 logger.info("To run port")
                 state = "To run port"
                 break
             }
+            /*   runtime--
+               TimeUnit.SECONDS.sleep(1)
+               if (runtime <= 0) {//ถ้า นับมาจนครบ ก็เริ่มทำงาน
+                   canrunport = true
+                   logger.info("To run port")
+                   state = "To run port"
+                   break
+               }
+               */
+
 
         }
 
+
+        //ถ้ามีการกำหนด เวลา เริ่มต้น
+        if (pijob.stime != null || pijob.stimes != null) {
+            checktime() // รอจนกว่าจะถึงเวลาเริ่มทำงาน
+        }
 
         try {
             if (canrunport) {
@@ -72,10 +88,22 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
 
 
 
-        logger.info("End countdown")
+        logger.info("Endcountdown")
         state = "End countdown"
-        isRun=false
+        isRun = false
 
+    }
+
+    var finishtime: Date? = null
+    fun checkruncomplete(): Boolean {
+        if (finishtime == null)
+            finishtime = getnextrunt()
+
+        var now = Date()
+        if (now.time >= finishtime?.time!!) {
+            return true
+        }
+        return false
     }
 
     /**
@@ -84,15 +112,8 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
      */
     fun runport() {
 
-        //ถ้ามีการกำหนด เวลา เริ่มต้น
-        if (pijob.stime != null || pijob.stimes != null) {
-
-            checktime() // รอจนกว่าจะถึงเวลาเริ่มทำงาน
-        }
-
 
         var timetorun = 1
-
         if (pijob.timetorun != null && pijob.timetorun!!.toInt() > 0)
             timetorun = pijob.timetorun!!.toInt()
 
@@ -134,9 +155,7 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
 
 
             }
-        }
-        else
-        {
+        } else {
             logger.error("No port to run")
         }
 
@@ -161,26 +180,30 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
     }
 
     fun checktime() {
-        if (pijob.stimes != null) {
+        try {
+            logger.debug("checktime Have to check if pijob set stimes system have to wait util stimes ")
+            if (pijob.stimes != null) {
+                var timetorun = getnextrunt()
 
-            var timetorun = getnextrunt()
-
-            while (true) {
-                var now = Date().time
-
-                logger.debug("cooldown checktime checktime nextrun time wait time :  ${timetorun!!.time} now ${now}")
-                state = "cooldown checktime checktime nextrun time wait time :  ${timetorun!!.time} now ${now}"
-                if (now.toInt() >= timetorun.time.toInt()) {
-                    break
+                while (true) {
+                    var now = Date().time
+                    logger.debug("cooldown checktime checktime nextrun time wait time :  ${timetorun!!.time} now ${now}")
+                    state = "cooldown checktime checktime nextrun time wait time :  ${timetorun.time} now ${now}"
+                    if (now >= timetorun.time) {
+                        break
+                    }
+                    state = "Wait 1 sec"
+                    TimeUnit.SECONDS.sleep(1)
                 }
-
-                TimeUnit.SECONDS.sleep(1)
             }
+        } catch (e: Exception) {
+            logger.error(e.message)
         }
     }
 
     fun getnextrunt(): Date? {
         try {
+            dn.timeZone = TimeZone.getTimeZone("UTC")
             var ds = dn.format(Date())
             logger.debug("DS: ${ds}")
             state = "DS : ${ds}"
@@ -204,16 +227,35 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
     //ใช้สำหรับอ่านค่า ว่าอยู่ในช่วงหรือเปล่า
     fun checkincondition(): Boolean {
         if (pijob != null) {
-            if (pijob.desdevice_id != null && pijob.ds18sensor_id != null) {
-                state = "Read ds from ReadOther()"
-                return readother()
-            } else if (pijob.desdevice_id != null) {
-                state = "Read ds k type "
-                return readktype()
+            try {
+                var value = readUtil.readTmpByjob(pijob)
+                state = "Read value ${value}"
+                logger.debug("Readvalue ${value} ")
+                if (value != null) {
+                    var v = value.toFloat()
+                    var tl = pijob.tlow!!.toFloat()
+                    val th = pijob.thigh!!.toFloat()
+                    if (v >= tl && v <= th) {
+                        state = "Job in range"
+                        logger.debug("?Job in rang")
+                        return true
+                    }
+                    state = "job not in rang"
+                    logger.debug("Job in rang")
+                    return false
+
+                }
+                return false
+            } catch (e: Exception) {
+
+                logger.error(e.message)
+                state = e.message!!
+                throw e
             }
 
 
         }
+        state = "Pijob is null"
         return false
     }
 
@@ -313,7 +355,7 @@ class CoundownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServi
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(CoundownWorkerii::class.java)
+        internal var logger = LoggerFactory.getLogger(CountdownWorkerii::class.java)
     }
 
 }

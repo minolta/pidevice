@@ -46,7 +46,6 @@ class RunPressure(val reader: ReadUtil, val js: JobService, val pjs: PijobServic
         if (p != null) {
             var pl = j.tlow?.toFloat()
             var ph = j.thigh?.toFloat()
-
             var pv = p.pressurevalue?.toFloat()
 
             logger.debug("Value Low ${pl} Value ${pv} High ${ph}")
@@ -62,12 +61,18 @@ class RunPressure(val reader: ReadUtil, val js: JobService, val pjs: PijobServic
 
 
     fun loadjob(): List<Pijob>? {
-        var job = js.findByName("runpressure")
-        if (job != null) {
-            var jobtorun = pjs.findJob(job.id)
-            return jobtorun
+        try {
+            var job = js.findByName("runpressure")
+            if (job != null) {
+                var jobtorun = pjs.findJob(job.id)
+                return jobtorun
+            }
+            return null
+        }catch (e:Exception)
+        {
+            logger.error(e.message)
+            throw e
         }
-        return null
     }
 
     companion object {

@@ -6,10 +6,10 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.run.CoundownWorkerii
+import me.pixka.kt.pidevice.u.ReadUtil
+import me.pixka.kt.run.CountdownWorkerii
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -21,7 +21,7 @@ import java.math.BigDecimal
 @Profile("pi")
 class Runcooldown(val js: JobService, val pjs: PijobService,
                   val gpios: GpioService, val ts: TaskService, val ss: SensorService,
-                  val m: MessageService, val i: Piio, val ppp: PortstatusinjobService) {
+                  val m: MessageService, val i: Piio, val readUtil: ReadUtil) {
 
     @Scheduled(initialDelay = 2000, fixedDelay = 30000)
     fun run() {
@@ -51,33 +51,17 @@ class Runcooldown(val js: JobService, val pjs: PijobService,
     fun exe(jobs: List<Pijob>) {
 
         for (pj in jobs) {
-            var checkvar = readDs(pj)
-            if (checkvar == null || checkvar.compareTo(pj.tlow) < 0) {
-                logger.error("Not in ranger job not start ${pj}")
-                continue
-            } else {
-                logger.debug("Cool job can run")
-
-                var c = CoundownWorkerii(pj,gpios,ss)
-                ts.run(c)
-            }
+           // var checkvar = readDs(pj)
+            logger.debug("Cool job can run")
+            var c = CountdownWorkerii(pj, gpios, ss,readUtil)
+            ts.run(c)
         }
     }
 
     fun readDs(pijob: Pijob): BigDecimal? {
 
-        var desid = pijob.desdevice_id
-        var sensorid = pijob.ds18sensor_id
+        return readUtil.readTmpByjob(pijob)
 
-        var value = i.readDs18(pijob.ds18sensor?.name!!)
-        if (value == null) {
-            var dsvalue = ss.readDsOther(desid!!, sensorid!!)
-            if (dsvalue != null) {
-                value = dsvalue.t
-            }
-        }
-
-        return value
     }
 
     companion object {

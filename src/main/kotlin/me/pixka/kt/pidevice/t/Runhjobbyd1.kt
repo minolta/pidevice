@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-    class Runhjobbyd1(val pjs: PijobService,
+class Runhjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,
                   val gpios: GpioService,

@@ -70,7 +70,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
                 if (pijob.timetorun!!.toInt() > 0)
                     loop = pijob.timetorun!!.toInt()
             }
-            logger.debug("Startworker ${pijob.id}")
+            logger.debug("Startworker JOBID:${pijob.id} ${pijob.name}")
             //  ms.message("Start work id:${pijob.id} ", "info")
 
 
