@@ -85,7 +85,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
                     for (port in porttocheck) {
                         var p = gpio.readPort(port.portname?.name!!)
                         logger.debug("readport ${p} ${p!!.state}")
-                        if (p!!.isHigh) {
+                        if (p.isHigh) {
                             value = 1
                         } else {
                             value = 0
@@ -159,7 +159,6 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
                 tochecks.add(port)
             }
         }
-
         return tochecks
     }
 
@@ -168,7 +167,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
             if (ports != null)
                 for (port in ports) {
                     if (!port.status?.name.equals("check")) {
-                        var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
+                        var pin = gpio.gpio.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
                         logger.debug("Reset pin ${pin}")
                         state = "Reset pin ${pin}"
                         gpio.resettoDefault(pin)
@@ -182,15 +181,43 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
         }
     }
 
+    fun findRuntime(port: Portstatusinjob): Int? {
+        try {
+            var rt = port.runtime
+            if (rt == null || rt.toInt() == 0)
+                return null
+            return rt
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+
+
+    }
+
+    fun findWaittime(port: Portstatusinjob): Int? {
+        try {
+            var rt = port.waittime
+            if (rt == null || rt.toInt() == 0)
+                return null
+            return rt
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+    }
+
     open fun setport(ports: List<Portstatusinjob>) {
         try {
             logger.debug("Gpio : ${gpio}")
             for (port in ports) {
-                if (port.enable == null || port.enable == false || port.status?.name.equals("check")!!) {//ถ้า Enable == null หรือ false ให้ไปทำงาน port ต่อไปเลย
+                if (port.enable == null || port.enable == false || port.status?.name.equals("check")) {//ถ้า Enable == null หรือ false ให้ไปทำงาน port ต่อไปเลย
                     logger.error("Not set port ${port}")
                 } else {
+
+
                     logger.debug("Port for pijob ${port}")
-                    var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
+                    var pin = gpio.gpio.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
                     logger.debug("Pin: ${pin}")
 
                     //save old state
@@ -206,7 +233,10 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
                     // pin.setState(true)
                         gpio.setPort(pin, true)
 
+
                     logger.debug("Set pin state: ${pin.state}")
+
+
                 }
             }
         } catch (e: Exception) {

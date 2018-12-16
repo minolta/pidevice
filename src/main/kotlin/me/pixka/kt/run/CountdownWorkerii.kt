@@ -49,7 +49,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
                     break
                 }
             } else {
-                timeout--;
+                timeout--
             }
 
             if (checkruncomplete()) {
@@ -58,6 +58,8 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
                 state = "To run port"
                 break
             }
+
+            TimeUnit.SECONDS.sleep(1)
             /*   runtime--
                TimeUnit.SECONDS.sleep(1)
                if (runtime <= 0) {//ถ้า นับมาจนครบ ก็เริ่มทำงาน
@@ -96,14 +98,25 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
 
     var finishtime: Date? = null
     fun checkruncomplete(): Boolean {
-        if (finishtime == null)
-            finishtime = getnextrunt()
+        try {
+            if(pijob.stimes == null)
+                return true
+            if (finishtime == null)
+                finishtime = getnextrunt()
 
-        var now = Date()
-        if (now.time >= finishtime?.time!!) {
-            return true
+            var now = Date()
+
+            logger.debug("Checktime ${finishtime?.time} ${now.time} ")
+            if (now.time >= finishtime?.time!!) {
+                return true
+            }
+
+            return false
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
         }
-        return false
+
     }
 
     /**
@@ -145,7 +158,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
                         gpios.setPort(pin!!, l)
                         state = "Run this port ${runtime} "
                         TimeUnit.SECONDS.sleep(runtime!!)
-                        gpios.setPort(pin!!, !l)
+                        gpios.setPort(pin, !l)
                         state = "wait ${waittime}"
                         TimeUnit.SECONDS.sleep(waittime!!)
                     } catch (e: Exception) {
@@ -220,6 +233,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
             logger.error("coundown getnextrun pares date ${e.message}")
             state = "coundown getnextrun pares date ${e.message}"
             throw e
+
         }
 
     }
@@ -237,11 +251,11 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
                     val th = pijob.thigh!!.toFloat()
                     if (v >= tl && v <= th) {
                         state = "Job in range"
-                        logger.debug("?Job in rang")
+                        logger.debug("Job in rang")
                         return true
                     }
                     state = "job not in rang"
-                    logger.debug("Job in rang")
+                    logger.debug("Job not in rang")
                     return false
 
                 }
