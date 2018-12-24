@@ -2,11 +2,10 @@ package me.pixka.kt.pidevice.u
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
+import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.kt.pibase.d.DS18value
-import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.d.PressureValue
+import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.pibase.s.DS18sensorService
@@ -18,8 +17,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
-class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
-               val dss: DS18sensorService, val io: Piio,
+class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServicekt: IptableServicekt,
+               val dss: DS18sensorService, val io: Piio, val ps: PideviceService,
                val pideviceService: PideviceService, val ss: SensorService) {
     val om = ObjectMapper()
     fun readPressureByjob(j: Pijob): PressureValue? {
@@ -59,6 +58,132 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
 
     }
 
+    fun readOther(desid: Long, senid: Long? = null): DS18value? {
+
+
+        var url: String? = null
+
+        try {
+            url = findurl(desid, senid)
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+        try {
+            var get = HttpGetTask(url!!)
+            var ee = Executors.newSingleThreadExecutor()
+            var f = ee.submit(get)
+            var value = f.get(15, TimeUnit.SECONDS)
+            if (value != null) {
+                return Stringtods18value(value)
+            }
+            throw Exception("Not found Ds18value ")
+
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+
+
+    }
+
+    fun findDevice(desid: Long): PiDevice {
+        try {
+            var desdevice = ps.find(desid) //เปลียน ip แล้ว
+            //var desdevice = ps.findByRefid(desid) //refid จะ save ตอน load pijob
+            logger.debug("1 Find pidevice ${desid} found ===> ${desdevice} #readother")
+            if (desdevice == null)
+                throw Exception("Device no found")
+            return desdevice
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+    }
+
+    fun findIp(desdevice: PiDevice): Iptableskt? {
+
+        var ip = iptableServicekt.findByMac(desdevice.mac!!)
+        logger.debug("3 Find ip of pidevice ${desdevice} found ===> ${ip} #readother")
+        if (ip == null || ip.ip == null) {
+            logger.error("4 Can not find ip ${ip} #readother")
+            throw Exception("Ip not found")
+        }
+        return ip
+
+    }
+
+    fun findurl(desid: Long, sensorid: Long?): String? {
+
+        var desdevice: PiDevice? = null
+        try {
+            desdevice = findDevice(desid)
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+
+        var sensor: DS18sensor? = null
+        try {
+            sensor = dss.find(sensorid)
+        } catch (e: Exception) {
+            logger.error("Find Sensor Error")
+
+        }
+        logger.debug("2 Find sensor ${sensorid} found ===> ${sensor} #readother")
+
+        var ip: Iptableskt? = null
+        try {
+            ip = findIp(desdevice)
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+        var url = ""
+
+        if (ip != null && ip.ip != null) {
+
+            if (sensor == null) {
+                url = "http://${ip.ip}/ktype"
+            } else
+                if (sensor.name != null && sensor.name?.indexOf("28-") != -1)
+                    url = "http://${ip.ip}/ds18valuebysensor/${sensor.name}"
+                else {
+                    //เป็น ktype จะไม่มี 28- ให้อานตรงๆเลย
+                    url = "http://${ip.ip}/ktype"
+                }
+        }
+        logger.debug("6 Read URL: [${url}] #readother")
+        return url
+
+    }
+
+    fun readLocal(job: Pijob): DS18value? {
+        var localsensor = dss.find(job.ds18sensor_id)
+        logger.debug("4 Found local sensor ? ${localsensor} #readtmpbyjob")
+        var value: DS18value? = null
+        if (localsensor != null && value == null) {
+            logger.debug("5 Read Temp from ${localsensor} ")
+            var v = null
+            try {
+                var v = io.readDs18(localsensor.name!!)
+            } catch (e: Exception) {
+                logger.error("6 ${e.message}")
+                throw e
+            }
+            value = DS18value()
+            value.t = v
+            logger.debug("7 Read Temp from ${localsensor}  get ${v} return ${value} #readtmpbyjob")
+            if (v != null)
+                return value
+        }
+        if (value != null) {
+            return value
+        }
+        throw Exception("Read local not found")
+
+    }
+
     /**
      * ใช้สำหรับอ่านข้อมูล ความร้อนโดยที่จะอ่าน local  ถ้าไม่มีให้อ่าน จาก ที่อื่นแทน
      */
@@ -69,40 +194,22 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl,
 
 
             var value: DS18value? = null
-            try {
-                logger.debug("1 Read tmp By pijob ${job} #readtmpbyjob")
-                value = ss.readDsOther(desid!!, sensorid)
-                logger.debug("2 Read tmp other #readtmpbyjob [${value}]")
-                if (value != null) {
+            if (desid != null) {
+                value = readOther(desid, sensorid)
+                if (value != null)
                     return value.t
-                }
-            } catch (e: Exception) {
-                logger.error("3 Readother ${e.message}  ")
             }
 
-            var localsensor = dss.find(job.ds18sensor_id)
-            logger.debug("4 Found local sensor ? ${localsensor} #readtmpbyjob")
 
-            if (localsensor != null && value == null) {
-                logger.debug("5 Read Temp from ${localsensor} ")
-                var v = null
-                try {
-                    var v = io.readDs18(localsensor.name!!)
-                } catch (e: Exception) {
-                    logger.error("6 ${e.message}")
-                }
-                value = DS18value()
-                value.t = v
-                logger.debug("7 Read Temp from ${localsensor}  get ${v} return ${value} #readtmpbyjob")
-                if (v != null)
-                    return v
-            }
-            if (value != null) {
+            value = readLocal(job)
+            if (value != null)
                 return value.t
-            }
+
+            throw Exception("Value is null")
 
         } catch (e: Exception) {
             logger.error("8 ${e.message}")
+            throw e
         }
 
 
