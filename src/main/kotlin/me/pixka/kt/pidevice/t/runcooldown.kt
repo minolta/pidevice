@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.CountdownWorkerii
@@ -19,7 +20,7 @@ import java.math.BigDecimal
 
 @Component
 @Profile("pi")
-class Runcooldown(val js: JobService, val pjs: PijobService,
+class Runcooldown(val js: JobService, val pjs: PijobService,val notifyService: NotifyService,
                   val gpios: GpioService, val ts: TaskService, val ss: SensorService,
                   val m: MessageService, val i: Piio, val readUtil: ReadUtil) {
 
@@ -53,7 +54,7 @@ class Runcooldown(val js: JobService, val pjs: PijobService,
         for (pj in jobs) {
            // var checkvar = readDs(pj)
             logger.debug("Cool job can run")
-            var c = CountdownWorkerii(pj, gpios, ss,readUtil)
+            var c = CountdownWorkerii(pj, gpios, ss,notifyService,readUtil)
             ts.run(c)
         }
     }

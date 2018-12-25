@@ -4,6 +4,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pidevice.s.NotifyService
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit
  */
 class CountdownDisplayWorker(var pijob: Pijob,
                              val sensorService: SensorService,
-                             val display: DisplayService) : PijobrunInterface, Runnable {
+                             val display: DisplayService,val notifyService: NotifyService) : PijobrunInterface, Runnable {
     val queue = ThreadPoolExecutor(5, 10, 30,
             TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
             ThreadPoolExecutor.CallerRunsPolicy())
@@ -42,7 +43,7 @@ class CountdownDisplayWorker(var pijob: Pijob,
         setup()
         startDate = Date()
         state = "Start countdown ${startDate}"
-
+        notifyService.message("Start countdown at ${startDate}  เวลาปิด ${closedate}")
         var timeout = 0
 
 
@@ -53,11 +54,15 @@ class CountdownDisplayWorker(var pijob: Pijob,
             if (runtime % 60 == 0) {
                 display()
             }
-
+            if(runtime % 120 == 0)
+            {
+                notifyService.message("เวลาปิดเตา ${closedate} Job name ${pijob.name}")
+            }
             if (!checkincondition()) {
                 timeout++
                 if (timeout >= 300) //ถ้าหลุดนานกว่า 5 นาที
                 {
+                    notifyService.message("Countdown display Time out Job ${pijob.name}")
                     break
                 }
             } else {

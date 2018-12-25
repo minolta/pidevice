@@ -4,6 +4,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.u.ReadUtil
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
@@ -13,7 +14,8 @@ import java.util.concurrent.TimeUnit
 /**
  * เป็นตัว run การนับว่าจะให้ทำอะไร
  */
-class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorService: SensorService, val readUtil: ReadUtil)
+class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorService: SensorService,
+                        val notifyService: NotifyService, val readUtil: ReadUtil)
     : PijobrunInterface, Runnable {
 
     var runtime: Int = 0
@@ -45,6 +47,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
                 {
                     logger.error("Error Timeout 10 min")
                     state = "Error Timeout 10 min"
+                    notifyService.message("Time out 600 sec ${pijob.name}")
                     isRun = false
                     break
                 }
@@ -86,12 +89,14 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
         } catch (e: Exception) {
             logger.error("Run port error ${e.message}")
             state = "Error ${e.message}"
+            notifyService.message("${e.message}")
         }
 
 
 
         logger.info("Endcountdown")
         state = "End countdown"
+        notifyService.message("End countdown")
         isRun = false
 
     }
@@ -99,7 +104,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
     var finishtime: Date? = null
     fun checkruncomplete(): Boolean {
         try {
-            if(pijob.stimes == null)
+            if (pijob.stimes == null)
                 return true
             if (finishtime == null)
                 finishtime = getnextrunt()
@@ -114,6 +119,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
             return false
         } catch (e: Exception) {
             logger.error(e.message)
+            notifyService.message("${pijob.name} error ${e.message}")
             throw e
         }
 
@@ -125,7 +131,6 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
      */
     fun runport() {
 
-
         var timetorun = 1
         if (pijob.timetorun != null && pijob.timetorun!!.toInt() > 0)
             timetorun = pijob.timetorun!!.toInt()
@@ -135,6 +140,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
         var portlist = pijob.ports
 
         logger.debug("Port to run ${portlist}")
+        notifyService.message("${pijob.name} Port to run ")
         if (portlist != null) {
             while (timetorun > 0) {
                 timetorun--
@@ -170,6 +176,7 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
             }
         } else {
             logger.error("No port to run")
+            notifyService.message("No port to run")
         }
 
     }

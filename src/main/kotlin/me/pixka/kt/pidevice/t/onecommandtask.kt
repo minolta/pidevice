@@ -9,6 +9,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.CountdownWorkerii
@@ -28,8 +29,8 @@ import java.io.IOException
 
 @Component
 @Profile("pi", "lite")
-class Runonecommand(val dhts: DhtvalueService, val ts: TaskService
-                    , val pjs: PijobService, val js: JobService,
+class Runonecommand(val dhts: DhtvalueService, val ts: TaskService, val notifyService: NotifyService,
+                    val pjs: PijobService, val js: JobService,
                     val gpios: GpioService, val ss: SensorService,
                     val m: MessageService, val i: Piio, val readUtil: ReadUtil,
                     val ms: MessageService, val io: Piio, val http: HttpControl, val ps: PortstatusinjobService) {
@@ -51,6 +52,7 @@ class Runonecommand(val dhts: DhtvalueService, val ts: TaskService
                 if (type.equals("DS")) {
                     var worker = Worker(pijob, gpios, io, ps)
                     logger.debug("Run  ${pijob} in onecommand")
+                    notifyService.message("Run onecommand DS job ${pijob.name}")
                     ts.run(worker)
                     if (pijob.runwithid != null) {
                         var runwith = pjs.findByRefid(pijob.runwithid)
@@ -61,14 +63,15 @@ class Runonecommand(val dhts: DhtvalueService, val ts: TaskService
                 } else if (type.equals("DSOTHER")) {
 
                 } else if (type.equals("cooldown")) {
-                    var w = CountdownWorkerii(pijob, gpios, ss,readUtil)
-                    var r  = ts.run(w)
-                    if(r)
-                    {
+                    var w = CountdownWorkerii(pijob, gpios, ss, notifyService, readUtil)
+
+                    var r = ts.run(w)
+                    if (r) {
                         logger.debug("Run command cooldown ${w}")
-                    }
-                    else
+                    } else
                         logger.error("Not run cooldown ${w}")
+
+                    notifyService.message("Run onecommand Cooldown job ${pijob.name} is run ${r}")
                 }
 
             }

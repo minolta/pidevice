@@ -213,8 +213,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         }
 
 
-        logger.error("9 Not found other job for run #readtmpbyjob")
-        return null
+
     }
 
     /**

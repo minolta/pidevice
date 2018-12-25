@@ -72,26 +72,34 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             setup()
             val list = loadPijob(io.wifiMacAddress())
 
-            for (item in list!!) {
-                logger.debug("[loadpijob] Find Job Refs " + item)
-                var ref: Pijob? = service.findByRefid(item.id) // หาว่ามีในเครื่องเรายัง
+            if (list != null) {
+                for (item in list) {
 
-                logger.debug("[loadpijob] Found ? ${ref}")
+                    var ref: Pijob? = null
+                    try {
+                        logger.debug("[loadpijob] Find Job Refs " + item)
+                        ref = service.findByRefid(item.id) // หาว่ามีในเครื่องเรายัง
+                    } catch (e: Exception) {
+                        logger.error(e.message)
+                    }
+                    logger.debug("[loadpijob] Found ? ${ref}")
 
-                if (ref == null) {// Save เข้าถ้าหาไม่เจอเป็น job ใหม่
-                    logger.debug("[loadpijob] new Pi job on device ${item}")
-                    ref = newpijobinlocaldevice(item)
-                } else {
-                    logger.debug("[loadpijob] Jobs already edit " + ref)
-                    ref = edit(ref, item)
+                    if (ref == null) {
+                        // Save เข้าถ้าหาไม่เจอเป็น job ใหม่
+                        logger.debug("[loadpijob] new Pi job on device ${item}")
+                        ref = newpijobinlocaldevice(item)
+                    } else {
 
+                        logger.debug("[loadpijob] Jobs already edit " + ref)
+                        ref = edit(ref, item)
+
+                    }
+
+
+
+                    saveportstatus(item, ref!!)
                 }
-
-
-
-                saveportstatus(item, ref!!)
             }
-
             return AsyncResult(true)
         } catch (e: Exception) {
             logger.error(" [loadpijob] Error run load pijob : " + e.message)
@@ -190,7 +198,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             saveport(listofports!!, ref)
         } catch (e: Exception) {
             logger.error("[loadpijob] Save port error: " + e.message)
-            err.n("loadpijob", "102-103", "${e.message}")
         }
 
     }
@@ -201,10 +208,18 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             val ic = item.ds18sensor
             if (ic != null)
                 ref.ds18sensor = dsservice.findorcreate(ic)
+            var dd = item.desdevice
+            if(dd!=null)
+            {
+                var dds = pds.findByMac(dd.mac!!)
+                if(dds==null)
+                    dds = pds.create(dd.mac!!,dd.mac!!)
+                ref.desdevice = dds
+            }
             return service.save(ref)
         } catch (e: Exception) {
-            logger.error("[loadpijob edit error]" + e.message)
-            err.n("loadpijob", "113-117", "${e.message}")
+            logger.error("edit job  ${ref.name} ")
+            throw e
         }
 
         return null
