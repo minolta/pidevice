@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 @Component
-class NotifyTmp(val js: JobService, val pjs: PijobService,
+class NotifyPressure(val js: JobService, val pjs: PijobService,
                 val readUtil: ReadUtil, val notifyService: NotifyService) {
 
     @Scheduled(fixedDelay = 5000)
@@ -33,13 +33,13 @@ class NotifyTmp(val js: JobService, val pjs: PijobService,
             var th = job.thigh?.toDouble()
 
             try {
-                var r = readUtil.readTmpByjob(job)
+                var r = readUtil.readPressureByjob(job)
 
                 if (r != null) {
-                    var rr = r.toDouble()
+                    var rr = r.pressurevalue?.toDouble()
 
-                    if (tl!! <= rr && th!! >= rr) {
-                        notifyService.message(" Tmp:[${r}] ${job.refid} ${job.name} device ${job.desdevice?.name} ")
+                    if (tl!! <= rr!! && th!! >= rr) {
+                        notifyService.message("Pressure: [${rr}] ${job.refid} ${job.name} device: ${job.desdevice?.name} ")
                     }
                 }
 
@@ -59,19 +59,19 @@ class NotifyTmp(val js: JobService, val pjs: PijobService,
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(NotifyTmp::class.java)
+        internal var logger = LoggerFactory.getLogger(NotifyPressure::class.java)
     }
 
     fun loadjob(): List<Pijob>? {
         try {
-            var job = js.findByName("notifytmp")
+            var job = js.findByName("notifypressure")
             if (job != null) {
                 var jobtorun = pjs.findJob(job.id)
                 return jobtorun
             }
             return null
         } catch (e: Exception) {
-            RunPressure.logger.error(e.message)
+            logger.error(e.message)
             throw e
         }
     }

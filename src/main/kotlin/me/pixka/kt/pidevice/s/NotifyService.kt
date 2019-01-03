@@ -30,6 +30,7 @@ class NotifyService()
          httpPost.entity = UrlEncodedFormEntity(params)
          httpPost.addHeader("Content-type", "application/x-www-form-urlencoded")
          httpPost.addHeader("Authorization","Bearer ${token}")
+         httpPost.addHeader("charset","UTF-8")
 
          val response = client.execute(httpPost)
          client.close()

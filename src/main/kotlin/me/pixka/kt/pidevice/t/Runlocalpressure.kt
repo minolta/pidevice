@@ -38,6 +38,12 @@ class Runlocalpressure(val infoService: InfoService, val js: JobService, val pjs
         }
 
     }
+ /*
+ *
+ * ตรวจสอบว่าแรงดันอยู่ในช่วงต้องช่วยหรือเปล่า
+ * เอาแต่ที่ตำกว่า tl
+ *
+ * */
 
     fun check(pj: Pijob): Pijob? {
         var tl = pj.hlow?.toDouble()
@@ -50,18 +56,19 @@ class Runlocalpressure(val infoService: InfoService, val js: JobService, val pjs
             logger.error(e.message)
             throw e
         }
-
-        if (tl!! <= now!! && now <= th!!) {
+        //ทดสอบว่าแรงดันอยู่ใย่ช่วงหรือเปล่า
+        if (tl!! >= now !! && now > 0) {
+            logger.debug("Run this job")
             return pj
         }
-
+        logger.error("Pressuer to high")
         return null
 
 
     }
 
     /**
-     * ใช้สำหรับ อ่านค่า ต่างๆ
+     * ใช้สำหรับ ความร้อนช่วงกำหนดไว้หรือเปล่า
      */
     fun checkReadTmp(pj: Pijob): Pijob? {
         try {
