@@ -15,35 +15,27 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.math.BigDecimal
 
 
 @Component
 @Profile("pi")
-class Runcooldown(val js: JobService, val pjs: PijobService,val notifyService: NotifyService,
+class Runcooldown(val js: JobService, val pjs: PijobService, val notifyService: NotifyService,
                   val gpios: GpioService, val ts: TaskService, val ss: SensorService,
                   val m: MessageService, val i: Piio, val readUtil: ReadUtil) {
 
     @Scheduled(initialDelay = 2000, fixedDelay = 30000)
     fun run() {
-
         logger.info("Run Cooldown")
-
         var job = js.findByName("cooldown") //สำหรับแสดงผล
-
         if (job == null) {
             logger.error("JOB COOL DOWN NOT FOUND")
             return
         }
 
         var jobs = pjs.findJob(job.id)
-
-
         if (jobs != null) {
             logger.debug("Found Jobs ${jobs.size}")
             exe(jobs)
-
-
         } else
             logger.debug("Job not found ")
 
@@ -52,18 +44,14 @@ class Runcooldown(val js: JobService, val pjs: PijobService,val notifyService: N
     fun exe(jobs: List<Pijob>) {
 
         for (pj in jobs) {
-           // var checkvar = readDs(pj)
-            logger.debug("Cool job can run")
-            var c = CountdownWorkerii(pj, gpios, ss,notifyService,readUtil)
-            ts.run(c)
+            if (readUtil.checktmp(pj)) {
+                logger.debug("Cool job can run")
+                var c = CountdownWorkerii(pj, gpios, ss, notifyService, readUtil)
+                ts.run(c)
+            }
         }
     }
 
-    fun readDs(pijob: Pijob): BigDecimal? {
-
-        return readUtil.readTmpByjob(pijob)
-
-    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runcooldown::class.java)

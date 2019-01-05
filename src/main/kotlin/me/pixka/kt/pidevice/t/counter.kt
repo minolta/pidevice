@@ -29,7 +29,6 @@ class CounterOther(val context: ApplicationContext,
                    val js: JobService, val io: Piio, val ps: PortstatusinjobService,
                    val ts: TaskService,
                    val ss: SensorService, val gpio: GpioService, val dps: DisplayService, val ms: MessageService) {
-    // var pool = context.getBean("pool") as ExecutorService
 
     var runjobs = ArrayList<runInfo>()
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
@@ -52,13 +51,6 @@ class CounterOther(val context: ApplicationContext,
                     } else {
                         logger.info("runcounterjob ${task}")
                     }
-
-                    //var f = pool.submit(task)
-                    //logger.debug("Future ${f}")
-                    //var run = runInfo(task, f, Date())
-
-
-                    //runjobs.add(run)
                 }
 
             } else {
@@ -67,28 +59,6 @@ class CounterOther(val context: ApplicationContext,
         } catch (e: Exception) {
             logger.error(e.message)
         }
-        /*
-
-        logger.debug("To run ${torun}")
-        if (torun != null) {
-            //ถ้ามี job ที่ตรงกับการจับเวลาระบบ จะทำการสร้าง Task ขึ้นมา run
-            var canrun = checkcanrun(torun)
-
-            logger.debug("Can run size:${canrun.size}")
-            if (canrun.size > 0) {
-                for (job in canrun) {
-                    logger.debug("Start task job ${job.id}")
-                    var task = Workercounter(job, ps, gpio, ss, dps, ms, io, dss)
-                    var f = pool.submit(task)
-                    logger.debug("Future ${f}")
-                    var run = runInfo(task, f, Date())
-                    runjobs.add(run)
-                }
-
-            }
-        }
-        */
-
     }
 
     /**
