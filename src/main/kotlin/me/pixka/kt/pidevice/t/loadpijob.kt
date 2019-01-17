@@ -24,16 +24,13 @@ class Loadpijob(val task: LoadpijobTask) {
 
     @Scheduled(initialDelay = 60000, fixedDelay = 60000)
     fun run() {
-
         logger.info("Start load pijob")
         var f = task.run()
-
         var count = 0
         while (true) {
             if (f!!.isDone) {
                 logger.info("Load pi job end")
                 break
-
             }
 
             TimeUnit.SECONDS.sleep(1)

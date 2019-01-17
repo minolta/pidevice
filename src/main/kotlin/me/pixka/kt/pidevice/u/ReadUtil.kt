@@ -8,19 +8,24 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.InfoService
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
 class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServicekt: IptableServicekt,
                val dss: DS18sensorService, val io: Piio, val ps: PideviceService,
-               val pideviceService: PideviceService, val ss: SensorService) {
+               val pideviceService: PideviceService, val ss: SensorService, val infoService: InfoService) {
     val om = ObjectMapper()
+
+    var buffer = ArrayList<ReadBuffer>()
+
     fun readPressureByjob(j: Pijob): PressureValue? {
         var des = j.desdevice
         if (des == null) {
@@ -158,6 +163,39 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
     }
 
+    /**
+     * ใช้สำหรับตรวจสอบ pijob ว่า แรงดัน อยู่ในช่วนหรือเปล่า
+     */
+    fun checkLocalPressure(pijob: Pijob): Boolean {
+        try {
+            logger.debug("Run localpressure")
+            var now = infoService.A0?.psi?.toDouble()
+            if (now == null)
+                throw Exception("Can not read localpressure")
+
+            logger.debug("Read local localpressure ${now}")
+            if (pijob.hlow != null && pijob.hhigh != null) {
+
+                var l = pijob.hlow?.toDouble()
+                var h = pijob.hhigh?.toDouble()
+
+                logger.debug("check localpressure l:${l} <= ${now}  <= ${h}")
+                if (l!! <= now && now <= h!!) {
+                    logger.debug("In rang localpressure")
+                    return true
+                }
+                logger.debug(" pressure in  rang localpressure ")
+                return false
+            }
+
+        } catch (e: Exception) {
+            logger.error("${e.message} localpressure")
+            throw e
+        }
+        throw Exception("Pressure not set localpressure")
+
+    }
+
     fun readLocal(job: Pijob): DS18value? {
         var localsensor = dss.find(job.ds18sensor_id)
         logger.debug("4 Found local sensor ? ${localsensor} #readtmpbyjob")
@@ -183,6 +221,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         throw Exception("Read local not found")
 
     }
+
     fun checktmp(p: Pijob): Boolean {
 
         try {
@@ -219,24 +258,109 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
             var value: DS18value? = null
             if (desid != null) {
-                value = readOther(desid, sensorid)
-                if (value != null)
-                    return value.t
+                try {
+                    value = readOther(desid, sensorid)
+                    if (value != null) {
+                        savebuffer(job, value.t!!)
+                        return value.t
+                    }
+                } catch (e: Exception) {
+                    logger.error(e.message)
+
+                }
+
+                try {
+                    var p = readBuffer(job)
+                    return p
+                } catch (e: Exception) {
+                    logger.error(e.message)
+                    throw e
+                }
             }
 
 
-            value = readLocal(job)
-            if (value != null)
-                return value.t
+            try {
+                value = readLocal(job)
+                if (value != null) {
 
-            throw Exception("Value is null")
+                    savebuffer(job, value.t!!)
+                    return value.t
+                }
+            } catch (e: Exception) {
+                logger.error(e.message)
+                try {
+                    var p = readBuffer(job)
+                    return p
+                } catch (e: Exception) {
+                    logger.error(e.message)
+                    throw e
+                }
+            }
+
 
         } catch (e: Exception) {
             logger.error("8 ${e.message}")
             throw e
         }
 
+        throw Exception("Not found readTmpByjob")
 
+
+    }
+
+    fun readBuffer(pijob: Pijob): BigDecimal? {
+        try {
+            var p = getBuffer(pijob)
+            return p.value
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    fun getBuffer(pijob: Pijob): ReadBuffer {
+
+        logger.debug("Buffer ${buffer}")
+        for (i in buffer) {
+
+            if (pijob.id.equals(i.pijob?.id)) {
+                if (checktimeout(Date(), i.timeout!!))
+                    return i
+                throw Exception("Time out")
+            }
+        }
+        throw Exception("Not found Buffer")
+
+    }
+
+    fun checktimeout(now: Date, timeout: Date): Boolean {
+        if (now.time < timeout.time)
+            return true
+
+        return false
+    }
+
+    fun savebuffer(pijob: Pijob, value: BigDecimal) {
+        var p: ReadBuffer? = null
+        try {
+            p = getBuffer(pijob)
+        } catch (e: Exception) {
+            logger.error(e.message)
+        }
+
+        var timeout = Date(Date().time + 1000 * 60 * 60)
+        logger.debug("Timeout : ${timeout}")
+        if (p != null) {
+            logger.debug("Update old value  ${p}")
+            p.readtime = Date()
+            p.value = value
+            p.timeout = timeout
+        } else {
+
+            p = ReadBuffer(value, Date(), pijob, timeout)
+            logger.debug("New value ${p}")
+            buffer.add(p)
+        }
+        logger.debug("End save buffer")
 
     }
 
@@ -261,8 +385,6 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             logger.error("ReadTfromD1Byjob ${e.message}")
             throw e
         }
-
-
     }
 
     fun Stringtods18value(stringvalue: String): DS18value? {
@@ -293,5 +415,12 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
     companion object {
         internal var logger = LoggerFactory.getLogger(ReadUtil::class.java)
+    }
+}
+
+class ReadBuffer(var value: BigDecimal? = null, var readtime: Date? = null, var pijob: Pijob? = null,
+                 var timeout: Date? = null) {
+    override fun toString(): String {
+        return "${pijob?.id} ${readtime} ${timeout} ${value} "
     }
 }

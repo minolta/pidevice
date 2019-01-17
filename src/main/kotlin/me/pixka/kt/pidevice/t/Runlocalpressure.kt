@@ -6,7 +6,7 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pidevice.s.InfoService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.kt.run.Worker
+import me.pixka.kt.run.RunlocalpressureTask
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
@@ -30,7 +30,7 @@ class Runlocalpressure(val infoService: InfoService, val js: JobService, val pjs
             for (job in jobs) {
                 var j = check(job)
                 if (j != null) {
-                    var t = Worker(j, gpios, io, ps)
+                    var t = RunlocalpressureTask(j, gpios, readUtil, ps)
                     var canrun = taskService.run(t)
                     logger.debug("${j} is run ${canrun}")
                 }
@@ -38,33 +38,38 @@ class Runlocalpressure(val infoService: InfoService, val js: JobService, val pjs
         }
 
     }
- /*
- *
- * ตรวจสอบว่าแรงดันอยู่ในช่วงต้องช่วยหรือเปล่า
- * เอาแต่ที่ตำกว่า tl
- *
- * */
+    /*
+    *
+    * ตรวจสอบว่าแรงดันอยู่ในช่วงต้องช่วยหรือเปล่า
+    * เอาแต่ที่ตำกว่า tl
+    *
+    * */
 
     fun check(pj: Pijob): Pijob? {
-        var tl = pj.hlow?.toDouble()
-        var th = pj.hhigh?.toDouble()
-        var now = infoService.A0?.psi?.toDouble()
-        logger.debug("===== ${tl} < ${now} > ${th} =====")
         try {
-            checkReadTmp(pj)
+            var tl = pj.hlow?.toDouble()
+            var th = pj.hhigh?.toDouble()
+            var now = infoService.A0?.psi?.toDouble()
+            logger.debug("===== ${tl} < ${now} > ${th} =====")
+            if (pj.tlow != null && pj.thigh != null) {
+                try {
+                    checkReadTmp(pj)
+                } catch (e: Exception) {
+                    logger.error(e.message)
+                    throw e
+                }
+            }
+            //ทดสอบว่าแรงดันอยู่ใย่ช่วงหรือเปล่า
+            if (tl!! <= now!! && now <= th!!) {
+                logger.debug("Run this job")
+                return pj
+            }
+            logger.error("Pressuer to high")
+            return null
         } catch (e: Exception) {
             logger.error(e.message)
             throw e
         }
-        //ทดสอบว่าแรงดันอยู่ใย่ช่วงหรือเปล่า
-        if (tl!! >= now !! && now > 0) {
-            logger.debug("Run this job")
-            return pj
-        }
-        logger.error("Pressuer to high")
-        return null
-
-
     }
 
     /**

@@ -200,9 +200,9 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
             for (port in ports) {
                 if (!port.status?.name.equals("check")) {
                     var pin = gpio.gpio.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
-                    Worker.logger.debug("Reset pin ${pin}")
+                    logger.debug("Reset pin ${pin}")
                     gpio.resettoDefault(pin)
-                    Worker.logger.debug("Reset Port to default")
+                    logger.debug("Reset Port to default")
                 }
             }
 

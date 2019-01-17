@@ -61,7 +61,7 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService,
         try {
             if (ports != null)
                 for (port in ports) {
-                    if (!port.status?.name.equals("check")) {
+                    if (!port.status?.name.equals("check") && port.enable!!) {
                         var pin = gpios.gpio.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
                         logger.debug("Reset pin ${pin}")
                         status = "Reset pin ${pin}"
@@ -104,7 +104,6 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService,
 
                 logger.debug("Set pin state: ${pin.state}")
                 status = "Set pin state: ${pin.state}"
-
 
             }
         } catch (e: Exception) {
