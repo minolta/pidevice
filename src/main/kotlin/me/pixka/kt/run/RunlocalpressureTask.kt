@@ -1,6 +1,7 @@
 package me.pixka.kt.run
 
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PortstatusinjobService
@@ -10,100 +11,126 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class RunlocalpressureTask(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService)
-    : DefaultWorker(p, gpios, readUtil, ps, GasWorker.logger) {
+    : DefaultWorker(p, gpios, readUtil, ps, logger) {
     var finishrun: Date? = null
     var timeout: Long? = null
     var run: Long? = null
     override fun run() {
+        try {
+            isRun = true
+            startRun = Date()
+            status = "Start job ${startRun}"
+            logger.debug("Start job ${startRun}")
+            var ports: List<Portstatusinjob>? = null
+            try {
+                ports = loadPorts(pijob)
+            } catch (e: Exception) {
+                logger.error("Load port error ${e.message}")
+            }
+            getTime()
+            var isSetport = false
 
-        isRun = true
-        startRun = Date()
-        status = "Start job ${startRun}"
-        logger.debug("Start job ${startRun}")
-        var ports = loadPorts(pijob)
-        getTime()
-        var isSetport = false
-        while (true) {
+            while (true) {
+                logger.debug("Pijob : ${pijob} ports :${ports}")
+                var checkvalue = readUtil.checkLocalPressure(pijob)
+                logger.debug("localpressure in rang ? ${checkvalue}")
+                status = "localpressure in rang ? ${checkvalue}"
+                if (checkvalue) {
+                    if (ports != null) {
+                        if (!isSetport) {
+                            setport(ports)
+                            isSetport = true
+                        }
 
 
-            if (readUtil.checkLocalPressure(pijob)) {
-
-
-                if (ports != null) {
-                    if (!isSetport) {
-                        setport(ports)
-                        isSetport = true
-                    }
-                    status = "Wait 1 sec"
-                    TimeUnit.SECONDS.sleep(1)
 //                    if (pijob.runtime != null) {
 //                        status = "Run time ${pijob.runtime}"
 //                        TimeUnit.SECONDS.sleep(1)
 //                    }
+                    } else {
+                        logger.debug("Not port to set")
+                        status = "No ports to set"
+                    }
+
+
                 } else {
-                    logger.debug("Not port to set")
-                    status = "No ports to set"
-                }
 
-
-            } else {
-
-                if (ports != null) {
-                    logger.debug("Reset port")
-                    status = "reset port"
-                    resetport(ports)
-                    if (pijob.waittime != null) {
-                        status = "Wait time ${pijob.waittime}"
-                        TimeUnit.SECONDS.sleep(pijob.waittime!!)
+                    if (ports != null) {
+                        logger.debug("Reset port")
+                        status = "reset port"
+                        resetport(ports)
+                        if (pijob.waittime != null) {
+                            status = "Wait time ${pijob.waittime}"
+                            TimeUnit.SECONDS.sleep(pijob.waittime!!)
+                        }
                     }
+                    status = "End job pressure out of range"
+                    logger.debug("End job pressure out of range")
+                    isRun = false
+                    break
                 }
-                status = "End job pressure out of range"
-                logger.debug("End job pressure out of range")
-                isRun = false
-                break
-            }
 
-            if (checkRuntime()) {
-                if (ports != null) {
-                    logger.debug("Reset port")
-                    status = "reset port"
-                    resetport(ports)
-                    if (pijob.waittime != null) {
-                        status = "Wait time ${pijob.waittime}"
-                        TimeUnit.SECONDS.sleep(pijob.waittime!!)
+                if (checkRuntime()) {
+                    if (ports != null) {
+                        logger.debug("Reset port")
+                        status = "reset port"
+                        resetport(ports)
+                        if (pijob.waittime != null) {
+                            status = "Wait time ${pijob.waittime}"
+                            TimeUnit.SECONDS.sleep(pijob.waittime!!)
+                        }
                     }
+                    status = "End job  Pressure timeout"
+                    logger.debug("End job pressure timeout")
+                    isRun = false
+                    break
+                } else {
+                    status = "Not end time"
+//                    TimeUnit.SECONDS.sleep(1)
                 }
-                status = "End job  Pressure timeout"
-                logger.debug("End job pressure timeout")
-                isRun = false
-                break
-            } else {
-                status = "Not end time"
+
+
+                status = "Wait 1 sec"
+                TimeUnit.SECONDS.sleep(1)
             }
+        } catch (e: Exception) {
+            status = "Run localhostpressure error ${e.message}"
+            logger.error("Run localhostpressure error ${e.message}")
+
+
+            isRun = false
         }
-
     }
 
     fun checkRuntime(): Boolean {
-        var now = Date().time
-        logger.debug("Check time NOW: ${now} >= ${finishrun!!.time}")
-        if (now >= finishrun!!.time) {
-            return true
+        logger.debug("Check time fini *******************************  ")
+        try {
+            var now = Date().time
+            logger.debug("Check time NOW: ${now} >= ${finishrun}")
+            if (now >= finishrun!!.time) {
+                return true
+            }
+            return false
+        } catch (e: Exception) {
+            logger.error("Check time error ${e.message}")
+            throw e
         }
-        return false
     }
 
     fun getTime() {
         try {
             if (startRun == null) {
                 startRun = Date()
-                timeout = pijob.waittime!! //
-                run = pijob.runtime //เวลาในการ run เอ็นวินาที
-                finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
-                logger.debug("Counter info START : ${startRun} RUN TIME: ${finishrun}")
+
             }
+            timeout = pijob.waittime!! //
+            run = pijob.runtime //เวลาในการ run เอ็นวินาที
+            finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
+            logger.debug("Counter info START : ${startRun} RUN TIME: ${finishrun}")
+
+
         } catch (e: Exception) {
-            CounterandrunWorker.logger.error("GETTIME: ${e.message}")
+            logger.error("GETTIME: ${e.message}")
             status = "Error ${e.message}"
             isRun = false
             throw e

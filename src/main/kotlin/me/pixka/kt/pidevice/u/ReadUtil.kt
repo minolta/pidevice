@@ -413,6 +413,10 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         }
     }
 
+    fun readLocalDht()
+    {
+
+    }
     companion object {
         internal var logger = LoggerFactory.getLogger(ReadUtil::class.java)
     }
