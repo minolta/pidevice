@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit
 @Profile("pi", "lite")
 class Loadpijob(val task: LoadpijobTask) {
 
-    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+    //@Scheduled(initialDelay = 60000, fixedDelay = 60000)
     fun run() {
         logger.info("Start load pijob")
         var f = task.run()

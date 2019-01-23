@@ -13,7 +13,8 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class RungasJob(val js: JobService, val pjs: PijobService, val ts: TaskService, val gpioService: GpioService,
+class RungasJob(val service: PijobService, val js: JobService, val pjs: PijobService,
+                val ts: TaskService, val gpioService: GpioService,
                 val readUtil: ReadUtil, val psij: PortstatusinjobService) {
 
     @Scheduled(initialDelay = 10000, fixedDelay = 1000)
@@ -23,7 +24,7 @@ class RungasJob(val js: JobService, val pjs: PijobService, val ts: TaskService, 
         logger.debug("Job to run ${toruns}")
         if (toruns != null && toruns.size > 0) {
             for (j in toruns) {
-                if(checktmp(j)) {
+                if (checktmp(j) && runwith(j)) {
                     var task = GasWorker(j, gpioService, readUtil, psij)
                     ts.run(task)
                 }
@@ -31,6 +32,29 @@ class RungasJob(val js: JobService, val pjs: PijobService, val ts: TaskService, 
             }
         }
 
+    }
+
+    //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้
+    fun runwith(p: Pijob): Boolean {
+        logger.debug("Start runwidth")
+        try {
+            var testwidth = p.runwithid
+            logger.debug("runwidth job refid ${testwidth}")
+            if (testwidth == null)
+                return true
+            //ถ้ามี runwidthid
+            var testjob = service.findByRefid(testwidth)
+            logger.debug("runwidth Check job ${testjob}")
+            if (testjob != null) {
+                var re = readUtil.checktmp(testjob)
+                logger.debug("runwidth Test result ${re}")
+                return re
+            }
+        } catch (e: Exception) {
+            logger.error("Error runwith() ${e.message}")
+            throw  e
+        }
+        return false
     }
 
     fun checktmp(p: Pijob): Boolean {
