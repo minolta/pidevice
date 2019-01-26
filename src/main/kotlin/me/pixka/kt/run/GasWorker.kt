@@ -2,6 +2,7 @@ package me.pixka.kt.run
 
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pidevice.t.RungasJob
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
@@ -11,7 +12,7 @@ import java.util.concurrent.TimeUnit
 /**
  * จะ run ยาวเลยไม่หยุด แต่ถ้าอยู่น้อง
  */
-class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService)
+class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService, var runwithjob: Pijob)
     : DefaultWorker(p, gpios, readUtil, ps, logger) {
     override fun run() {
 
@@ -20,10 +21,9 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
         status = "Start job ${startRun}"
         while (true) {
             var ports = loadPorts(pijob)
-            if (readUtil.checktmp(pijob)) {
+            if (readUtil.checktmp(pijob) && runwith(runwithjob)) {
                 if (ports != null) {
                     setport(ports)
-
                     if (pijob.runtime != null) {
                         status = "Run time ${pijob.runtime}"
                         TimeUnit.SECONDS.sleep(pijob.runtime!!)
@@ -50,6 +50,23 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
 
     }
 
+    //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้
+    fun runwith(testjob: Pijob?): Boolean {
+        RungasJob.logger.debug("Start runwidth")
+        try {
+            //ถ้ามี runwidthid
+            logger.debug("runwidth Check job ${testjob}")
+            if (testjob != null) {
+                var re = readUtil.checktmp(testjob)
+                logger.debug("runwidth Test result ${re}")
+                return re
+            }
+        } catch (e: Exception) {
+            logger.error("Error runwith() ${e.message}")
+            throw  e
+        }
+        return false
+    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(GasWorker::class.java)

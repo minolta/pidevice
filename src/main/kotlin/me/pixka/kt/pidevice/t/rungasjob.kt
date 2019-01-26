@@ -25,7 +25,8 @@ class RungasJob(val service: PijobService, val js: JobService, val pjs: PijobSer
         if (toruns != null && toruns.size > 0) {
             for (j in toruns) {
                 if (checktmp(j) && runwith(j)) {
-                    var task = GasWorker(j, gpioService, readUtil, psij)
+                    var testjob = service.findByRefid(j.runwithid)
+                    var task = GasWorker(j, gpioService, readUtil, psij,testjob)
                     ts.run(task)
                 }
 

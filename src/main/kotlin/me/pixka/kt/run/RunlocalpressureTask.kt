@@ -36,6 +36,7 @@ class RunlocalpressureTask(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps:
                 logger.debug("localpressure in rang ? ${checkvalue}")
                 status = "localpressure in rang ? ${checkvalue}"
                 if (checkvalue) {
+
                     if (ports != null) {
                         if (!isSetport) {
                             setport(ports)
@@ -52,7 +53,11 @@ class RunlocalpressureTask(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps:
                         status = "No ports to set"
                     }
 
-
+                    if (pijob.runtime != null) {
+                        status = "Run port in ${pijob.runtime}"
+                        logger.debug("Run port in ${pijob.runtime}")
+                        TimeUnit.SECONDS.sleep(pijob.runtime!!)
+                    }
                 } else {
 
                     if (ports != null) {
