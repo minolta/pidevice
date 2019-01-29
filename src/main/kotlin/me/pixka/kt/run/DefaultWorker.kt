@@ -1,17 +1,26 @@
 package me.pixka.kt.run
 
 import com.pi4j.io.gpio.GpioPinDigitalOutput
+import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PortstatusinjobService
+import org.springframework.beans.factory.annotation.Autowired
 import java.util.*
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 
 abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService,
-                             var readUtil: ReadUtil, val ps: PortstatusinjobService, var logger: org.slf4j.Logger)
+                             var readUtil: ReadUtil,
+                             val ps: PortstatusinjobService, var logger: org.slf4j.Logger)
     : PijobrunInterface, Runnable {
+
+
     var status: String? = null
     var isRun: Boolean = false
     var startRun: Date? = null
@@ -113,4 +122,54 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService,
         }
     }
 
+    fun logtoint(logic: Logistate): Int {
+        try {
+            if (logic.name?.toLowerCase().equals("high"))
+                return 1
+
+        } catch (e: Exception) {
+            logger.error("logtoin ${e.message}")
+        }
+        return 0
+    }
+
+    /**
+     * สำหรับ D1
+     */
+    fun setRemoteport(ports: List<Portstatusinjob>) {
+        var ee = Executors.newSingleThreadExecutor()
+        logger.debug("Set remoteport ${ports}")
+        for (port in ports) {
+
+            try {
+                var traget = port.device
+                var runtime = port.runtime
+                var waittime = port.waittime
+                var portname = port.portname?.name
+                var value = logtoint(port.status!!)
+
+
+                var ip = readUtil.findIp(traget!!)
+                logger.debug("Found traget ip ${ip}")
+                if (ip != null) {
+                    var url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"
+                    logger.debug("Call to ${url}")
+                    var get = HttpGetTask(url)
+                    var f = ee.submit(get)
+                    try {
+                        var value = f.get(3, TimeUnit.SECONDS)
+                        logger.debug("Set remote result ${value}")
+                    } catch (e: Exception) {
+                        logger.error("Can not connect to traget device [${e.message}]")
+                    }
+                }
+            } catch (e: Exception) {
+                logger.error("SetRemote ${e.message}")
+            }
+        }
+    }
+
+    fun setD1(portname: String?, ip: String) {
+
+    }
 }

@@ -20,21 +20,25 @@ class Runlocalpressure(val infoService: InfoService, val js: JobService, val pjs
                        val taskService: TaskService, val gpios: GpioService, val io: Piio,
                        val ps: PortstatusinjobService, val readUtil: ReadUtil) {
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 2000)
     fun run() {
-        logger.debug("Load run loacal pressure Value ")
-        var jobs = loadjob()
-        logger.debug("Found pressure job ${jobs}")
+        try {
+            logger.debug("Load run loacal pressure Value ")
+            var jobs = loadjob()
+            logger.debug("Found pressure job ${jobs}")
 
-        if (jobs != null) {
-            for (job in jobs) {
-                var j = check(job)
-                if (j != null) {
-                    var t = RunlocalpressureTask(j, gpios, readUtil, ps)
-                    var canrun = taskService.run(t)
-                    logger.debug("${j} is run ${canrun}")
+            if (jobs != null) {
+                for (job in jobs) {
+                    var j = check(job)
+                    if (j != null) {
+                        var t = RunlocalpressureTask(j, gpios, readUtil, ps)
+                        var canrun = taskService.run(t)
+                        logger.debug("${j} is run ${canrun}")
+                    }
                 }
             }
+        } catch (e: Exception) {
+            logger.error(e.message)
         }
 
     }

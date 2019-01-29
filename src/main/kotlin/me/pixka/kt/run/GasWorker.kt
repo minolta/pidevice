@@ -1,6 +1,7 @@
 package me.pixka.kt.run
 
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pidevice.t.RungasJob
 import me.pixka.kt.pidevice.u.ReadUtil
@@ -15,39 +16,60 @@ import java.util.concurrent.TimeUnit
 class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService, var runwithjob: Pijob)
     : DefaultWorker(p, gpios, readUtil, ps, logger) {
     override fun run() {
+        var ports: List<Portstatusinjob>? = null
+        try {
+            isRun = true
+            startRun = Date()
+            status = "Start job ${startRun}"
 
-        isRun = true
-        startRun = Date()
-        status = "Start job ${startRun}"
-        while (true) {
-            var ports = loadPorts(pijob)
-            if (readUtil.checktmp(pijob) && runwith(runwithjob)) {
-                if (ports != null) {
-                    setport(ports)
-                    if (pijob.runtime != null) {
-                        status = "Run time ${pijob.runtime}"
-                        TimeUnit.SECONDS.sleep(pijob.runtime!!)
+            ports = loadPorts(pijob)
+
+            while (true) {
+
+                if (readUtil.checktmp(pijob) && runwith(runwithjob)) {
+                    if (ports != null) {
+                        setport(ports)
+                        if (pijob.runtime != null) {
+                            status = "Run time ${pijob.runtime}"
+                            TimeUnit.SECONDS.sleep(pijob.runtime!!)
+                        }
+                    } else {
+                        logger.debug("Not port to set")
+                        status = "No ports to set"
                     }
                 } else {
-                    logger.debug("Not port to set")
-                    status = "No ports to set"
-                }
-            } else {
-                if (ports != null) {
-                    logger.debug("Reset port")
-                    status = "reset port"
-                    resetport(ports)
-                    if (pijob.waittime != null) {
-                        status = "Wait time ${pijob.waittime}"
-                        TimeUnit.SECONDS.sleep(pijob.waittime!!)
+                    if (ports != null) {
+                        rt(ports)
                     }
+                    status = "End job tmp out of range"
+                    logger.error("End job tmp out of range")
+                    isRun = false
+                    break
                 }
-                status = "End job tmp out of range"
-                isRun = false
-                break
             }
-        }
+        } catch (e: Exception) {
+            logger.error(e.message)
+            isRun = false
+            status = e.message
+            if (ports != null)
+                rt(ports)
 
+
+        }
+    }
+
+    fun rt(ports: List<Portstatusinjob>) {
+        try {
+            logger.debug("Reset port")
+            status = "reset port"
+            resetport(ports)
+            if (pijob.waittime != null) {
+                status = "Wait time ${pijob.waittime}"
+                TimeUnit.SECONDS.sleep(pijob.waittime!!)
+            }
+        } catch (e: Exception) {
+            logger.error(e.message)
+        }
     }
 
     //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้

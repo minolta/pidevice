@@ -258,6 +258,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
             var value: DS18value? = null
             if (desid != null) {
+
                 try {
                     value = readOther(desid, sensorid)
                     if (value != null) {
@@ -313,7 +314,9 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             var p = getBuffer(pijob)
             return p.value
         } catch (e: Exception) {
-            throw e
+           logger.error("New read buffer")
+           throw e
+
         }
     }
 

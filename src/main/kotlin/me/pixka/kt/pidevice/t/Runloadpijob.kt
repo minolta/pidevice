@@ -58,6 +58,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                 logger.debug("[loadpijob] Jobs already edit " + ref)
                 ref = edit(ref, item)
             }
+
             saveportstatus(item, ref!!)
         }
 
@@ -180,7 +181,9 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             if (re != null) {
 
                 val list = mapper.readValue<List<Portstatusinjob>>(re)
-                logger.debug("[loadpijob] Found Port states  for me " + list.size)
+                logger.debug("[loadpijob] Found Port states  for me  ***************************************")
+                logger.debug("${list}")
+                logger.debug("******************************************************************************")
                 return list
             }
 
@@ -191,18 +194,22 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
         }
     }
 
-    private fun edit(ref: Pijob, item: Pijob): Pijob? {
+    /**
+     * Edit pijob
+     */
+    fun edit(ref: Pijob, item: Pijob): Pijob? {
+        if (ref.verref == item.ver) {
+            return ref //same no need edit
+        }
         try {
+            logger.debug("editpijob")
             ref.copy(item)
             val ic = item.ds18sensor
             if (ic != null)
                 ref.ds18sensor = dsservice.findorcreate(ic)
             var dd = item.desdevice
             if (dd != null) {
-                var dds = pds.findByMac(dd.mac!!)
-                if (dds == null)
-                    dds = pds.create(dd.mac!!, dd.mac!!)
-                ref.desdevice = dds
+                ref.desdevice = newotherdevice(dd)
             }
             return service.save(ref)
         } catch (e: Exception) {
@@ -213,49 +220,66 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
         return null
     }
 
-    fun find(pn: Portname): Portname {
+    fun find(pn: Portname): Portname? {
+        try {
+            logger.debug("[loadpijob saveport Portname to save] " + pn)
+            var p = ps.findorcreate(pn.name!!)
+            logger.debug("[loadpijob saveport Portname found] " + p)
+            return p
+        } catch (e: Exception) {
+            logger.error("Find port name ${e.message}")
+            throw e
+        }
 
-        logger.debug("[loadpijob saveport Portname to save] " + pn)
-        var p = ps.findorcreate(pn.name!!)
-        logger.debug("[loadpijob saveport Portname found] " + pn)
-        return pn
     }
 
     fun find(l: Logistate): Logistate? {
-        logger.debug("[loadpijob saveport Logistatus to save] " + l)
-        val lg = ls.findorcreate(l.name!!) // find
-        logger.debug("[loadpijob saveport Logi found] " + lg)
-        return lg
-
+        try {
+            logger.debug("[loadpijob saveport Logistatus to save] " + l)
+            val lg = ls.findorcreate(l.name!!) // find
+            logger.debug("[loadpijob saveport Logi found] " + lg)
+            return lg
+        } catch (e: Exception) {
+            logger.error("Find logic  ${e.message}")
+            throw e
+        }
     }
 
-    private fun saveport(listofports: List<Portstatusinjob>, pi: Pijob) {
+     fun saveport(listofports: List<Portstatusinjob>, pi: Pijob) {
 
         try {
             for (item in listofports) {
+                logger.debug("Item ${item} ver:${item.ver} ")
                 var ref: Portstatusinjob? = psijs.finByRefId(item.id)
                 if (ref == null) {
-                    logger.debug("[loadpijob saveport] new portstatus ")
+                    logger.debug("1 [loadpijob saveport] new portstatus  ${item.device}")
                     var pn = item.portname
                     pn = find(pn!!)
-
                     item.portname = pn
                     item.pijob = pi
-
                     item.refid = item.id
                     val lg = find(item.status!!)
-                    logger.debug("[loadpijob  saveport status  to save] " + pn)
+                    logger.debug("2 [loadpijob  saveport status  to save] " + pn)
                     item.status = lg
+                    if (item.device != null) {
+                        logger.debug(" 3 find Device ${item.device}")
+                        item.device = newotherdevice(item.device!!)
+
+
+                    } else {
+                        logger.debug("**************** ${item}")
+                    }
 
                     psijs.save(item)
-                    logger.debug("[loadpijob saveport] Save port :" + item)
+                    logger.debug("[ 4 loadpijob saveport] Save port :" + item)
                 } else {
-                    logger.debug("[loadpijob saveport] have portsttus already " + ref)
-                    ref = editport(ref, item)
+                    logger.debug("[5 loadpijob saveport] have portsttus already REF:${ref} ${ref.verref} != ${item.ver}")
+                    if (ref.verref != item.ver)
+                        ref = editport(ref, item)
                 }
             }
         } catch (e: Exception) {
-            logger.error("[loadpijob saveport] saveport error : " + e.message)
+            logger.error("[ 6 loadpijob saveport] saveport error : " + e.message)
             throw e
         }
 
@@ -263,15 +287,19 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
 
     fun editport(ref: Portstatusinjob, item: Portstatusinjob): Portstatusinjob? {
         try {
-            logger.debug("[loadpijob] edit  :" + item)
-
+            logger.debug("[loadpijob] editport  :" + item)
             ref.copy(item)
             ref.portname = ps.findorcreate(item.portname?.name!!)
             ref.status = ls.findorcreate(item.status?.name!!)
             ref.enable = item.enable
+            ref.runtime = item.runtime
+            ref.waittime = item.waittime
+            ref.enable = item.enable
+
             return psijs.save(ref)
+
         } catch (e: Exception) {
-            logger.error("loadpijob edit error : " + e.message)
+            logger.error("loadpijob editport error : " + e.message)
             throw e
         }
 
