@@ -4,12 +4,14 @@ import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pidevice.s.InfoService
 import me.pixka.kt.pidevice.u.ReadUtil
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.text.DecimalFormat
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("pi")
 class DisplayLocalpressure(val dps: DisplayService, val readUtil: ReadUtil, val infoService: InfoService) {
     var df = DecimalFormat("##")
     @Scheduled(fixedDelay = 15000)

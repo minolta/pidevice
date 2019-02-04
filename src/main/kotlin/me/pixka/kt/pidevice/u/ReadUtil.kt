@@ -12,6 +12,7 @@ import me.pixka.kt.pidevice.s.InfoService
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
+@Profile("pi")
 class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServicekt: IptableServicekt,
                val dss: DS18sensorService, val io: Piio, val ps: PideviceService,
                val pideviceService: PideviceService, val ss: SensorService, val infoService: InfoService) {

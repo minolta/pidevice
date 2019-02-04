@@ -12,6 +12,7 @@ import me.pixka.kt.run.PijobrunInterface
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("pi")
 class RunonPump(val pjs: PijobService,
                 val js: JobService,
                 val task: TaskService,

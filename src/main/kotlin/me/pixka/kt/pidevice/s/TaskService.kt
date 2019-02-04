@@ -12,7 +12,7 @@ import java.util.concurrent.*
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class TaskService(val context: ApplicationContext) {
     //val executor = Executors.newFixedThreadPool(50)
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่

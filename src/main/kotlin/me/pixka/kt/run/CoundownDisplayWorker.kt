@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.NotifyService
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.LinkedBlockingDeque
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit
 /**
  * เป็นตัว run การนับว่าจะให้ทำอะไร สำหรับ แสดงผล กำหนดเวลาปิด จาก hlow เป็น วินาที
  */
+@Profile("pi")
 class CountdownDisplayWorker(var pijob: Pijob,
                              val sensorService: SensorService,
                              val display: DisplayService,val notifyService: NotifyService) : PijobrunInterface, Runnable {

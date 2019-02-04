@@ -9,10 +9,12 @@ import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("pi")
 class Rundsjob(val pjs: PijobService, val js: JobService, val io: Piio, val ts: TaskService,
                val ps: PortstatusinjobService, val gpios: GpioService) {
 

@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.u.ReadUtil
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit
 /**
  * เป็นตัว run การนับว่าจะให้ทำอะไร
  */
+@Profile("pi")
 class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorService: SensorService,
                         val notifyService: NotifyService, val readUtil: ReadUtil)
     : PijobrunInterface, Runnable {

@@ -14,6 +14,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.ArrayBlockingQueue
@@ -22,6 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("pi")
 class Sendpressure(val service: PressurevalueService, val http: HttpControl) {
     val ex = ThreadPoolExecutor(
             2,

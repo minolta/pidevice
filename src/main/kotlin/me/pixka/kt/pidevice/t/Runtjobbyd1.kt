@@ -14,11 +14,13 @@ import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
+@Profile("pi")
 class Runtjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,

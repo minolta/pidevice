@@ -9,10 +9,12 @@ import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("pi")
 class RungasJob(val service: PijobService, val js: JobService, val pjs: PijobService,
                 val ts: TaskService, val gpioService: GpioService,
                 val readUtil: ReadUtil, val psij: PortstatusinjobService) {

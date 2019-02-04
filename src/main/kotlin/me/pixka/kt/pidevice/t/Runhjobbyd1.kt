@@ -11,10 +11,12 @@ import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("pi")
 class Runhjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,

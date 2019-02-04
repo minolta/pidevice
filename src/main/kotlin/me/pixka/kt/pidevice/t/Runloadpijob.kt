@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService, val ls: LogistateService,
-                   var err: ErrorlogService, val js: JobService, val dsservice: DS18sensorService,
+                  val js: JobService, val dsservice: DS18sensorService,
                    val ps: PortnameService, val pds: PideviceService) {
     val mapper = ObjectMapper()
     var ex = Executors.newSingleThreadExecutor()
@@ -129,7 +129,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
 
     }
 
-    private fun newpijobinlocaldevice(item: Pijob): Pijob? {
+    fun newpijobinlocaldevice(item: Pijob): Pijob? {
 
         try {
             item.job = newjob(item.job!!)
@@ -142,7 +142,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                 item.desdevice = newotherdevice(item.desdevice!!)
             } catch (e: Exception) {
                 logger.error("Can not create Other Device")
-                throw e
+
             }
             logger.debug("Item for new pijob ${item}")
             var p: Pijob = service.newpijob(item)

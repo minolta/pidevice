@@ -8,6 +8,7 @@ import me.pixka.kt.pibase.d.PressurevalueService
 import me.pixka.kt.pidevice.s.InfoService
 import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.File
@@ -16,6 +17,7 @@ import java.util.*
 
 
 @Component
+@Profile("pi")
 class Readlocalpressure(val infoService: InfoService, val ps: Piio,
                         val prs: PressurevalueService, val pideviceService: PideviceService) {
     var mapper = ObjectMapper()
