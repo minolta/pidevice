@@ -25,7 +25,7 @@ class PideviceApplication {
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
-        taskScheduler.poolSize = 200
+        taskScheduler.poolSize = 150
         taskScheduler.threadNamePrefix = "SS-"
 
 
@@ -59,29 +59,11 @@ class PideviceApplication {
                 AbortPolicy() // <-- It will abort if timeout exceeds
         )
 
-        /*
-        val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize =10
-        executor.maxPoolSize = 25
-        executor.setAllowCoreThreadTimeOut(true)
-        executor.keepAliveSeconds = 10
-        executor.setQueueCapacity(500)
-        executor.threadNamePrefix = "PT-"
-        executor.initialize()
-        return executor
-        */
+
 
     }
 
-    /*
-    @Bean(name = arrayOf("longrun"))
-    fun longrun(): Executor {
-        return ThreadPoolExecutor(5, 100, 30,
-                TimeUnit.HOURS, LinkedBlockingDeque<Runnable>(50),
-                ThreadPoolExecutor.CallerRunsPolicy())
 
-    }
-    */
     @Bean(name = arrayOf("pool"))
     fun pool(): ExecutorService? {
         val threadpool = ThreadPoolExecutor(20, 100, 1,

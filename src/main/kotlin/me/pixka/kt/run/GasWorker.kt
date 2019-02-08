@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pidevice.t.RungasJob
 import me.pixka.kt.pidevice.u.ReadUtil
+import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -13,7 +14,8 @@ import java.util.concurrent.TimeUnit
 /**
  * จะ run ยาวเลยไม่หยุด แต่ถ้าอยู่น้อง
  */
-class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService, var runwithjob: Pijob)
+class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService, var runwithjob: Pijob,
+                var pjs: PijobService)
     : DefaultWorker(p, gpios, readUtil, ps, logger) {
     override fun run() {
         var ports: List<Portstatusinjob>? = null
@@ -26,6 +28,13 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
 
             while (true) {
 
+                pijob = pjs.find(pijob.id)
+                if(pijob.enable==false)
+                {
+                    isRun=false
+                    status="Job is disable"
+                    break
+                }
                 if (readUtil.checktmp(pijob) && runwith(runwithjob)) {
                     if (ports != null) {
                         setport(ports)
