@@ -2,7 +2,6 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.t.HttpGetTask
@@ -16,7 +15,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService, val ls: LogistateService,
-                  val js: JobService, val dsservice: DS18sensorService,
+                   val js: JobService, val dsservice: DS18sensorService,
                    val ps: PortnameService, val pds: PideviceService) {
     val mapper = ObjectMapper()
     var ex = Executors.newSingleThreadExecutor()
@@ -68,6 +67,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
 
         try {
             var http = HttpGetTask(target + "/${mac}")
+            logger.debug("${target}/${mac}")
             var f = ex.submit(http)
             var re: String? = null
             re = f.get(3, TimeUnit.SECONDS)
@@ -245,7 +245,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
         }
     }
 
-     fun saveport(listofports: List<Portstatusinjob>, pi: Pijob) {
+    fun saveport(listofports: List<Portstatusinjob>, pi: Pijob) {
 
         try {
             for (item in listofports) {

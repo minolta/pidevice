@@ -11,7 +11,6 @@ import me.pixka.pibase.s.Ds18valueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -23,7 +22,7 @@ import java.util.*
  *
  */
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, val io: Piio,
               val dvs: Ds18valueService, val ss: SensorService, val dss: DS18sensorService) {
 
@@ -114,8 +113,13 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
     }
 
     fun checkLocal(ds: DS18sensor): DS18value? {
-        var value = io.readDs18value(ds.name!!)
-        return value
+        try {
+            var value = io.readDs18value(ds.name!!)
+            return value
+        } catch (e: Exception) {
+            logger.error("Error ${e.message}")
+        }
+        return null
     }
 
 

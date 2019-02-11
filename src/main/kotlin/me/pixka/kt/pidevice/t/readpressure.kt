@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ExecutorService
 
 @Component
-@Profile("pi")
+//@Profile("pi")
 class Findreadpressure(val pideviceService: PideviceService, val ps: PressurevalueService,
                        val js: JobService, val pjs: PijobService,
                        val http: HttpControl, val ips: IptableServicekt, val ts: TaskService

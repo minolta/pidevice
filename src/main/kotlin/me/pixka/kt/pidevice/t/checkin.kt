@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class Checkin(val c: CheckinTask,val notifyService: NotifyService) {
 
 
@@ -68,9 +68,10 @@ class Checkin(val c: CheckinTask,val notifyService: NotifyService) {
 }
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class CheckinTask(val erl: ErrorlogService, val io: Piio, val http: HttpControl,
-                  val ds: DevicecheckinService, val dbcfg: DbconfigService, val mtservice: MessagetypeService, val ips: IptableServicekt) {
+                  val ds: DevicecheckinService, val dbcfg: DbconfigService,
+                  val mtservice: MessagetypeService, val ips: IptableServicekt) {
     var target: String? = null
     var host: String? = null
 

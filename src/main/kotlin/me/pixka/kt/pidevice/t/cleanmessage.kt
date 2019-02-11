@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-@Profile("pi","lite")
+//@Profile("pi","lite")
 class Cleanmessage(val service: MessageService) {
 
     @Scheduled(fixedDelay = 60*60*1000)

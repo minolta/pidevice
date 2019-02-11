@@ -22,7 +22,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class ReadDhtfromother(val http: HttpControl,
                        val pjs: PijobService,
                        val js: JobService,
@@ -62,10 +62,10 @@ class ReadDhtfromother(val http: HttpControl,
 
                             if (dhtvalue != null) {
 
-                                var pidevice = pds.findByMac(dhtvalue.ip!!)
+                               // var pidevice = pds.findByMac(dhtvalue.pidevice?.mac!!)
                                 dhtvalue.valuedate = Date()
 
-                                dhtvalue.pidevice = pidevice
+                                dhtvalue.pidevice = des
                                 var d = dhts.save(dhtvalue)
                                 logger.info("Save otherdht ${d}")
                                 if (i.waittime != null)

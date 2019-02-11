@@ -23,7 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi")
+//@Profile("pi")
 class Sendpressure(val service: PressurevalueService, val http: HttpControl) {
     val ex = ThreadPoolExecutor(
             2,

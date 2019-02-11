@@ -26,11 +26,10 @@ import java.util.Calendar
 
 
 @Component
-@Profile("pi")
+//@Profile("pi")
 class RunoffPump(val pjs: PijobService,
                  val js: JobService,
                  val task: TaskService,
-                 val gpios: GpioService,
                  val timeUtil: TimeUtil, val dhts: Dhtutil) {
 
 
@@ -45,7 +44,7 @@ class RunoffPump(val pjs: PijobService,
 
                 for (job in jobs) {
 
-                    var t = OffpumbWorker(job, gpios, timeUtil, dhts)
+                    var t = OffpumbWorker(job, timeUtil, dhts)
                     var run = task.run(t)
                     logger.debug("Run ${job} ${run}")
                 }
@@ -72,7 +71,7 @@ class RunoffPump(val pjs: PijobService,
     }
 }
 
-class OffpumbWorker(var pijob: Pijob, var gpios: GpioService, val timeUtil: TimeUtil,
+class OffpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
                     val dhts: Dhtutil)
     : PijobrunInterface, Runnable {
 

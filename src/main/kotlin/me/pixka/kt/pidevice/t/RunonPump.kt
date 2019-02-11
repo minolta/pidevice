@@ -20,11 +20,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi")
+//@Profile("pi")
 class RunonPump(val pjs: PijobService,
                 val js: JobService,
                 val task: TaskService,
-                val gpios: GpioService,
                 val timeUtil: TimeUtil, val dhts: Dhtutil) {
 
 
@@ -39,7 +38,7 @@ class RunonPump(val pjs: PijobService,
 
                 for (job in jobs) {
 
-                    var t = OnpumbWorker(job, gpios, timeUtil, dhts)
+                    var t = OnpumbWorker(job, timeUtil, dhts)
                     var run = task.run(t)
                     logger.debug("Run ${job} ${run}")
                 }
@@ -66,7 +65,7 @@ class RunonPump(val pjs: PijobService,
     }
 }
 
-class OnpumbWorker(var pijob: Pijob, var gpios: GpioService, val timeUtil: TimeUtil,
+class OnpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
                    val dhts: Dhtutil)
     : PijobrunInterface, Runnable {
 

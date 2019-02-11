@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor
 
 
 @Component
-@Profile("pi")
+//@Profile("pi")
 class ThreadInfo(val context: ApplicationContext, val tsk: TaskService, val ms: MessageService) {
 
     @Scheduled(fixedDelay = 15000)

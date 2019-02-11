@@ -21,7 +21,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class SendDht(val task: SenddhtTask) {
 
 
@@ -53,7 +53,7 @@ class SendDht(val task: SenddhtTask) {
 }
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class SenddhtTask(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
                   val err: ErrorlogService, val http: HttpControl, val dbcfg: DbconfigService) {
 
