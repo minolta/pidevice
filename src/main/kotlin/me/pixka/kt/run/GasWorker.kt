@@ -29,10 +29,13 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
             while (true) {
 
                 pijob = pjs.find(pijob.id)
-                if(pijob.enable==false)
-                {
-                    isRun=false
-                    status="Job is disable"
+                logger.debug("Pijob ${pijob}")
+                if (pijob.enable == false) {
+                    isRun = false
+                    status = "Job is disable"
+                    logger.error("Job have disable")
+                    if (ports != null)
+                        rt(ports)
                     break
                 }
                 if (readUtil.checktmp(pijob) && runwith(runwithjob)) {
@@ -55,6 +58,9 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
                     isRun = false
                     break
                 }
+                logger.debug("GasWoker wait 1 sec")
+                status = "GasWoker wait 1 sec"
+                TimeUnit.SECONDS.sleep(1)
             }
         } catch (e: Exception) {
             logger.error(e.message)
