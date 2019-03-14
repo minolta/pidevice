@@ -52,10 +52,11 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
                                 //   logger.debug("Value is ${value.t} PI:${value.pidevice} SENSOR:${value.ds18sensor} ")
 
                                 var d = i.ds18sensor
-                                if (d != null) {
+                                if (d != null && d.name != "") {
                                     d = dss.findorcreate(d.name!!)
                                     logger.debug(" Found Sensor ${d}")
                                 } else {
+                                    d = dss.findorcreate(i.desdevice?.mac!!)
                                     logger.debug("Ds18Sensor not found")
                                 }
                                 value.ds18sensor = d
@@ -117,7 +118,7 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
             var value = io.readDs18value(ds.name!!)
             return value
         } catch (e: Exception) {
-            logger.error("Error ${e.message}")
+            logger.error("Read local ==> Error ${e.message}")
         }
         return null
     }

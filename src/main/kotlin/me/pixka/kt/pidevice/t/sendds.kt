@@ -116,7 +116,7 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
                     }
                 } catch (e: Exception) {
                     logger.error("[sendds18b20] ERROR " + e.message)
-                    err.n("Sendds", "37-50", "${e.message}")
+//                    err.n("Sendds", "37-50", "${e.message}")
                 } finally {
                     if (re != null)
                         re.close()

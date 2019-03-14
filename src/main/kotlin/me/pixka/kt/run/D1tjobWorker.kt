@@ -14,9 +14,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-class D1tjobWorker(p: Pijob, g: GpioService,
+class D1tjobWorker(p: Pijob,
                    val readvalue: ReadUtil, val pijs: PortstatusinjobService)
-    : DefaultWorker(p, g, readvalue, pijs, logger) {
+    : DefaultWorker(p, null, readvalue, pijs, logger) {
     override fun run() {
         try {
             startrun = Date()

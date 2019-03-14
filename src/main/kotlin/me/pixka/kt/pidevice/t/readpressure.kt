@@ -1,6 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
@@ -12,14 +13,9 @@ import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PideviceService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
-import org.springframework.scheduling.annotation.Async
-import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.*
-import java.util.concurrent.Executors
-import java.util.concurrent.ExecutorService
 
 @Component
 //@Profile("pi")
@@ -92,9 +88,6 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
     }
 
 
-
-
-
     companion object {
         internal var logger = LoggerFactory.getLogger(Findreadpressure::class.java)
     }
@@ -123,7 +116,7 @@ class readP(val ips: IptableServicekt, val http: HttpControl) : Callable<Pressur
             var ip = ips.findByMac(des.mac!!)
             if (ip != null) {
                 var ipstring = ip.ip
-                var re :String?= ""
+                var re: String? = ""
                 try {
                     var executor = Executors.newSingleThreadExecutor()
                     var u = "http://${ipstring}${url}"
@@ -131,10 +124,18 @@ class readP(val ips: IptableServicekt, val http: HttpControl) : Callable<Pressur
                     logger.debug("Read pressure ${u}")
                     //re = http.get(u)
                     var f = executor.submit(get)
-                    re = f.get(2,TimeUnit.SECONDS)
+                    re = f.get(2, TimeUnit.SECONDS)
                     logger.debug("Return ${re}")
+                    if (re != null) {
+                        try {
+                            var o = om.readValue<PressureValue>(re)
+                            return o
+                        } catch (e: Exception) {
+                            logger.error("Error pras value ${e.message}")
+                        }
+                    }
                 } catch (e: Exception) {
-                    logger.error(e.message)
+                    logger.error("Get value ${e.message}")
                     return null
                 }
                 try {
@@ -143,7 +144,7 @@ class readP(val ips: IptableServicekt, val http: HttpControl) : Callable<Pressur
                     logger.debug("Pressure value ${ps}")
                     return ps
                 } catch (e: Exception) {
-                    logger.error(e.message)
+                    logger.error("Top error ${e.message}")
                     return null
 
                 }
@@ -153,7 +154,7 @@ class readP(val ips: IptableServicekt, val http: HttpControl) : Callable<Pressur
             return null
 
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("global ${e.message}")
             return null
         }
 

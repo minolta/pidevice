@@ -16,11 +16,11 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-@Profile("pi")
+//@Profile("pi")
 class Runhjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,
-                  val gpios: GpioService,
+//                  val gpios: GpioService,
                   val dhs: Dhtutil, val httpControl: HttpControl,
                   val dhtvalueService: DhtvalueService) {
     val om = ObjectMapper()
@@ -34,7 +34,7 @@ class Runhjobbyd1(val pjs: PijobService,
         if (list != null) {
             for (job in list) {
                 logger.debug("Run ${job}")
-                var t = D1hjobWorker(job, gpios, dhtvalueService, dhs, httpControl)
+                var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl)
                 var run = task.run(t)
                 logger.debug("RunJOB ${run}")
             }

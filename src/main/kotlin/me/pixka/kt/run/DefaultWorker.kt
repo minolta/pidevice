@@ -15,7 +15,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService,
+abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
                              var readUtil: ReadUtil,
                              val ps: PortstatusinjobService, var logger: org.slf4j.Logger)
     : PijobrunInterface, Runnable {
@@ -71,10 +71,10 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService,
             if (ports != null)
                 for (port in ports) {
                     if (!port.status?.name.equals("check") && port.enable!!) {
-                        var pin = gpios.gpio.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
+                        var pin = gpios?.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
                         logger.debug("Reset pin ${pin}")
                         status = "Reset pin ${pin}"
-                        gpios.resettoDefault(pin)
+                        gpios?.resettoDefault(pin)
                         logger.debug("Reset Port to default")
                     }
                 }
@@ -98,17 +98,17 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService,
                 }
                 logger.debug("Port for pijob ${port}")
                 status = "Port for pijob ${port}"
-                var pin = gpios.gpio.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
+                var pin = gpios?.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
 
                 var sn = port.status?.name
                 logger.debug("Set to " + sn)
                 status = "Set to " + sn
                 if (sn?.indexOf("low") != -1) {
-                    gpios.setPort(pin, false)
+                    gpios?.setPort(pin, false)
                     //pin.setState(false)
                 } else
                 // pin.setState(true)
-                    gpios.setPort(pin, true)
+                    gpios?.setPort(pin, true)
 
 
                 logger.debug("Set pin state: ${pin.state}")

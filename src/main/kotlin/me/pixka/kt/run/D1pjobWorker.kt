@@ -2,17 +2,19 @@ package me.pixka.kt.run
 
 import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
-                   val dhts: Dhtutil, val httpControl: HttpControl)
+
+class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
@@ -52,17 +54,21 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         startrun = Date()
         isRun = true
         try {
-            var dhtvalue = dhts.readByPijob(pijob)
-            logger.debug("DHTVALUE ${dhtvalue}")
-            state = "Get value from traget [${dhtvalue}]"
-            if (dhtvalue != null) {
-
-                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
-                    logger.debug("Go!!")
+            var v = readUtil.readPressureByjob(pijob)
+            logger.debug("Found pressure : ${v}")
+            if (v != null) {
+                var value = v.pressurevalue?.toFloat()
+                var h = pijob.hhigh?.toFloat()
+                var l = pijob.hlow?.toFloat()
+                if (checkH(l!!, h!!, value!!)) {
                     go()
+                } else {
+                    logger.error("D1 pressure job Value not in rang ${l} < ${value} > ${h}")
                     isRun = false
                 }
-
+            } else {
+                state = "Not found pressure value"
+                isRun = false
             }
         } catch (e: Exception) {
             isRun = false
@@ -71,6 +77,10 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         }
 
         isRun = false
+
+    }
+
+    fun checkpressure(v: PressureValue) {
 
     }
 
@@ -141,7 +151,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
     fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
         if (pijob.desdevice != null) {
-            var ip = dhts.mactoip(pijob.desdevice!!.mac!!)
+            var ip = readUtil.findIp(pijob.desdevice!!)
             if (ip != null) {
                 var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
                 return url
@@ -156,6 +166,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(D1hjobWorker::class.java)
+        internal var logger = LoggerFactory.getLogger(D1pjobWorker::class.java)
     }
 }

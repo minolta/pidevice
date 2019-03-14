@@ -8,47 +8,40 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1hjobWorker
-import me.pixka.kt.run.D1tjobWorker
+import me.pixka.kt.run.D1pjobWorker
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
 //@Profile("pi")
-class Runtjobbyd1(val pjs: PijobService,
+class Runpjobbyd1(val pjs: PijobService,
                   val js: JobService,
-                  val task: TaskService,
-//                  val gpios: GpioService,
-                  val dhs: Dhtutil, val httpControl: HttpControl, val psij: PortstatusinjobService,
-                  val readUtil: ReadUtil) {
+                  val task: TaskService,val readUtil: ReadUtil
+                ) {
     val om = ObjectMapper()
-
     @Scheduled(fixedDelay = 5000)
     fun run() {
-        try {
-            logger.debug("Start run ${Date()}")
-            var list = loadjob()
-            logger.debug("found job ${list?.size}")
-            if (list != null) {
-                for (job in list) {
-                    var t = D1tjobWorker(job, readUtil, psij)
-                    task.run(t)
-                }
+
+        var list = loadjob()
+        if (list != null)
+            logger.debug("Job for Runhjobbyd1 ${list.size}")
+        if (list != null) {
+            for (job in list) {
+                logger.debug("Run ${job}")
+                var t = D1pjobWorker(job,readUtil)
+                var run = task.run(t)
+                logger.debug("RunJOB ${run}")
             }
-        } catch (e: Exception) {
-            logger.error(e.message)
         }
     }
 
-
     fun loadjob(): List<Pijob>? {
-        var job = js.findByName("runtbyd1")
+        var job = js.findByName("runpbyd1")
 
         if (job != null) {
 
@@ -59,6 +52,6 @@ class Runtjobbyd1(val pjs: PijobService,
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(Runtjobbyd1::class.java)
+        internal var logger = LoggerFactory.getLogger(Runpjobbyd1::class.java)
     }
 }
