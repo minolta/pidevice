@@ -24,7 +24,7 @@ class Runpjobbyd1(val pjs: PijobService,
                   val task: TaskService,val readUtil: ReadUtil
                 ) {
     val om = ObjectMapper()
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
 
         var list = loadjob()

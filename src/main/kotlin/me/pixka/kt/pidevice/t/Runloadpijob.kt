@@ -14,7 +14,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService, val ls: LogistateService,
+class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService,
+                   val ls: LogistateService,
                    val js: JobService, val dsservice: DS18sensorService,
                    val ps: PortnameService, val pds: PideviceService) {
     val mapper = ObjectMapper()
@@ -295,6 +296,9 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             ref.runtime = item.runtime
             ref.waittime = item.waittime
             ref.enable = item.enable
+            if (item.device != null)
+                ref.device = newotherdevice(item.device!!)
+
 
             return psijs.save(ref)
 

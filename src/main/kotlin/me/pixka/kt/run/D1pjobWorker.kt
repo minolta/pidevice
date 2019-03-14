@@ -1,6 +1,7 @@
 package me.pixka.kt.run
 
 import me.pixka.c.HttpControl
+import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.s.GpioService
@@ -55,13 +56,15 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
         isRun = true
         try {
             var v = readUtil.readPressureByjob(pijob)
-            logger.debug("Found pressure : ${v}")
+            logger.debug("D1 Found pressure : ${v}")
             if (v != null) {
                 var value = v.pressurevalue?.toFloat()
                 var h = pijob.hhigh?.toFloat()
                 var l = pijob.hlow?.toFloat()
+                logger.debug("D1 pressure  ${l} < ${value} > ${h}")
                 if (checkH(l!!, h!!, value!!)) {
                     go()
+                    isRun = false
                 } else {
                     logger.error("D1 pressure job Value not in rang ${l} < ${value} > ${h}")
                     isRun = false
@@ -103,6 +106,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
                 var pw = port.waittime
                 var pr = port.runtime
                 var pn = port.portname!!.name
+                var tg = port.device
                 var v = port.status
 
                 var portname = pn
@@ -127,7 +131,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
                 }
 
                 try {
-                    var url = findUrl(portname!!, runtime, waittime, value)
+                    var url = findUrl(tg!!, portname!!, runtime, waittime, value)
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
                     var get = HttpGetTask(url)
@@ -149,9 +153,9 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
 
     }
 
-    fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
+    fun findUrl(tg: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
         if (pijob.desdevice != null) {
-            var ip = readUtil.findIp(pijob.desdevice!!)
+            var ip = readUtil.findIp(tg)
             if (ip != null) {
                 var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
                 return url
