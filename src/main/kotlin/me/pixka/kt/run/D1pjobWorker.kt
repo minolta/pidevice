@@ -83,9 +83,6 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
 
     }
 
-    fun checkpressure(v: PressureValue) {
-
-    }
 
     fun checkH(l: Float, h: Float, v: Float): Boolean {
         state = "Check value ${l} < ${v} > ${h}"

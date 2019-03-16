@@ -89,7 +89,7 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
 
     //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้
     fun runwith(testjob: Pijob?): Boolean {
-        RungasJob.logger.debug("Start runwidth")
+        logger.debug("Start runwidth")
         try {
             //ถ้ามี runwidthid
             logger.debug("runwidth Check job ${testjob}")

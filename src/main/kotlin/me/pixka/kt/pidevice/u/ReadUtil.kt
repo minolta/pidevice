@@ -109,15 +109,14 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
     }
 
     fun findIp(desdevice: PiDevice): Iptableskt? {
-
-        var ip = iptableServicekt.findByMac(desdevice.mac!!)
-        logger.debug("3 Find ip of pidevice ${desdevice} found ===> ${ip} #readother")
-        if (ip == null || ip.ip == null) {
-            logger.error("4 Can not find ip ${ip} #readother")
-            throw Exception("Ip not found")
+        try {
+            var ip = iptableServicekt.findByMac(desdevice.mac!!)
+            logger.debug("3 Find ip of pidevice [${desdevice}] found ===> [${ip}] #readother")
+            return ip
+        } catch (e: Exception) {
+            logger.error("Find ip ERROR ${e.message}")
+            throw e
         }
-        return ip
-
     }
 
     fun findurl(desid: Long, sensorid: Long?): String? {
@@ -126,30 +125,28 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         try {
             desdevice = findDevice(desid)
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("findurl URL ${e.message}")
             throw e
         }
-
+        logger.debug("Device name ${desdevice} ${desdevice.mac}")
         var sensor: DS18sensor? = null
         try {
             sensor = dss.find(sensorid)
         } catch (e: Exception) {
-            logger.error("Find Sensor Error")
-
+            logger.error("findurl Sensor Error ${e.message}")
         }
-        logger.debug("2 Find sensor ${sensorid} found ===> ${sensor} #readother")
+        logger.debug("2 Find sensor [${sensorid}] found ===> [${sensor}] #readother")
 
         var ip: Iptableskt? = null
         try {
             ip = findIp(desdevice)
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("findurl findip ${e.message}")
             throw e
         }
         var url = ""
 
         if (ip != null && ip.ip != null) {
-
             if (sensor == null) {
                 url = "http://${ip.ip}/ktype"
             } else
@@ -269,7 +266,6 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
                     }
                 } catch (e: Exception) {
                     logger.error(e.message)
-
                 }
 
                 try {
@@ -316,8 +312,8 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             var p = getBuffer(pijob)
             return p.value
         } catch (e: Exception) {
-           logger.error("New read buffer")
-           throw e
+            logger.error("New read buffer")
+            throw e
 
         }
     }
@@ -418,10 +414,10 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         }
     }
 
-    fun readLocalDht()
-    {
+    fun readLocalDht() {
 
     }
+
     companion object {
         internal var logger = LoggerFactory.getLogger(ReadUtil::class.java)
     }
