@@ -29,7 +29,7 @@ class Runtjobbyd1(val pjs: PijobService,
                   val readUtil: ReadUtil) {
     val om = ObjectMapper()
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 3000)
     fun run() {
         try {
             logger.debug("Start run ${Date()}")
@@ -37,8 +37,12 @@ class Runtjobbyd1(val pjs: PijobService,
             logger.debug("found job ${list?.size}")
             if (list != null) {
                 for (job in list) {
-                    var t = D1tjobWorker(job, readUtil, psij)
-                    task.run(t)
+                   var testjob = pjs.findByRefid(job.runwithid)
+                    logger.debug("")
+                    var t = D1tjobWorker(job, readUtil, psij,testjob)
+                    if (t.checktmp(job)) {
+                        task.run(t)
+                    }
                 }
             }
         } catch (e: Exception) {

@@ -15,45 +15,69 @@ import java.util.concurrent.TimeUnit
 
 
 class D1tjobWorker(p: Pijob,
-                   val readvalue: ReadUtil, val pijs: PortstatusinjobService)
+                   val readvalue: ReadUtil, val pijs: PortstatusinjobService, var test: Pijob? = null)
     : DefaultWorker(p, null, readvalue, pijs, logger) {
     override fun run() {
         try {
             startrun = Date()
             isRun = true
-            status = "Start run this job ${pijob}"
 
-            if (checktmp(pijob)) {
-                logger.debug("Now jobrun D1tjob")
+            logger.debug("${pijob.name} Pijob ${pijob} runwith ${test}")
+            if (checktmp(pijob) && runwith(test)) {
+                status = "${pijob.name} Start run this job ${pijob.id} "
+                logger.debug(" ${pijob.name} Now jobrun D1tjob")
                 var ports = pijs.findByPijobid(pijob.id)
                 if (ports != null) {
 
                     setRemoteport(ports as List<Portstatusinjob>)
 
                 } else {
-                    logger.debug("No port to set")
+                    logger.debug(" ${pijob.name} No port to set")
                 }
             }
         } catch (e: Exception) {
             logger.error(e.message)
-
+            status = "${pijob.name} error ${e.message}"
         }
 
         isRun = false
-        logger.debug("Run d1 T job ")
+        logger.debug("${pijob.name} Run d1 T job  ")
 
 
     }
 
+    //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้
+    fun runwith(testjob: Pijob?): Boolean {
+        logger.debug("${pijob.name} Start runwidth")
+        try {
+            //ถ้ามี runwidthid
+            logger.debug("${pijob.name} runwidth Check job ${testjob}")
+            if (testjob != null) {
+                var re = readUtil.checktmp(testjob)
+                logger.debug("${pijob.name} runwidth Test result ${re}")
+                return re
+            }
+            return true // ถ้าไม่กำหนด run with ก็ run เลย
+
+        } catch (e: Exception) {
+            logger.error("${pijob.name} Error runwith() ${e.message}")
+            throw  e
+        }
+        return false
+    }
+
     fun checktmp(p: Pijob): Boolean {
-        logger.debug("Check temp ${p}")
+        logger.debug("${pijob.name} Check temp ${p}")
+        status = "${pijob.name} Check temp ${p}"
         try {
             var v = readUtil.readTmpByjob(p)
-            logger.debug("value from Readtmp ${v}")
+            logger.debug("${pijob.name} value from Readtmp ${v}")
+            status = "${pijob.name} value from Readtmp ${v}"
             var l = p.tlow?.toDouble()
             var h = p.thigh?.toDouble()
             var now = v?.toDouble()
-            logger.debug("temp check ${l} < ${v} < ${h}")
+            logger.debug("${pijob.name} temp check ${l} < ${v} < ${h}")
+            status = "${pijob.name} temp check ${l} < ${v} < ${h}"
             if (l != null && h != null && now != null) {
                 if (l <= now && now <= h) {
                     return true //in rang
@@ -62,7 +86,8 @@ class D1tjobWorker(p: Pijob,
             }
             return false
         } catch (e: Exception) {
-            logger.error("Check temp ${e.message}")
+            logger.error("${pijob.name} Check temp ${e.message}")
+            status = "${pijob.name} Check temp ${e.message}"
             throw e
         }
     }

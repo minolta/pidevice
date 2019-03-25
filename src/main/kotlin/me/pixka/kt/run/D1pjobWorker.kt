@@ -57,6 +57,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
         try {
             var v = readUtil.readPressureByjob(pijob)
             logger.debug("D1 Found pressure : ${v}")
+            state = "D1 Found pressure : ${v}"
             if (v != null) {
                 var value = v.pressurevalue?.toFloat()
                 var h = pijob.hhigh?.toFloat()
@@ -67,6 +68,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
                     isRun = false
                 } else {
                     logger.error("D1 pressure job Value not in rang ${l} < ${value} > ${h}")
+                    state = "D1 pressure job Value not in rang ${l} < ${value} > ${h}"
                     isRun = false
                 }
             } else {
@@ -76,6 +78,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
         } catch (e: Exception) {
             isRun = false
             logger.error("ERROR ${e.message}")
+            state = "ERROR ${e.message}"
             throw e
         }
 
