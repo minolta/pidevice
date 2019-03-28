@@ -12,7 +12,6 @@ import me.pixka.kt.pidevice.s.InfoService
 import me.pixka.pibase.s.DS18sensorService
 import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*
@@ -39,7 +38,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         var ip = ips.findByMac(des.mac!!)
         if (ip != null) {
             var ipstring = ip.ip
-            var re:String? = null
+            var re: String? = null
             try {
                 var u = "http://${ipstring}${url}"
                 logger.debug("${j.name}  Read pressure ${u}")
@@ -325,13 +324,12 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
         logger.debug("Buffer ${buffer}")
         for (i in buffer) {
-
-            if (pijob.id.equals(i.pijob?.id)) {
-                if (checktimeout(Date(), i.timeout!!))
-                    return i
-                throw Exception("Time out")
+            if (i.equals(pijob)) {
+                return i
             }
         }
+
+
         throw Exception("Not found Buffer")
 
     }
@@ -354,17 +352,23 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         var timeout = Date(Date().time + 1000 * 60 * 60)
         logger.debug("Timeout : ${timeout}")
         if (p != null) {
-            logger.debug("Update old value  ${p}")
-            p.readtime = Date()
-            p.value = value
-            p.timeout = timeout
+            var t = checktimeout(Date(), p.timeout!!)
+            if (t) {
+                logger.debug("${pijob.name} Update old value  ${p}")
+                p.readtime = Date()
+                p.value = value
+                p.timeout = timeout
+                var re = buffer.remove(p) //เอาอันเก่าออกก่อน
+                logger.debug("${pijob.name} remove ${re}")
+                buffer.add(p) // เอาอันใหม่เข้า
+            }
         } else {
 
             p = ReadBuffer(value, Date(), pijob, timeout)
-            logger.debug("New value ${p}")
+            logger.debug("${pijob.name} New value ${p}")
             buffer.add(p)
         }
-        logger.debug("End save buffer")
+        logger.debug("${pijob.name} End save buffer")
 
     }
 
@@ -430,5 +434,21 @@ class ReadBuffer(var value: BigDecimal? = null, var readtime: Date? = null, var 
                  var timeout: Date? = null) {
     override fun toString(): String {
         return "${pijob?.id} ${readtime} ${timeout} ${value} "
+    }
+
+    override fun equals(other: Any?): Boolean {
+
+        if (other is ReadBuffer) {
+
+            if (other.pijob?.id?.toInt() == pijob?.id?.toInt())
+                return true
+        }
+
+        if (other is Pijob) {
+            if (other.id.toInt() == pijob?.id?.toInt())
+                return true
+
+        }
+        return false
     }
 }
