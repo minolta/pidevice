@@ -123,10 +123,12 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     var get = HttpGetTask(url)
                     var ee = Executors.newSingleThreadExecutor()
                     var f = ee.submit(get)
-                    var value = f.get(5, TimeUnit.SECONDS)
+                    var value = f.get(1, TimeUnit.SECONDS)
                     state = "Delay  ${runtime} + ${waittime}"
-                    logger.debug("Value ${value}")
+                    logger.debug("D1h Value ${value}")
+                    state = "${value}"
                     TimeUnit.SECONDS.sleep(runtime)
+
                     TimeUnit.SECONDS.sleep(waittime)
                 } catch (e: Exception) {
                     logger.error("Error ${e.message}")

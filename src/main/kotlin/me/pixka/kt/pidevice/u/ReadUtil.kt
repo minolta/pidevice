@@ -350,25 +350,32 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         }
 
         var timeout = Date(Date().time + 1000 * 60 * 60)
-        logger.debug("Timeout : ${timeout}")
+        logger.debug("savebuffer Timeout : ${timeout}")
         if (p != null) {
             var t = checktimeout(Date(), p.timeout!!)
             if (t) {
-                logger.debug("${pijob.name} Update old value  ${p}")
-                p.readtime = Date()
-                p.value = value
-                p.timeout = timeout
-                var re = buffer.remove(p) //เอาอันเก่าออกก่อน
-                logger.debug("${pijob.name} remove ${re}")
-                buffer.add(p) // เอาอันใหม่เข้า
+                var index = buffer.indexOf(p)
+                logger.debug("savebuffer ${pijob.name} Update old value  ${p}")
+
+                buffer[index].readtime = Date()
+                buffer[index].value = value
+                buffer[index].timeout = timeout
+                logger.debug("savebuffer ${pijob.name} ")
+            }
+            else
+            {
+//                var removeok = buffer.remove(p) //เอาอันหมดอายุออก
+                var index = buffer.indexOf(p)
+                buffer[index] = ReadBuffer(value, Date(), pijob, timeout)
+                logger.debug("savebuffer ${pijob.name} New value ${p} remove is buffer size ${buffer.size} " )
             }
         } else {
 
             p = ReadBuffer(value, Date(), pijob, timeout)
-            logger.debug("${pijob.name} New value ${p}")
+            logger.debug("savebuffer ${pijob.name} New value ${p}")
             buffer.add(p)
         }
-        logger.debug("${pijob.name} End save buffer")
+        logger.debug("savebuffer ${pijob.name} End save buffer")
 
     }
 
@@ -413,10 +420,11 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
     fun findip(mac: String): String? {
         try {
             var ip = ips.findByMac(mac)
+            logger.debug("Found IP ${ip} findip")
             return ip!!.ip
 
         } catch (e: Exception) {
-            logger.error("Find IP ${e.message}")
+            logger.error("findip ${e.message}")
             throw e
         }
     }

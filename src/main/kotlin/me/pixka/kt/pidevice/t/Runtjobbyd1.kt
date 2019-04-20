@@ -41,7 +41,8 @@ class Runtjobbyd1(val pjs: PijobService,
                     logger.debug("")
                     var t = D1tjobWorker(job, readUtil, psij,testjob)
                     if (t.checktmp(job)) {
-                        task.run(t)
+                        var canrun = task.run(t)
+                        logger.debug("This job run JOB:${job.name} ==> ${canrun}" )
                     }
                 }
             }

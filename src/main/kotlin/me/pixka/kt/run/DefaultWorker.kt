@@ -159,6 +159,14 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
                     try {
                         var value = f.get(3, TimeUnit.SECONDS)
                         logger.debug("Set remote result ${value}")
+                        if(runtime!=null)
+                        {
+                            TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+                        }
+                        if(waittime!=null)
+                        {
+                            TimeUnit.SECONDS.sleep(waittime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+                        }
                     } catch (e: Exception) {
                         logger.error("Can not connect to traget device [${e.message}]")
                     }

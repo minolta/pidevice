@@ -70,12 +70,12 @@ class D1tjobWorker(p: Pijob,
         logger.debug("${pijob.name} Check temp ${p}")
         status = "${pijob.name} Check temp ${p}"
         try {
-            var v = readUtil.readTmpByjob(p)
+            var v = readUtil.readTfromD1Byjob(p)
             logger.debug("${pijob.name} value from Readtmp ${v}")
             status = "${pijob.name} value from Readtmp ${v}"
             var l = p.tlow?.toDouble()
             var h = p.thigh?.toDouble()
-            var now = v?.toDouble()
+            var now = v?.t?.toDouble()
             logger.debug("${pijob.name} temp check ${l} < ${v} < ${h}")
             status = "${pijob.name} temp check ${l} < ${v} < ${h}"
             if (l != null && h != null && now != null) {
