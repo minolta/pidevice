@@ -12,7 +12,6 @@ import me.pixka.pibase.s.Ds18valueService
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -29,26 +28,38 @@ class Sendds(val task: SenddsTask) {
         try {
 
             var f = task.run()
-            var count = 0
-            while (true) {
-                if (f!!.isDone) {
-                    logger.info("Run commplete")
-                    break
-                }
-                TimeUnit.SECONDS.sleep(1)
-                count++
+            if (f != null) {
+                var sendok = f.get(5, TimeUnit.SECONDS)
 
-                if (count > (60*30)) {
-                    f.cancel(true)
-                    logger.error("Timeout")
+                if(sendok)
+                {
+                    logger.debug("End Send ds")
                 }
-
+                else
+                {
+                    logger.error("Send ds 18 error")
+                }
             }
+
+//            var count = 0
+//            while (true) {
+//                if (f!!.isDone) {
+//                    logger.info("Run commplete")
+//                    break
+//                }
+//                TimeUnit.SECONDS.sleep(1)
+//                count++
+//
+//                if (count > (60*30)) {
+//                    f.cancel(true)
+//                    logger.error("Timeout")
+//                }
+
         } catch (e: Exception) {
             logger.error("Error send Sendds ${e.message}")
         }
 
-        logger.debug("End Send ds")
+
     }
 
 

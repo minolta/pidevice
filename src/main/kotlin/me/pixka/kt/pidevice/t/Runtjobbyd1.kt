@@ -3,18 +3,14 @@ package me.pixka.kt.pidevice.t
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.kt.run.D1hjobWorker
 import me.pixka.kt.run.D1tjobWorker
-import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -37,12 +33,17 @@ class Runtjobbyd1(val pjs: PijobService,
             logger.debug("found job ${list?.size}")
             if (list != null) {
                 for (job in list) {
-                   var testjob = pjs.findByRefid(job.runwithid)
-                    logger.debug("")
-                    var t = D1tjobWorker(job, readUtil, psij,testjob)
-                    if (t.checktmp(job)) {
-                        var canrun = task.run(t)
-                        logger.debug("This job run JOB:${job.name} ==> ${canrun}" )
+                    try {
+                        var testjob = pjs.findByRefid(job.runwithid)
+                        logger.debug("")
+                        var t = D1tjobWorker(job, readUtil, psij, testjob)
+
+                        if (t.checktmp(job)) {
+                            var canrun = task.run(t)
+                            logger.debug("This job run JOB:${job.name} ==> ${canrun}")
+                        }
+                    } catch (e: Exception) {
+                        logger.error("${job.name} ${e.message}")
                     }
                 }
             }
