@@ -6,8 +6,11 @@ import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Dhtvalue
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.t.HttpGetTask
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Service
 class Dhtutil(val http: HttpControl, val ips: IptableServicekt) {
@@ -15,11 +18,14 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt) {
     fun readDhtfromOther(url: String): Dhtvalue? {
 
         try {
-            var rep = http.get(url)
+            var get = HttpGetTask(url)
+            var ee = Executors.newSingleThreadExecutor()
+            var f = ee.submit(get)
+            var rep = f.get(30,TimeUnit.SECONDS)
             var dhtvalue = om.readValue<Dhtvalue>(rep, Dhtvalue::class.java)
             return dhtvalue
         } catch (e: Exception) {
-            logger.error("line 56 ${e.message}")
+            logger.error("line 56 ${e.message} ${url}")
             throw e
         }
         return null
@@ -33,7 +39,7 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt) {
             if (ip != null) {
                 var url = "http://${ip.ip}/dht"
                 var dhtvalue = readDhtfromOther(url)
-                logger.debug("Read dht value ${dhtvalue}")
+                logger.debug("Read dht value ${dhtvalue} from ${url}")
                 if (dhtvalue != null) {
                     return dhtvalue
                 }

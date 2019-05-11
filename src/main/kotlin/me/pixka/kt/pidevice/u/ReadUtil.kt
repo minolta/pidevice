@@ -66,6 +66,25 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
     }
 
+    fun readA0(desid: Long): Int? {
+        try {
+            var desdevice = findDevice(desid)
+            var ip = findIp(desdevice)
+
+            var url = "http://${ip?.ip}/a0"
+            var get = HttpGetTask(url)
+            var ee = Executors.newSingleThreadExecutor()
+            var f = ee.submit(get)
+            var value = f.get(2, TimeUnit.SECONDS)
+
+            var a0value = value?.toInt()
+            return a0value
+        } catch (e: Exception) {
+            logger.error("Read A0 ERROR ${e.message}")
+            throw e
+        }
+    }
+
     fun readOther(desid: Long, senid: Long? = null): DS18value? {
 
 
@@ -361,13 +380,11 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
                 buffer[index].value = value
                 buffer[index].timeout = timeout
                 logger.debug("savebuffer ${pijob.name} ")
-            }
-            else
-            {
+            } else {
 //                var removeok = buffer.remove(p) //เอาอันหมดอายุออก
                 var index = buffer.indexOf(p)
                 buffer[index] = ReadBuffer(value, Date(), pijob, timeout)
-                logger.debug("savebuffer ${pijob.name} New value ${p} remove is buffer size ${buffer.size} " )
+                logger.debug("savebuffer ${pijob.name} New value ${p} remove is buffer size ${buffer.size} ")
             }
         } else {
 

@@ -38,7 +38,7 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
                         rt(ports)
                     break
                 }
-                if (readUtil.checktmp(pijob) && runwith(runwithjob)) {
+                if (readUtil?.checktmp(pijob)!! && runwith(runwithjob)!!) {
                     if (ports != null) {
                         setport(ports)
                         if (pijob.runtime != null) {
@@ -88,13 +88,13 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
     }
 
     //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้
-    fun runwith(testjob: Pijob?): Boolean {
+    fun runwith(testjob: Pijob?): Boolean? {
         logger.debug("Start runwidth")
         try {
             //ถ้ามี runwidthid
             logger.debug("runwidth Check job ${testjob}")
             if (testjob != null) {
-                var re = readUtil.checktmp(testjob)
+                var re = readUtil?.checktmp(testjob)
                 logger.debug("runwidth Test result ${re}")
                 return re
             }

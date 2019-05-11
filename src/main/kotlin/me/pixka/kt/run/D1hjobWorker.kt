@@ -4,6 +4,7 @@ import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
@@ -12,11 +13,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
-                   val dhts: Dhtutil, val httpControl: HttpControl)
+                   val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
     var startrun: Date? = null
+    var waitstatus = false
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -56,22 +58,30 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             logger.debug("DHTVALUE ${dhtvalue}")
             state = "Get value from traget [${dhtvalue}]"
             if (dhtvalue != null) {
-
                 if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
                     logger.debug("Go!!")
                     go()
-                    isRun = false
+                    var waittime = pijob.waittime
+                    if (waittime != null) {
+                        state = "Wait time of job ${waittime}"
+                        TimeUnit.SECONDS.sleep(waittime)
+                    }
                 }
 
+
             }
+
+
         } catch (e: Exception) {
             isRun = false
             logger.error("ERROR ${e.message}")
+            state = "ERROR ${e.message}"
+            waitstatus = true
             throw e
         }
-
+        waitstatus = true
         isRun = false
-
+        state = "End job"
     }
 
     fun checkH(l: Float, h: Float, v: Float): Boolean {
@@ -89,7 +99,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         if (ports != null)
             for (port in ports) {
 
-
+                waitstatus = false
                 var pw = port.waittime
                 var pr = port.runtime
                 var pn = port.portname!!.name
@@ -118,27 +128,50 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
                 try {
                     var url = findUrl(portname!!, runtime, waittime, value)
+                    var waittimeout = 10
+                    while (checkgroup(this.pijob) == null) {
+                        state = "Wait for job in group use "
+                        logger.debug("Wait for job in group use")
+                        TimeUnit.SECONDS.sleep(1)
+                        waittimeout --
+                        if(waittimeout<=0)
+                        {
+                            isRun = false
+                            waitstatus = true
+                            throw Exception("Wait time out")
+                        }
+                    }
+                    startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
                     var get = HttpGetTask(url)
                     var ee = Executors.newSingleThreadExecutor()
                     var f = ee.submit(get)
-                    var value = f.get(1, TimeUnit.SECONDS)
+                    var value = f.get(30, TimeUnit.SECONDS)
                     state = "Delay  ${runtime} + ${waittime}"
                     logger.debug("D1h Value ${value}")
-                    state = "${value}"
+                    state = "${value} and run ${runtime}"
                     TimeUnit.SECONDS.sleep(runtime)
+                    waitstatus = true
+                    if (waittime != null) {
 
-                    TimeUnit.SECONDS.sleep(waittime)
+                        state = "Wait time of port ${waittime}"
+                        TimeUnit.SECONDS.sleep(waittime)
+
+                    }
+                    waitstatus = false
+
                 } catch (e: Exception) {
                     logger.error("Error ${e.message}")
                     state = " Error ${e.message}"
+                    waitstatus = true
+
                 }
 
             }
 
         state = "Set port ok "
-
+        waitstatus = true
     }
 
     fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
@@ -159,5 +192,32 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
     companion object {
         internal var logger = LoggerFactory.getLogger(D1hjobWorker::class.java)
+    }
+
+    override fun toString(): String {
+
+        return "name ${pijob.name}"
+    }
+
+    fun checkgroup(job: Pijob): Pijob? {
+        var runs = task.runinglist
+
+        for (run in runs) {
+            if (run is D1hjobWorker) {
+                //ถ้า job รอแล้ว
+                logger.debug("Wait status is ${run.waitstatus} RunGROUPID ${run.pijob.pijobgroup_id} " +
+                        "JOBGROUPID ${job.pijobgroup_id} ")
+
+                if (/*ทำงานอยู่*/run.isRun && /*อยู่ในการพักอยู่*/ !run.waitstatus &&
+                        /*ไม่ใช่ตัวเอง*/run.getPijobid().toInt() != job.id.toInt()) {
+                    if (run.pijob.pijobgroup_id?.toInt() == job.pijobgroup_id?.toInt()) {
+                        return null //อยู่ในกลุ่มเดียวกัน
+                    }
+                }
+
+            }
+        }
+        logger.debug("No Job in this group run ${job}")
+        return job
     }
 }

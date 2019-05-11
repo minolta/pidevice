@@ -7,7 +7,6 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1TimerWorker
-import me.pixka.kt.run.D1tjobWorker
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
@@ -26,16 +25,25 @@ class runD1Timer(val pjs: PijobService,
     @Scheduled(fixedDelay = 5000)
     fun run() {
 
-        var list = loadjob()
-        if (list != null)
-            logger.debug("Job for Runhjobbyd1 ${list.size}")
-        if (list != null) {
-            for (job in list) {
-                logger.debug("Run ${job}")
-                var t = D1TimerWorker(job, readUtil, psij)
-                var run = task.run(t)
-                logger.debug("RunJOB ${run}")
+        try {
+            var list = loadjob()
+            if (list != null)
+                logger.debug("Job for Runhjobbyd1 ${list.size}")
+            if (list != null) {
+                for (job in list) {
+                    try {
+                        logger.debug("Run ${job}")
+                        var t = D1TimerWorker(job, readUtil, psij)
+                        var run = task.run(t)
+                        logger.debug("RunJOB ${run}")
+                    } catch (e: Exception) {
+                        logger.error("Error ${e.message}")
+                    }
+                }
             }
+        } catch (e: Exception) {
+            logger.error("Error ${e.message}")
+
         }
     }
 

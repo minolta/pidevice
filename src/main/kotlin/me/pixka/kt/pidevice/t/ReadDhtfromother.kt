@@ -6,35 +6,34 @@ import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Dhtvalue
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.kt.run.ReadDhtWorker
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PideviceService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
-import org.springframework.scheduling.annotation.Async
-import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.*
-import java.util.concurrent.Future
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
 //@Profile("pi", "lite")
 class ReadDhtfromother(val http: HttpControl,
                        val pjs: PijobService,
-                       val js: JobService,
+                       val js: JobService, val task: TaskService,
                        val dhts: DhtvalueService,
-                       val pds: PideviceService,
+                       val pds: PideviceService, val dhtutil: Dhtutil,
                        val taskservice: TaskService,
                        val ips: IptableServicekt) {
 
     val om = ObjectMapper()
 
 
-    @Scheduled(fixedDelay = 3000)
+    @Scheduled(fixedDelay = 2000)
     fun run(): Dhtvalue? {
 
         var list = loadjob()
@@ -45,42 +44,42 @@ class ReadDhtfromother(val http: HttpControl,
             throw Exception("JOB Readdht not found")
         }
 
-        if (list != null)
-            for (i in list) {
+        for (i in list) {
 
-                try {
-                    var des = i.desdevice
-                    logger.debug("read from ${des}")
-                    if (des != null) {
-                        var ip = mactoip(des.mac!!)
-                        logger.debug("read from ip ${ip}")
-                        if (ip != null) {
-                            var url = "http://${ip.ip}/dht"
-                            var dhtvalue = readDht(url)
-                            logger.debug("Read dht value ${dhtvalue}")
+            try {
 
+                var rt = ReadDhtWorker(i, dhtutil, dhts)
+                task.run(rt)
 
-                            if (dhtvalue != null) {
-
-                               // var pidevice = pds.findByMac(dhtvalue.pidevice?.mac!!)
-                                dhtvalue.valuedate = Date()
-
-                                dhtvalue.pidevice = des
-                                var d = dhts.save(dhtvalue)
-                                logger.info("Save otherdht ${d}")
-                                if (i.waittime != null)
-                                    TimeUnit.SECONDS.sleep(i.waittime!!.toLong())
-
-                            }
-
-                        }
-                    }
-                } catch (e: Exception) {
-                    logger.error("Run " + e.message)
-                    throw e
-                }
+//                    var des = i.desdevice
+//                    logger.debug("read from ${des}")
+//                    if (des != null) {
+//                        var ip = mactoip(des.mac!!)
+//                        logger.debug("read from ip ${ip}")
+//                        if (ip != null) {
+//                            var url = "http://${ip.ip}/dht"
+//                            logger.debug("Read DHT url ${url}")
+//                            var dhtvalue = readDht(url)
+//                            logger.debug("Read dht value ${dhtvalue}")
+//                            if (dhtvalue != null) {
+//                                dhtvalue.valuedate = Date()
+//                                dhtvalue.pidevice = des
+//                                var d = dhts.save(dhtvalue)
+//                                logger.info("Save otherdht ${d}")
+//                                if (i.waittime != null)
+//                                    TimeUnit.SECONDS.sleep(i.waittime!!.toLong())
+//                            }
+//                            else
+//                            {
+//                                logger.error("Dhtvalue is null")
+//                            }
+//                        }
+//                    }
+            } catch (e: Exception) {
+                logger.error("Run " + e.message)
+//                    throw e
             }
-
+        }
         return null
     }
 
@@ -88,11 +87,13 @@ class ReadDhtfromother(val http: HttpControl,
     fun readDht(url: String): Dhtvalue? {
 
         try {
-            //var get = HttpGetTask(url)
-            var f = get(url)
-            var value = f.get(5, TimeUnit.SECONDS)
-            logger.debug("Get value ${value}")
-            return value
+            var get = HttpGetTask(url)
+            var t = Executors.newSingleThreadExecutor()
+            var f = t.submit(get)
+            var value = f.get(20, TimeUnit.SECONDS)
+            var dhtvalue = om.readValue<Dhtvalue>(value, Dhtvalue::class.java)
+            logger.debug("Get value ${dhtvalue}")
+            return dhtvalue
         } catch (e: Exception) {
             logger.error("GET DHT OTHER ${e.message}")
             throw e
@@ -100,20 +101,13 @@ class ReadDhtfromother(val http: HttpControl,
         return null
     }
 
-    @Async
-    fun get(url: String): Future<Dhtvalue> {
-        var rep = http.get(url)
-        var dhtvalue = om.readValue<Dhtvalue>(rep, Dhtvalue::class.java)
-        return AsyncResult<Dhtvalue>(dhtvalue)
-
-    }
 
     fun mactoip(mac: String): Iptableskt? {
         try {
             var ip = ips.findByMac(mac)
             return ip
         } catch (e: Exception) {
-            logger.error("Read dht Macto ip"+e.message)
+            logger.error("Read dht Macto ip" + e.message)
         }
         return null
     }

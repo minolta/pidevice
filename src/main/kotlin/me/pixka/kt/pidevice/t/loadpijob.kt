@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component
 import java.io.IOException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
-
+//ไม่ใช้แล้ว
 @Component
 @Profile("pi", "lite")
 class Loadpijob(val task: LoadpijobTask) {

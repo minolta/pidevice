@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService,
-                   val ls: LogistateService,
+                   val ls: LogistateService, val pijobgroupService: PijobgroupService,
                    val js: JobService, val dsservice: DS18sensorService,
                    val ps: PortnameService, val pds: PideviceService) {
     val mapper = ObjectMapper()
@@ -100,6 +100,15 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
 
     }
 
+    fun newpijobgroup(pijobgroup: Pijobgroup): Pijobgroup? {
+        var p = pijobgroupService.findByName(pijobgroup.name!!)
+        if (p == null) {
+            p = Pijobgroup(pijobgroup.name)
+            p = pijobgroupService.save(p)
+        }
+        return p
+    }
+
     fun newotherdevice(pd: PiDevice): PiDevice? {
 
         try {
@@ -138,6 +147,11 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
 
         try {
             item.job = newjob(item.job!!)
+            if (item.pijobgroup != null) {
+                var pijobgroup = newpijobgroup(item.pijobgroup!!)
+                item.pijobgroup = pijobgroup
+                item.pijobgroup_id = pijobgroup?.id
+            }
             try {
                 if (item.ds18sensor != null)
                     item.ds18sensor = newdssensor(item.ds18sensor!!)
@@ -158,6 +172,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             p.pidevice_id = null
             p.runwithid = item.runwithid
             p.name = item.name
+            p.pijobgroup = item.pijobgroup
             logger.debug("[loadpijob newforsave] new Pi job for save :" + p)
             p = service.save(p)!!
             logger.debug("[loadpijob pijobsaved] Save pi job to device : " + p)
@@ -220,8 +235,16 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             if (dd != null) {
                 ref.desdevice = newotherdevice(dd)
             }
+            if (item.pijobgroup != null) {
+                var pg = pijobgroupService.findByName(item.pijobgroup!!.name!!)
+                if (pg == null) {
+                    pg = Pijobgroup()
+                    pg.name = item.pijobgroup?.name
+                    ref.pijobgroup = pijobgroupService.save(pg)
+                } else
+                    ref.pijobgroup = pg
 
-
+            }
 
             return service.save(ref)
         } catch (e: Exception) {

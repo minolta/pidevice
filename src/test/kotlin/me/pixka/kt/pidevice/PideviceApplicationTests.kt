@@ -17,9 +17,10 @@ class PideviceApplicationTests {
     @Test
     fun contextLoads() {
 
-        var buffer = ArrayList<ReadBuffer>()
 
-        var b = ReadBuffer()
+        var df = SimpleDateFormat("hh:mm:ss")
+
+        println(df.parse("10:20:22"))
 
     }
 

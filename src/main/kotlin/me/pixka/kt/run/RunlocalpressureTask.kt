@@ -32,10 +32,10 @@ class RunlocalpressureTask(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps:
 
             while (true) {
                 logger.debug("Pijob : ${pijob} ports :${ports}")
-                var checkvalue = readUtil.checkLocalPressure(pijob)
+                var checkvalue = readUtil?.checkLocalPressure(pijob)
                 logger.debug("localpressure in rang ? ${checkvalue}")
                 status = "localpressure in rang ? ${checkvalue}"
-                if (checkvalue) {
+                if (checkvalue!!) {
 
                     if (ports != null) {
                         if (!isSetport) {

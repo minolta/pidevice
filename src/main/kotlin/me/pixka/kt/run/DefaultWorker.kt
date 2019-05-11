@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit
 
 
 abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
-                             var readUtil: ReadUtil,
-                             val ps: PortstatusinjobService, var logger: org.slf4j.Logger)
+                             var readUtil: ReadUtil?=null,
+                             val ps: PortstatusinjobService?=null, var logger: org.slf4j.Logger)
     : PijobrunInterface, Runnable {
 
 
@@ -59,7 +59,7 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
 
     fun loadPorts(p: Pijob): List<Portstatusinjob>? {
         try {
-            return ps.findByPijobid(pijob.id) as List<Portstatusinjob>
+            return ps?.findByPijobid(pijob.id) as List<Portstatusinjob>
         } catch (e: Exception) {
             logger.error(e.message)
             throw e
@@ -136,7 +136,7 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
     /**
      * สำหรับ D1
      */
-    fun setRemoteport(ports: List<Portstatusinjob>) {
+   open fun setRemoteport(ports: List<Portstatusinjob>) {
         var ee = Executors.newSingleThreadExecutor()
         logger.debug("Set remoteport ${ports}")
         for (port in ports) {
@@ -149,7 +149,7 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
                 var value = logtoint(port.status!!)
 
 
-                var ip = readUtil.findIp(traget!!)
+                var ip = readUtil?.findIp(traget!!)
                 logger.debug("Found traget ip ${ip}")
                 if (ip != null) {
                     var url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"

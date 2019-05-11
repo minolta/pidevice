@@ -23,7 +23,7 @@ class D1tjobWorker(p: Pijob,
             isRun = true
 
             logger.debug("${pijob.name} Pijob ${pijob} runwith ${test}")
-            if (checktmp(pijob) && runwith(test)) {
+            if (checktmp(pijob) && runwith(test)!!) {
                 status = "${pijob.name} Start run this job ${pijob.id} "
                 logger.debug(" ${pijob.name} Now jobrun D1tjob")
                 var ports = pijs.findByPijobid(pijob.id)
@@ -47,13 +47,13 @@ class D1tjobWorker(p: Pijob,
     }
 
     //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้
-    fun runwith(testjob: Pijob?): Boolean {
+    fun runwith(testjob: Pijob?): Boolean? {
         logger.debug("${pijob.name} Start runwidth")
         try {
             //ถ้ามี runwidthid
             logger.debug("${pijob.name} runwidth Check job ${testjob}")
             if (testjob != null) {
-                var re = readUtil.checktmp(testjob)
+                var re = readUtil?.checktmp(testjob)
                 logger.debug("${pijob.name} runwidth Test result ${re}")
                 return re
             }
@@ -70,7 +70,7 @@ class D1tjobWorker(p: Pijob,
         logger.debug("${pijob.name} Check temp ${p}")
         status = "${pijob.name} Check temp ${p}"
         try {
-            var v = readUtil.readTfromD1Byjob(p)
+            var v = readUtil?.readTfromD1Byjob(p)
             logger.debug("${pijob.name} value from Readtmp ${v}")
             status = "${pijob.name} value from Readtmp ${v}"
             var l = p.tlow?.toDouble()
