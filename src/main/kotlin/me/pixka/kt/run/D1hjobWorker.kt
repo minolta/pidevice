@@ -54,6 +54,14 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         startrun = Date()
         isRun = true
         try {
+            if(pijob.tlow!=null)
+            {
+
+                TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
+                logger.debug("Slow start")
+                //prility
+            }
+
             var dhtvalue = dhts.readByPijob(pijob)
             logger.debug("DHTVALUE ${dhtvalue}")
             state = "Get value from traget [${dhtvalue}]"
