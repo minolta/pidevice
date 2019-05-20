@@ -1,6 +1,7 @@
 package me.pixka.kt.run
 
 import me.pixka.c.HttpControl
+import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
@@ -54,8 +55,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         startrun = Date()
         isRun = true
         try {
-            if(pijob.tlow!=null)
-            {
+            if (pijob.tlow != null) {
 
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
                 logger.debug("Slow start")
@@ -135,15 +135,20 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 }
 
                 try {
-                    var url = findUrl(portname!!, runtime, waittime, value)
+
+                    var url = ""
+
+                    if (port.device != null)
+                        url = findUrl(port.device!!, portname!!, runtime, waittime, value)
+                    else
+                        url = findUrl(portname!!, runtime, waittime, value)
                     var waittimeout = 10
                     while (checkgroup(this.pijob) == null) {
                         state = "Wait for job in group use "
                         logger.debug("Wait for job in group use")
                         TimeUnit.SECONDS.sleep(1)
-                        waittimeout --
-                        if(waittimeout<=0)
-                        {
+                        waittimeout--
+                        if (waittimeout <= 0) {
                             isRun = false
                             waitstatus = true
                             throw Exception("Wait time out")
@@ -194,6 +199,19 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         throw Exception("Error Can not find url")
     }
 
+    fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
+        if (pijob.desdevice != null) {
+            var ip = dhts.mactoip(target.mac!!)
+            if (ip != null) {
+                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
+                return url
+            }
+        }
+
+        throw Exception("Error Can not find url")
+    }
+
+
     override fun setP(pijob: Pijob) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -222,7 +240,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                         return null //อยู่ในกลุ่มเดียวกัน
                     }
                 }
-
             }
         }
         logger.debug("No Job in this group run ${job}")
