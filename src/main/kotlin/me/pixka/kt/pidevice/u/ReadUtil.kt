@@ -267,7 +267,30 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         }
         return false
     }
+    fun checkpressure(p: Pijob): Boolean {
 
+        try {
+            var tmp = readPressureByjob(p)
+            if (tmp != null) {
+                var tl = p.hlow?.toFloat()
+                var th = p.hhigh?.toFloat()
+                var v = tmp.pressurevalue?.toFloat()
+
+                if (v!=null && tl != null) {
+                    if (tl <= v && v <= th!!) {
+                        return true
+                    }
+                }
+
+                return false
+
+            }
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw e
+        }
+        return false
+    }
     /**
      * ใช้สำหรับอ่านข้อมูล ความร้อนโดยที่จะอ่าน local  ถ้าไม่มีให้อ่าน จาก ที่อื่นแทน
      */

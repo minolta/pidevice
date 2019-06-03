@@ -20,6 +20,7 @@ class D1tjobWorker(p: Pijob,
     override fun run() {
         try {
             startrun = Date()
+            startRun = Date()
             isRun = true
 
             logger.debug("${pijob.name} Pijob ${pijob} runwith ${test}")

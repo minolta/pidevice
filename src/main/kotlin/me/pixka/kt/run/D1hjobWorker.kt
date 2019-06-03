@@ -107,6 +107,10 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         if (ports != null)
             for (port in ports) {
 
+                if(port.enable == null ||  !port.enable!!)
+                {
+                    continue //ข้ามไปเลย
+                }
                 waitstatus = false
                 var pw = port.waittime
                 var pr = port.runtime

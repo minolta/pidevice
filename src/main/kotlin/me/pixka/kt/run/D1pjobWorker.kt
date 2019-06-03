@@ -1,14 +1,10 @@
 package me.pixka.kt.run
 
-import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
