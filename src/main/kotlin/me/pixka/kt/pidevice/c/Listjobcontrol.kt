@@ -46,7 +46,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     fun testjob(@PathVariable("localid") id: Long): Boolean {
 
         try {
-            var job = pjs.find(id)
+            var job = pjs.findByRefid(id)
             logger.debug("Job ${job}")
 
             var url = readUtil.findurl(job.desdevice_id!!, job.ds18sensor_id)
