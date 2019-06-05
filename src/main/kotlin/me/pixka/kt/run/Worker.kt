@@ -56,6 +56,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
         try {
             isRun = true
             startrun = Date()
+            Thread.currentThread().name = "Worker ${pijob.name} ${startrun}"
             var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
 
 
@@ -211,8 +212,7 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
         try {
             logger.debug("Gpio : ${gpio}")
             for (port in ports) {
-                if (port.enable == null || port.enable == false || port.status?.name.equals("check"))
-                {//ถ้า Enable == null หรือ false ให้ไปทำงาน port ต่อไปเลย
+                if (port.enable == null || port.enable == false || port.status?.name.equals("check")) {//ถ้า Enable == null หรือ false ให้ไปทำงาน port ต่อไปเลย
                     logger.error("Not set port ${port}")
                 } else {
 

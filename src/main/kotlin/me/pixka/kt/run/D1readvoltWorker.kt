@@ -15,6 +15,7 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
     override fun run() {
         isRun = true
         startRun = Date()
+        Thread.currentThread().name = "JOBID:${pijob.id} D1readvolt : ${pijob.name} ${startRun}"
         try {
             var a0value = readvalue.readA0(pijob.desdevice_id!!)
             //var c = pijob.hlow?.toFloat()

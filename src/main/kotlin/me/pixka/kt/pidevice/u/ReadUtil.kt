@@ -39,15 +39,17 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         if (ip != null) {
             var ipstring = ip.ip
             var re: String? = null
+            var ee = Executors.newSingleThreadExecutor()
             try {
                 var u = "http://${ipstring}${url}"
                 logger.debug("${j.name}  Read pressure ${u}")
                 var get = HttpGetTask(u)
-                var ee = Executors.newSingleThreadExecutor()
+
                 var f = ee.submit(get)
                 re = f.get(2, TimeUnit.SECONDS)
             } catch (e: Exception) {
                 logger.error(e.message)
+                ee.shutdownNow()
                 throw e
             }
             try {
@@ -67,13 +69,14 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
     }
 
     fun readA0(desid: Long): Int? {
+        var ee = Executors.newSingleThreadExecutor()
         try {
             var desdevice = findDevice(desid)
             var ip = findIp(desdevice)
 
             var url = "http://${ip?.ip}/a0"
             var get = HttpGetTask(url)
-            var ee = Executors.newSingleThreadExecutor()
+
             var f = ee.submit(get)
             var value = f.get(2, TimeUnit.SECONDS)
 
@@ -81,6 +84,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             return a0value
         } catch (e: Exception) {
             logger.error("Read A0 ERROR ${e.message}")
+            ee.shutdownNow()
             throw e
         }
     }
@@ -96,9 +100,10 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             logger.error(e.message)
             throw e
         }
+        var ee = Executors.newSingleThreadExecutor()
         try {
             var get = HttpGetTask(url!!)
-            var ee = Executors.newSingleThreadExecutor()
+
             var f = ee.submit(get)
             var value = f.get(2, TimeUnit.SECONDS)
             if (value != null) {
@@ -108,6 +113,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
         } catch (e: Exception) {
             logger.error(e.message)
+            ee.shutdownNow()
             throw e
         }
 
@@ -423,13 +429,13 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
      * ใช้สำหรับ อ่านค่า ktype จาก D1
      */
     fun readTfromD1Byjob(job: Pijob): DS18value? {
-
+        var ee = Executors.newSingleThreadExecutor()
         //mac to ip
         try {
             var ip = findip(job.desdevice!!.mac!!)
             var url = "http://${ip}/ktype"
             var get = HttpGetTask(url)
-            var ee = Executors.newSingleThreadExecutor()
+
             var f = ee.submit(get)
             var value = f.get(15, TimeUnit.SECONDS)
             if (value != null)
@@ -438,6 +444,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
                 throw Exception("Value is null")
         } catch (e: Exception) {
             logger.error("ReadTfromD1Byjob ${e.message}")
+            ee.shutdownNow()
             throw e
         }
     }

@@ -1,7 +1,6 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
 import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
@@ -10,19 +9,14 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.TimeUtil
 import me.pixka.kt.run.PijobrunInterface
-import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.TimeZone
-import java.util.Calendar
-
 
 
 @Component
@@ -111,7 +105,7 @@ class OffpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
         logger.debug("TIME: ${pijob.lowtime} ${Date().time} ${pijob.hightime}")
         val cSchedStartCal = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
         val gmtTime = cSchedStartCal.time.time
-        var inrang =  timeUtil.checkInrangbyHighlow(pijob.lowtime!!, gmtTime, pijob.hightime!!)
+        var inrang = timeUtil.checkInrangbyHighlow(pijob.lowtime!!, gmtTime, pijob.hightime!!)
         logger.debug("In rang ${inrang}")
         return inrang
 
@@ -127,7 +121,7 @@ class OffpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
                 return
             }
         } catch (e: Exception) {
-            logger.error("check time: "+e.message)
+            logger.error("check time: " + e.message)
             status = e.message
             isRun = false
             return
@@ -163,7 +157,7 @@ class OffpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
                     url = "http://${ip.ip}/off"
                     ps = call(ip, url)
                     if (ps != null)
-                        status = "Off result ${ps?.status}"
+                        status = "Off result ${ps.status}"
                     else {
                         status = "Can not get off result"
                     }
@@ -181,13 +175,19 @@ class OffpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
     }
 
     fun call(ip: Iptableskt, url: String): PumbStatus? {
+
         var get = HttpGetTask(url)
         var ee = Executors.newSingleThreadExecutor()
-        var f = ee.submit(get)
-        var value = f.get(5, TimeUnit.SECONDS)
-        var ps = om.readValue<PumbStatus>(value, PumbStatus::class.java)
-        return ps
-
+        try {
+            var f = ee.submit(get)
+            var value = f.get(5, TimeUnit.SECONDS)
+            var ps = om.readValue<PumbStatus>(value, PumbStatus::class.java)
+            return ps
+        } catch (e: Exception) {
+            ee.shutdownNow()
+            logger.error(e.message)
+            throw e
+        }
     }
 
     companion object {
@@ -197,4 +197,4 @@ class OffpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
 
 }
 
-class PumbStatus(var status: Boolean?=false)
+class PumbStatus(var status: Boolean? = false)

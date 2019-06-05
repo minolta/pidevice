@@ -50,34 +50,8 @@ class ReadDhtfromother(val http: HttpControl,
 
                 var rt = ReadDhtWorker(i, dhtutil, dhts)
                 task.run(rt)
-
-//                    var des = i.desdevice
-//                    logger.debug("read from ${des}")
-//                    if (des != null) {
-//                        var ip = mactoip(des.mac!!)
-//                        logger.debug("read from ip ${ip}")
-//                        if (ip != null) {
-//                            var url = "http://${ip.ip}/dht"
-//                            logger.debug("Read DHT url ${url}")
-//                            var dhtvalue = readDht(url)
-//                            logger.debug("Read dht value ${dhtvalue}")
-//                            if (dhtvalue != null) {
-//                                dhtvalue.valuedate = Date()
-//                                dhtvalue.pidevice = des
-//                                var d = dhts.save(dhtvalue)
-//                                logger.info("Save otherdht ${d}")
-//                                if (i.waittime != null)
-//                                    TimeUnit.SECONDS.sleep(i.waittime!!.toLong())
-//                            }
-//                            else
-//                            {
-//                                logger.error("Dhtvalue is null")
-//                            }
-//                        }
-//                    }
             } catch (e: Exception) {
                 logger.error("Run " + e.message)
-//                    throw e
             }
         }
         return null
@@ -85,10 +59,10 @@ class ReadDhtfromother(val http: HttpControl,
 
 
     fun readDht(url: String): Dhtvalue? {
-
+        var t = Executors.newSingleThreadExecutor()
         try {
             var get = HttpGetTask(url)
-            var t = Executors.newSingleThreadExecutor()
+
             var f = t.submit(get)
             var value = f.get(20, TimeUnit.SECONDS)
             var dhtvalue = om.readValue<Dhtvalue>(value, Dhtvalue::class.java)
@@ -96,6 +70,7 @@ class ReadDhtfromother(val http: HttpControl,
             return dhtvalue
         } catch (e: Exception) {
             logger.error("GET DHT OTHER ${e.message}")
+            t.shutdownNow()
             throw e
         }
         return null

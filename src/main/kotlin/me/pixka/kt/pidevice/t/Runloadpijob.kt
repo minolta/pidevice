@@ -69,11 +69,11 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
     }
 
     fun loadPijob(mac: String): List<Pijob>? {
-
+        val ee = Executors.newSingleThreadExecutor()
         try {
             var http = HttpGetTask(target + "/${mac}")
             logger.debug("${target}/${mac}")
-            var f = ex.submit(http)
+            var f = ee.submit(http)
             var re: String? = null
             re = f.get(3, TimeUnit.SECONDS)
             logger.debug("Return ${re}")
@@ -85,6 +85,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             throw Exception("Not have pi job")
         } catch (e: IOException) {
             logger.error("[loadpijob] :error:" + e.message)
+            ee.shutdownNow()
             throw e
         }
     }

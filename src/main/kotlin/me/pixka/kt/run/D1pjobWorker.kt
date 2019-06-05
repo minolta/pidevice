@@ -50,6 +50,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
     override fun run() {
         startrun = Date()
         isRun = true
+        Thread.currentThread().name = "JOBID:${pijob.id} D1P ${pijob.name} ${startrun}"
         try {
             var v = readUtil.readPressureByjob(pijob)
             logger.debug("D1 Found pressure : ${v}")
@@ -125,13 +126,13 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
                         value = 1
                     } else value = 0
                 }
-
+                var ee = Executors.newSingleThreadExecutor()
                 try {
                     var url = findUrl(tg!!, portname!!, runtime, waittime, value)
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
                     var get = HttpGetTask(url)
-                    var ee = Executors.newSingleThreadExecutor()
+
                     var f = ee.submit(get)
                     var value = f.get(5, TimeUnit.SECONDS)
                     state = "Delay  ${runtime} + ${waittime}"
@@ -141,6 +142,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
                 } catch (e: Exception) {
                     logger.error("Error ${e.message}")
                     state = " Error ${e.message}"
+                    ee.shutdownNow()
                 }
 
             }
@@ -168,4 +170,6 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
     companion object {
         internal var logger = LoggerFactory.getLogger(D1pjobWorker::class.java)
     }
+
+
 }

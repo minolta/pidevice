@@ -52,8 +52,11 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     }
 
     override fun run() {
+
         startrun = Date()
         isRun = true
+        Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} ${startrun}"
+
         try {
             if (pijob.tlow != null) {
 
@@ -78,6 +81,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
 
             }
+            isRun=false
 
 
         } catch (e: Exception) {
@@ -101,6 +105,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     }
 
     fun go() {//Run
+        var ee = Executors.newSingleThreadExecutor()
         state = "Run set port "
         var ports = pijob.ports
         logger.debug("Ports ${ports}")
@@ -162,7 +167,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
                     var get = HttpGetTask(url)
-                    var ee = Executors.newSingleThreadExecutor()
+
                     var f = ee.submit(get)
                     var value = f.get(30, TimeUnit.SECONDS)
                     state = "Delay  ${runtime} + ${waittime}"
@@ -182,7 +187,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     logger.error("Error ${e.message}")
                     state = " Error ${e.message}"
                     waitstatus = true
-
+                    ee.shutdownNow()
                 }
 
             }

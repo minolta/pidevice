@@ -33,6 +33,10 @@ class Runpjobbyd1(val pjs: PijobService,
                     var run = task.run(t)
                     logger.debug("RunJOB ${run}")
                 }
+                else
+                {
+                    logger.warn("Run with is false")
+                }
             }
         }
     }
@@ -41,7 +45,7 @@ class Runpjobbyd1(val pjs: PijobService,
         if (job.runwithid == null)
             return true
         var testjob = pjs.findByRefid(job.runwithid)
-        return runwith(job)
+        return runwith(testjob)
     }
 
     //สำหรับ test job ที่ run ว่า ok มันทำงานได้เปล่าถ้าใช่ก็ run ต่อไปได้

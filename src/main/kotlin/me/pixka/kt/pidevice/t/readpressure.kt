@@ -117,8 +117,9 @@ class readP(val ips: IptableServicekt, val http: HttpControl) : Callable<Pressur
             if (ip != null) {
                 var ipstring = ip.ip
                 var re: String? = ""
+                var executor = Executors.newSingleThreadExecutor()
                 try {
-                    var executor = Executors.newSingleThreadExecutor()
+
                     var u = "http://${ipstring}${url}"
                     var get = HttpGetTask(u)
                     logger.debug("Read pressure ${u}")
@@ -136,6 +137,7 @@ class readP(val ips: IptableServicekt, val http: HttpControl) : Callable<Pressur
                     }
                 } catch (e: Exception) {
                     logger.error("Get value ${e.message}")
+                    executor.shutdownNow()
                     return null
                 }
                 try {

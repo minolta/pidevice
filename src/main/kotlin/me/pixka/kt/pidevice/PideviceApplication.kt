@@ -66,12 +66,9 @@ class PideviceApplication {
 
     @Bean(name = arrayOf("pool"))
     fun pool(): ExecutorService? {
-        val threadpool = ThreadPoolExecutor(20, 100, 1,
-                TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
+        val threadpool = ThreadPoolExecutor(50, 200, 1,
+                TimeUnit.SECONDS, LinkedBlockingDeque<Runnable>(400),
                 ThreadPoolExecutor.CallerRunsPolicy())
-
-
-        //Executors.newFixedThreadPool(20)
         return threadpool
     }
 }

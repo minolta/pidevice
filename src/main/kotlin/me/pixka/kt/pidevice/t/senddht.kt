@@ -55,6 +55,7 @@ class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
                     }
                 } catch (e: Exception) {
                     logger.error("Error ${e.message}")
+                    t.shutdownNow()
                 }
 
 

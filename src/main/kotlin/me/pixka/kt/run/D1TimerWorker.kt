@@ -25,6 +25,7 @@ class D1TimerWorker(val p: Pijob,
             var t = readvalue.readTmpByjob(p)
             startRun = Date()
             status = "T: ${t}"
+            Thread.currentThread().name = "JOBID:${pijob.id} D1Timer : ${pijob.name} ${startRun}"
             logger.debug("T: ${t}")
             isRun = true
             startRun = Date()
@@ -114,6 +115,7 @@ class D1TimerWorker(val p: Pijob,
 
                         } catch (e: Exception) {
                             logger.error("Can not connect to traget device [${e.message}]")
+                            ee.shutdownNow()
                         }
                         if (runtime != null) {
                             status = "Run time state ${runtime}"
@@ -153,6 +155,7 @@ class D1TimerWorker(val p: Pijob,
             } catch (e: Exception) {
                 logger.error("call url 2 error ${e.message}")
                 status = "call url 2 error ${e.message}"
+                ee.shutdownNow()
                 throw e
             }
             val c = Calendar.getInstance()

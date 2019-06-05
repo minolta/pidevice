@@ -20,9 +20,9 @@ class D1tjobWorker(p: Pijob,
     override fun run() {
         try {
             startrun = Date()
-            startRun = Date()
-            isRun = true
 
+            isRun = true
+            Thread.currentThread().name = "JOBID:${pijob.id}  D1T:${pijob.name} ${startrun}"
             logger.debug("${pijob.name} Pijob ${pijob} runwith ${test}")
             if (checktmp(pijob) && runwith(test)!!) {
                 status = "${pijob.name} Start run this job ${pijob.id} "

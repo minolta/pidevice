@@ -177,10 +177,16 @@ class OnpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
     fun call(ip: Iptableskt, url: String): PumbStatus? {
         var get = HttpGetTask(url)
         var ee = Executors.newSingleThreadExecutor()
-        var f = ee.submit(get)
-        var value = f.get(5, TimeUnit.SECONDS)
-        var ps = om.readValue<PumbStatus>(value, PumbStatus::class.java)
-        return ps
+        try {
+            var f = ee.submit(get)
+            var value = f.get(5, TimeUnit.SECONDS)
+            var ps = om.readValue<PumbStatus>(value, PumbStatus::class.java)
+            return ps
+        }catch (e:Exception)
+        {
+            ee.shutdownNow()
+            throw e
+        }
 
     }
 

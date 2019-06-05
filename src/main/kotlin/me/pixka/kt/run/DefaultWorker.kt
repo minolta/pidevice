@@ -168,6 +168,7 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
                             TimeUnit.SECONDS.sleep(waittime.toLong()) //หยุดรอถ้ามีการกำหนดมา
                         }
                     } catch (e: Exception) {
+                        ee.shutdownNow()
                         logger.error("Can not connect to traget device [${e.message}]")
                     }
                 }

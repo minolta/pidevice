@@ -58,6 +58,25 @@ class ThreadInfo(val context: ApplicationContext, val tsk: TaskService, val ms: 
 
     }
 
+    @Scheduled(fixedDelay = 5000)
+    fun showPool()
+    {
+        var tp = context.getBean("pool") as ExecutorService
+        var tt = tp as ThreadPoolExecutor
+        logger.info("#threadpool TT Active : ${tt.activeCount}  Pool Size: ${tt.poolSize}  Queue size: ${tt.queue.size} " +
+                " Core size : ${tt.corePoolSize}   Max pool ${tt.maximumPoolSize} run completed: ${tt.completedTaskCount}")
+
+        val threadSet = Thread.getAllStackTraces().keys
+        logger.debug("threadpool =======================Strart list ================================")
+        var i = 1
+        for (thread in threadSet) {
+            logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
+            i++
+        }
+        logger.debug("threadpool ======================= end ================================")
+
+    }
+
     companion object {
         internal var logger = LoggerFactory.getLogger(ThreadInfo::class.java)
     }
