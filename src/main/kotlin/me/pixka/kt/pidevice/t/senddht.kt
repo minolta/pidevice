@@ -31,7 +31,7 @@ class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
         var target = System.getProperty("savedht")
 
         if (target == null)
-            target = "http://pi1.pixka.me:8081/dht/add"
+            target = "https://pi-dot-kykub-2.appspot.com/dht/add"
 
         val list = dhts.notInserver() as List<Dhtvalue>
 

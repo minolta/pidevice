@@ -13,6 +13,8 @@ import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Component
 class Runhjobbyd1(val pjs: PijobService,
@@ -35,15 +37,54 @@ class Runhjobbyd1(val pjs: PijobService,
                 var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
 
                 if (groups.canrun(t)) {
-                    var run = task.run(t)
-                    logger.debug("RunJOB ${run}")
+                    if (checktime(job)) {
+                        var run = task.run(t)
+                        logger.debug("${job} RunJOB ${run}")
+                    } else {
+                        logger.error("${job} Not in time rang ")
+                    }
                 } else {
-                    logger.warn("Some device use water")
+                    logger.debug("${job} ********************** Somedeviceusewater ***************")
                 }
             }
         }
     }
 
+    var df = SimpleDateFormat("HH:mm")
+    fun checktime(job: Pijob): Boolean {
+        try {
+//            df.timeZone = TimeZone.getTimeZone("+0700")
+            var n = df.format(Date())
+
+            var now = df.parse(n)
+            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
+            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
+            if (job.stimes != null && job.etimes != null) {
+                var st = df.parse(job.stimes).time
+                var et = df.parse(job.etimes).time
+                logger.debug("checktime ${st} <= ${now} <= ${et}")
+                if (st <= now.time && now.time <= et)
+                    return true
+            } else if (job.stimes != null && job.etimes == null) {
+                var st = df.parse(job.stimes).time
+                logger.debug("checktime ${st} <= ${now} ")
+                if (st <= now.time)
+                    return true
+            } else if (job.stimes == null && job.etimes != null) {
+                var st = df.parse(job.etimes).time
+                logger.debug("checktime ${st} >= ${now}")
+                if (st <= now.time)
+                    return true
+            } else {
+                logger.debug("${job.name} checktime not set ")
+                return true
+            }
+        } catch (e: Exception) {
+            logger.error("checktime ${e.message}")
+        }
+
+        return false
+    }
 
     fun loadjob(): List<Pijob>? {
         var job = js.findByName("runhbyd1")

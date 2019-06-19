@@ -13,23 +13,29 @@ import java.util.*
 
 @RestController
 class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
-               val ips:IptableServicekt) {
+               val ips: IptableServicekt) {
 
 
     @CrossOrigin
     @RequestMapping(value = "/listtask", method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun list(): ArrayList<tl> {
-        var list = ArrayList<tl>()
 
+        var list = ArrayList<tl>()
         var runs = taskService.runinglist
         for (run in runs) {
-            var pj = run.getPJ()
-            var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(), run.runStatus(), pj.ports)
-            list.add(t)
+            try {
+                var pj = run.getPJ()
+                var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(), run.runStatus(), pj.ports)
+                list.add(t)
+            } catch (e: Exception) {
+                logger.error("List task error ${e.message}")
+                throw e
+            }
         }
 
         return list
+
     }
 
     @CrossOrigin
@@ -64,7 +70,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     @ResponseBody
     fun listips(): MutableList<Iptableskt>? {
 
-        return  ips.all()
+        return ips.all()
     }
 
     companion object {

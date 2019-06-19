@@ -21,7 +21,7 @@ class PideviceApplicationTests {
         var df = SimpleDateFormat("hh:mm:ss")
 
         println(df.parse("10:20:22"))
-
+        println(df.parse("11:00:00"))
     }
 
 }

@@ -55,6 +55,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
         startrun = Date()
         isRun = true
+        waitstatus = false //เริ่มมาก็ทำงาน
         Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} ${startrun}"
 
         try {
@@ -71,7 +72,9 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             if (dhtvalue != null) {
                 if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
                     logger.debug("Go!!")
+                    waitstatus = false
                     go()
+                    waitstatus = true
                     var waittime = pijob.waittime
                     if (waittime != null) {
                         state = "Wait time of job ${waittime}"
@@ -81,7 +84,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
 
             }
-            isRun=false
 
 
         } catch (e: Exception) {
@@ -112,11 +114,9 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         if (ports != null)
             for (port in ports) {
 
-                if(port.enable == null ||  !port.enable!!)
-                {
+                if (port.enable == null || !port.enable!!) {
                     continue //ข้ามไปเลย
                 }
-                waitstatus = false
                 var pw = port.waittime
                 var pr = port.runtime
                 var pn = port.portname!!.name
@@ -129,7 +129,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 } else if (pijob.runtime != null) {
                     runtime = pijob.runtime!!
                 }
-
                 var waittime = 0L
                 if (pw != null) {
                     waittime = pw.toLong()
@@ -144,56 +143,36 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 }
 
                 try {
-
                     var url = ""
 
                     if (port.device != null)
                         url = findUrl(port.device!!, portname!!, runtime, waittime, value)
                     else
                         url = findUrl(portname!!, runtime, waittime, value)
-                    var waittimeout = 10
-                    while (checkgroup(this.pijob) == null) {
-                        state = "Wait for job in group use "
-                        logger.debug("Wait for job in group use")
-                        TimeUnit.SECONDS.sleep(1)
-                        waittimeout--
-                        if (waittimeout <= 0) {
-                            isRun = false
-                            waitstatus = true
-                            throw Exception("Wait time out")
-                        }
-                    }
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
                     var get = HttpGetTask(url)
-
                     var f = ee.submit(get)
                     var value = f.get(30, TimeUnit.SECONDS)
                     state = "Delay  ${runtime} + ${waittime}"
                     logger.debug("D1h Value ${value}")
                     state = "${value} and run ${runtime}"
                     TimeUnit.SECONDS.sleep(runtime)
-                    waitstatus = true
+
                     if (waittime != null) {
 
                         state = "Wait time of port ${waittime}"
                         TimeUnit.SECONDS.sleep(waittime)
-
                     }
-                    waitstatus = false
-
                 } catch (e: Exception) {
                     logger.error("Error ${e.message}")
                     state = " Error ${e.message}"
-                    waitstatus = true
                     ee.shutdownNow()
                 }
-
             }
 
         state = "Set port ok "
-        waitstatus = true
     }
 
     fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
