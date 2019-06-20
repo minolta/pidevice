@@ -15,51 +15,65 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
 //@Profile("pi", "lite")
-class Sendds(val task: SenddsTask) {
+class Sendds(val service: Ds18valueService, val io: Piio) {
 
 
     @Scheduled(initialDelay = 1000, fixedDelay = 30000)
     fun sendtask() {
-        try {
-
-            var f = task.run()
-            if (f != null) {
-                var sendok = f.get(5, TimeUnit.SECONDS)
-
-                if(sendok)
-                {
-                    logger.debug("End Send ds")
-                }
-                else
-                {
-                    logger.error("Send ds 18 error")
-                }
-            }
-
-//            var count = 0
-//            while (true) {
-//                if (f!!.isDone) {
-//                    logger.info("Run commplete")
-//                    break
-//                }
-//                TimeUnit.SECONDS.sleep(1)
-//                count++
+//        try {
 //
-//                if (count > (60*30)) {
-//                    f.cancel(true)
-//                    logger.error("Timeout")
+//            var f = task.run()
+//            if (f != null) {
+//                var sendok = f.get(5, TimeUnit.SECONDS)
+//
+//                if (sendok) {
+//                    logger.debug("End Send ds")
+//                } else {
+//                    logger.error("Send ds 18 error")
 //                }
+//            }
+//        } catch (e: Exception) {
+//            logger.error("Error send Sendds ${e.message}")
+//        }
+//
+        var t = Executors.newSingleThreadExecutor()
+        var target = System.getProperty("piserver") + "/ds18value/add"
+        val list = service.notInserver()
+        if (list != null) {
+            logger.debug("Found dht for send ${list.size}")
+            for (item in list) {
+                try {
+                    val info = Infoobj()
+                    info.token = System.getProperty("token")
+                    // info.ip = io.wifiIpAddress()
+                    info.mac = io.wifiMacAddress()
+                    info.ds18value = item
+                    var task = HttpPostTask(target, info)
+                    var f = t.submit(task)
 
-        } catch (e: Exception) {
-            logger.error("Error send Sendds ${e.message}")
+                    try {
+                        f.get(5, TimeUnit.SECONDS)
+                        item.toserver = true
+                        service.save(item)
+                    } catch (e: Exception) {
+                        logger.error("Send ds18vale error ${e.message}")
+                    }
+
+
+                } catch (e: Exception) {
+                    logger.error("Error ${e.message}")
+                    t.shutdownNow()
+                }
+
+
+            }
         }
-
-
     }
 
 

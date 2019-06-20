@@ -16,7 +16,7 @@ class GroupRunService(val task: TaskService) {
         for (r in grouprun) {
 
             if (r is D1hjobWorker) {
-                logger.debug("checkgroup Found D1Hworker [${d1hjob}]   check to  r:[${r}]  r is Run ? ${r.isRun} r is wait ${r.waitstatus}")
+                logger.debug("checkgroup D1Hworker [${d1hjob.getPJ().name}] check to  r:[${r.getPJ().name}] Run ? ${r.isRun} wait ${r.waitstatus}")
                 //ถ้ามี job นี้ กำลัง run อยู
                 if (r.getPijobid().toInt() == pijobid && r.runStatus()) {
                     logger.debug(" ${d1hjob} checkgroup This job is run in group ")
@@ -24,7 +24,7 @@ class GroupRunService(val task: TaskService) {
                 }
                 //ถ้าอยู่ในกลุ่มเดียวกัน แล้ว r.ยังทำงานอยู่หรือ wait status false
                 if (r.pijob.pijobgroup_id?.toInt() == groupid?.toInt() && !r.waitstatus) {
-                    logger.debug(" ${d1hjob} checkgroup Some one in group run ")
+                    logger.debug(" ${d1hjob.getPJ().name} checkgroup Some one in group run ")
                     return false
                 }
             }
