@@ -17,15 +17,17 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt) {
     val om = ObjectMapper()
     fun readDhtfromOther(url: String): Dhtvalue? {
         var ee = Executors.newSingleThreadExecutor()
+        var get = HttpGetTask(url)
+
         try {
-            var get = HttpGetTask(url)
             var f = ee.submit(get)
-            var rep = f.get(30,TimeUnit.SECONDS)
+            var rep = f.get(30, TimeUnit.SECONDS)
             var dhtvalue = om.readValue<Dhtvalue>(rep, Dhtvalue::class.java)
             return dhtvalue
         } catch (e: Exception) {
             logger.error("line 56 ${e.message} ${url}")
             ee.shutdownNow()
+
             throw e
         }
         return null

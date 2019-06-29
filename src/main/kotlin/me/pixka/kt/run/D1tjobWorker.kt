@@ -20,7 +20,7 @@ class D1tjobWorker(p: Pijob,
     override fun run() {
         try {
             startrun = Date()
-
+            startRun = Date()
             isRun = true
             Thread.currentThread().name = "JOBID:${pijob.id}  D1T:${pijob.name} ${startrun}"
             logger.debug("${pijob.name} Pijob ${pijob} runwith ${test}")
@@ -38,7 +38,9 @@ class D1tjobWorker(p: Pijob,
             }
         } catch (e: Exception) {
             logger.error(e.message)
+            isRun=false
             status = "${pijob.name} error ${e.message}"
+            throw e
         }
 
         isRun = false

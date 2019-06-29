@@ -1,17 +1,10 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.Dhtvalue
+import me.pixka.kt.pibase.t.HttpPostTask
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DhtvalueService
-import org.apache.http.auth.AuthScope
-import org.apache.http.auth.UsernamePasswordCredentials
-import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.entity.StringEntity
-import org.apache.http.impl.client.BasicCredentialsProvider
-import org.apache.http.impl.client.HttpClientBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -57,8 +50,7 @@ class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
                             dht.toserver = true
                             dhts.save(dht)
                         }
-                    }catch (e:Exception)
-                    {
+                    } catch (e: Exception) {
                         logger.error("Send Dht ERROR ${e.message}")
                     }
                 } catch (e: Exception) {

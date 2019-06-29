@@ -6,6 +6,7 @@ import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
+import me.pixka.kt.pibase.t.HttpPostTask
 import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.Ds18valueService
@@ -42,11 +43,12 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
 //            logger.error("Error send Sendds ${e.message}")
 //        }
 //
-        var t = Executors.newSingleThreadExecutor()
+
         var target = System.getProperty("piserver") + "/ds18value/add"
         val list = service.notInserver()
         if (list != null) {
             logger.debug("Found dht for send ${list.size}")
+            var t = Executors.newSingleThreadExecutor()
             for (item in list) {
                 try {
                     val info = Infoobj()
@@ -58,9 +60,15 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
                     var f = t.submit(task)
 
                     try {
-                        f.get(5, TimeUnit.SECONDS)
-                        item.toserver = true
-                        service.save(item)
+                        var re = f.get(5, TimeUnit.SECONDS)
+                        if(re.statusLine.statusCode == 200) {
+                            item.toserver = true
+                            service.save(item)
+                        }
+                        else
+                        {
+                            logger.error("ERROR ${re.statusLine.statusCode} ")
+                        }
                     } catch (e: Exception) {
                         logger.error("Send ds18vale error ${e.message}")
                     }

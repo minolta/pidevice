@@ -6,14 +6,19 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
+import me.pixka.kt.run.DefaultWorker
+import me.pixka.kt.run.PijobrunInterface
+import me.pixka.kt.run.Worker
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationContext
 import org.springframework.web.bind.annotation.*
 import java.util.*
+import java.util.concurrent.ExecutorService
 
 @RestController
 class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
-               val ips: IptableServicekt) {
+               val ips: IptableServicekt, val context: ApplicationContext ) {
 
 
     @CrossOrigin
@@ -36,6 +41,42 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 
         return list
 
+    }
+    @CrossOrigin
+    @RequestMapping(value = "/listpool", method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun listpool(): ArrayList<tl> {
+        var tp = context.getBean("pool") as ExecutorService
+        var list = ArrayList<tl>()
+        val threadSet = Thread.getAllStackTraces().keys
+        logger.debug("threadpool =======================Strart list ================================")
+        var i = 1
+        for (thread in threadSet) {
+            if(thread is PijobrunInterface) {
+                var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+                list.add(t)
+                i++
+            }
+
+            if(thread is Worker)
+            {
+                var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+//                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
+                list.add(t)
+                i++
+            }
+            if(thread is DefaultWorker)
+            {
+                var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+//                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
+                list.add(t)
+                i++
+            }
+            logger.debug("threadpoollist ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} state:${thread.state}")
+
+        }
+        logger.debug("threadpool ======================= end ================================")
+        return list
     }
 
     @CrossOrigin
