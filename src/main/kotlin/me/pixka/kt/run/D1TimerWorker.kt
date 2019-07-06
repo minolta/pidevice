@@ -29,7 +29,7 @@ class D1TimerWorker(val p: Pijob,
             logger.debug("T: ${t}")
             isRun = true
             startRun = Date()
-            if (t != null)
+            if (t != null) {
                 if (checkrang(t)) {
 
                     //go !!
@@ -54,6 +54,7 @@ class D1TimerWorker(val p: Pijob,
                                 status = "no have remote port"
                                 logger.error("No have report port to run")
                                 isRun = false
+                                throw Exception("No have report port to run")
                             }
 
                         } else {
@@ -69,11 +70,21 @@ class D1TimerWorker(val p: Pijob,
                 } else {
                     status = "Out of rang"
                     logger.error("Out of rang")
+                    isRun = false
+                    throw  Exception("Out of rang")
                 }
-            isRun = false
+                isRun = false
+            } else {
+                logger.error("T is null")
+                status = "T is null"
+                isRun=false
+                throw Exception("T is null")
+            }
         } catch (e: Exception) {
             logger.error("D1Timer error")
             status = "${e.message}"
+            isRun = false
+            throw e
         }
 
         isRun = false
@@ -212,13 +223,17 @@ class D1TimerWorker(val p: Pijob,
                     v = readvalue.readTmpByjob(p)
                 } catch (e: Exception) {
                     logger.error("Read Tmp error ${e.message}")
+                    status = "Read Tmp error ${e.message}"
                 }
                 logger.debug("Wait for high ${v} >= ${high}")
+                status = "Wait for high ${v} >= ${high}"
                 if (v != null) {
                     val tt = v.toFloat()
                     logger.debug("Check HIGH ${tt} > = ${high}")
+                    status = "Check HIGH ${tt} > = ${high}"
                     if (tt >= high!!) {
                         logger.debug("This job can run now")
+                        status = "This job can run now"
                         return true
                     } else {
                         logger.debug("This job have to wait")
@@ -230,13 +245,13 @@ class D1TimerWorker(val p: Pijob,
                 if (timeout <= 0) {
                     status = "Check high time out"
                     logger.error("Check high time out")
-                    return false
+                    throw Exception("Check high time out")
                 }
             }
         } catch (e: Exception) {
             logger.error("Check high  ${e.message}")
             status = "Check high ${e.message}"
-            return false
+            throw e
         }
 
     }
