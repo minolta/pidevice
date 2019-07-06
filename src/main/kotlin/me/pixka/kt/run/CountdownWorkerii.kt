@@ -26,6 +26,9 @@ class CountdownWorkerii(var pijob: Pijob, var gpios: GpioService, val sensorServ
     val d = SimpleDateFormat("yyyy/MM/dd HH:mm")
     val dn = SimpleDateFormat("yyyy/MM/dd")
     var state = ""
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun run() {
         if (!checkincondition()) {
             logger.error("Not in rang end this job")

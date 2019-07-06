@@ -23,6 +23,10 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
                           val i: Piio, val ppp: PortstatusinjobService, val ss: SensorService,
                           val dss: DS18sensorService, val read: ReadUtil)
     : Worker(pj, gi, i, ppp) {
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
+
     var run: Long? = null
     var runtime: Date? = null
     var startdate: Date? = null
@@ -31,6 +35,7 @@ class CounterandrunWorker(var pj: Pijob, var gi: GpioService, val m: MessageServ
     var finishrun: Date? = null //เวลาที่ เสร็จ
     var period: Period? = null
     var runcomplete = false
+
     override fun run() {
         logger.debug("Start run this job")
         state = "Start run " + Date()

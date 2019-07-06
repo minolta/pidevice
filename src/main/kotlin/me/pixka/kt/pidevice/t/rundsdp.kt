@@ -1,10 +1,13 @@
 package me.pixka.kt.pidevice.t
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.DS18sensorService
@@ -17,17 +20,14 @@ import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.util.*
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.Callable
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 @Component
 @Profile("pi")
-class RunDSDP(val pjs: PijobService, val js: JobService,
+class RunDSDP(val pjs: PijobService, val js: JobService, val ips: IptableServicekt,
               val ts: TaskService, val ss: SensorService, val dss: DS18sensorService,
               val io: Piio, val dps: DisplayService, val rs: ReadUtil) {
-
+    val om = ObjectMapper()
     val ex = ThreadPoolExecutor(
             2,
             10,
@@ -36,6 +36,35 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
             ArrayBlockingQueue(100),
             ThreadPoolExecutor.AbortPolicy() // <-- It will abort if timeout exceeds
     )
+
+    fun readKtype(job: Pijob) {
+        var ip = ips.findByMac(job.desdevice?.mac!!)
+        if (ip != null) {
+            try {
+                var t = Executors.newSingleThreadExecutor()
+                var url = "http://${ip.ip}/ktype"
+                logger.debug("Read value ${url}")
+                var get = HttpGetTask(url)
+                var tt = t.submit(get)
+
+                var displaytime = 0L
+                if (job.runtime != null) {
+                    displaytime = job.runtime?.toLong()!!
+                }
+                var re = tt.get(5, TimeUnit.SECONDS)
+                var ds = om.readValue<DS18value>(re, DS18value::class.java)
+
+                logger.debug("Value ${ds}")
+                var task = DPT(ds.t!!, dps, displaytime)
+                var f = ex.submit(task)
+                var display=    f.get(5, TimeUnit.SECONDS)
+
+                logger.debug("Display ${display}")
+            } catch (e: Exception) {
+
+            }
+        }
+    }
 
     fun readValue(job: Pijob): DS18value? {
         try {
@@ -48,9 +77,7 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
             }
 
             return v
-        }
-        catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error(e.message)
             throw e
         }
@@ -85,8 +112,7 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
                 }
             }
 
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error(e.message)
             throw e
         }
@@ -99,36 +125,38 @@ class RunDSDP(val pjs: PijobService, val js: JobService,
         logger.debug("JOB ${jobs}")
         if (jobs != null) {
             for (job in jobs) {
-                logger.debug("Run ${job.id}")
 
-                var v: DS18value? = readValue(job)
-
-
-                logger.debug("Value ${v}")
-
-
-                if (v != null) {
-                    var runtime = job.runtime
-                    var displaytime = 0L
-                    if (runtime != null) {
-                        displaytime = runtime.toLong()
-                    }
-                    var task = DPT(v, dps, displaytime)
-                    var f = ex.submit(task)
-                    logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} CP:${ex.completedTaskCount} / T:${ex.taskCount}")
-                    try {
-                        var re = f.get(10, TimeUnit.SECONDS)
-                        logger.debug("Run ok ${re}")
-                    } catch (e: Exception) {
-                        logger.error("1 ${e.message}")
-                      //  f.cancel(true)
-                    }
-
-                } else {
-                    //logger.error("Can not read ds18value")
-                    //read loacl
-                    readLocal(job)
-                }
+                readKtype(job)
+//                logger.debug("Run ${job.id}")
+//
+//                var v: DS18value? = readValue(job)
+//
+//
+//                logger.debug("Value ${v}")
+//
+//
+//                if (v != null) {
+//                    var runtime = job.runtime
+//                    var displaytime = 0L
+//                    if (runtime != null) {
+//                        displaytime = runtime.toLong()
+//                    }
+//                    var task = DPT(v, dps, displaytime)
+//                    var f = ex.submit(task)
+//                    logger.debug("Task info AT:${ex.activeCount} PS:${ex.poolSize} CP:${ex.completedTaskCount} / T:${ex.taskCount}")
+//                    try {
+//                        var re = f.get(10, TimeUnit.SECONDS)
+//                        logger.debug("Run ok ${re}")
+//                    } catch (e: Exception) {
+//                        logger.error("1 ${e.message}")
+//                        //  f.cancel(true)
+//                    }
+//
+//                } else {
+//                    //logger.error("Can not read ds18value")
+//                    //read loacl
+//                    readLocal(job)
+//                }
             }
         } else {
             logger.error("Job not found")
@@ -160,6 +188,7 @@ class DPT(var value: DS18value?, val dps: DisplayService, var displaytime: Long)
     constructor(value: BigDecimal, dps: DisplayService, displaytime: Long) : this(null, dps, displaytime) {
         vv = value
     }
+
     var vv: BigDecimal? = null
     var df = DecimalFormat("##.0")
     var d100 = DecimalFormat("###")
@@ -208,6 +237,7 @@ class DPT(var value: DS18value?, val dps: DisplayService, var displaytime: Long)
         } catch (e: Exception) {
             logger.debug(e.message)
             dps.unlock(this)
+            throw e
         }
 
         return true

@@ -40,7 +40,9 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
 
     var isRun = true
     var period: Period? = null
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun state(): String? {
         return state
     }

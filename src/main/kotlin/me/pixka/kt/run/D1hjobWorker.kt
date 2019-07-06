@@ -24,7 +24,9 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun runStatus(): Boolean {
         return isRun
     }

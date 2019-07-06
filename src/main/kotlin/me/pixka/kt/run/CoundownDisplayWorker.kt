@@ -33,6 +33,9 @@ class CountdownDisplayWorker(var pijob: Pijob,
     var runcount = 0
     var state = ""
     var df = SimpleDateFormat("HH:mm:ss")
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun run() {
         if (!checkincondition()) {
             logger.error("Not in rang end this job")

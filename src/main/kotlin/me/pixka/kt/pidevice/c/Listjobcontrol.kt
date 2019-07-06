@@ -18,7 +18,7 @@ import java.util.concurrent.ExecutorService
 
 @RestController
 class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
-               val ips: IptableServicekt, val context: ApplicationContext ) {
+               val ips: IptableServicekt, val context: ApplicationContext) {
 
 
     @CrossOrigin
@@ -42,6 +42,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         return list
 
     }
+
     @CrossOrigin
     @RequestMapping(value = "/listpool", method = arrayOf(RequestMethod.GET))
     @ResponseBody
@@ -52,25 +53,30 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         logger.debug("threadpool =======================Strart list ================================")
         var i = 1
         for (thread in threadSet) {
-            if(thread is PijobrunInterface) {
+            if (thread is PijobrunInterface) {
                 var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
                 list.add(t)
                 i++
-            }
-
-            if(thread is Worker)
-            {
-                var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+            } else
+                if (thread is Worker) {
+                    var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
 //                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
-                list.add(t)
-                i++
-            }
-            if(thread is DefaultWorker)
-            {
-                var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+                    list.add(t)
+                    i++
+                } else if (thread is DefaultWorker) {
+                    var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
 //                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
-                list.add(t)
+                    list.add(t)
+                    i++
+                }
+            try {
+                var t = thread as PijobrunInterface
+                var tt = tl(t.getPijobid(), t.getPJ().name, t.startRun(), t.state(), t.runStatus(), null)
+//                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
+                list.add(tt)
                 i++
+            } catch (e: Exception) {
+                logger.error("Can not case ****** ")
             }
             logger.debug("threadpoollist ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} state:${thread.state}")
 

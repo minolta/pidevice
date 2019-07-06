@@ -21,7 +21,9 @@ open class Worker(var pijob: Pijob, var gpio: GpioService, val io: Piio, val ps:
     override fun state(): String? {
         return state
     }
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun startRun(): Date? {
         return startrun
     }

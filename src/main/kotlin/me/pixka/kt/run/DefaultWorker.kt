@@ -20,7 +20,9 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
                              val ps: PortstatusinjobService?=null, var logger: org.slf4j.Logger)
     : PijobrunInterface, Runnable {
 
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     var status: String? = null
     var isRun: Boolean = false
     var startRun: Date? = null
@@ -178,7 +180,4 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
         }
     }
 
-    fun setD1(portname: String?, ip: String) {
-
-    }
 }

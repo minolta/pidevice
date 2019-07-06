@@ -20,7 +20,9 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun runStatus(): Boolean {
         return isRun
     }

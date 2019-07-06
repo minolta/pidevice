@@ -17,7 +17,9 @@ class DSOTHERWorker(var pijob: Pijob,
     override fun state(): String? {
         return state
     }
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun startRun(): Date? {
         return startRun
     }

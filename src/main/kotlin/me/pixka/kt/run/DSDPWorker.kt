@@ -24,7 +24,9 @@ class DSDPWorker(val ss: SensorService, val dps: DisplayService, var pijob: Pijo
         return state
     }
 
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun startRun(): Date? {
         return startRun
     }

@@ -44,6 +44,7 @@ class D1TimerWorker(val p: Pijob,
                                 status = "Set remote port"
                                 setRemoteport(list as List<Portstatusinjob>)
                                 if (pijob.waittime != null) {
+                                    status = "wait status job waittime ${pijob.waittime}"
                                     TimeUnit.SECONDS.sleep(pijob.waittime!!.toLong())
                                 }
                                 logger.debug("End job ")
@@ -81,7 +82,7 @@ class D1TimerWorker(val p: Pijob,
 
     var df = SimpleDateFormat("hh:mm:ss")
     override fun setRemoteport(ports: List<Portstatusinjob>) {
-        var ee = Executors.newSingleThreadExecutor()
+
         logger.debug("Set remoteport ${ports}")
         for (port in ports) {
 
@@ -101,32 +102,11 @@ class D1TimerWorker(val p: Pijob,
                         try {
                             callNewfunction(port, ip, runtime, waittime)
                         } catch (e: Exception) {
-                            logger.error("Call new fun error")
+                            logger.error("Call new fun error ${e.message}")
+                            old(ip, port.portname?.name!!, value, runtime, waittime)
+                        }
 
-                        }
-                        val url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"
-                        logger.debug("Call to ${url}")
 
-                        val get = HttpGetTask(url)
-                        val f = ee.submit(get)
-                        try {
-                            val value = f.get(3, TimeUnit.SECONDS)
-                            logger.debug("setremote result ${value}")
-
-                        } catch (e: Exception) {
-                            logger.error("Can not connect to traget device [${e.message}]")
-                            ee.shutdownNow()
-                        }
-                        if (runtime != null) {
-                            status = "Run time state ${runtime}"
-                            logger.debug("Run time state ${runtime}")
-                            TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
-                        }
-                        if (waittime != null) {
-                            status = "Wait time state ${waittime}"
-                            logger.debug("Wait time state ${waittime}")
-                            TimeUnit.SECONDS.sleep(waittime.toLong()) //หยุดรอถ้ามีการกำหนดมา
-                        }
                     } catch (e: Exception) {
 
                         logger.debug("D1Timer set remote port Error ${e.message}")
@@ -140,6 +120,33 @@ class D1TimerWorker(val p: Pijob,
             }
         }
 
+    }
+
+    fun old(ip: Iptableskt, portname: String, value: Int, runtime: Int?, waittime: Int?) {
+        val url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"
+        logger.debug("Call to ${url}")
+        val get = HttpGetTask(url)
+        var ee = Executors.newSingleThreadExecutor()
+        val f = ee.submit(get)
+        try {
+            val value = f.get(3, TimeUnit.SECONDS)
+            logger.debug("setremote result ${value}")
+            if (runtime != null) {
+                status = "Run time state ${runtime}"
+                logger.debug("Run time state ${runtime}")
+                TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+            }
+
+        } catch (e: Exception) {
+            logger.error("Can not connect to traget device [${e.message}]")
+            ee.shutdownNow()
+        }
+
+        if (waittime != null) {
+            status = "Wait time state ${waittime}"
+            logger.debug("Wait time state ${waittime}")
+            TimeUnit.SECONDS.sleep(waittime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+        }
     }
 
     fun callNewfunction(port: Portstatusinjob, ip: Iptableskt, runtime: Int?, waittime: Int?) {
@@ -156,7 +163,7 @@ class D1TimerWorker(val p: Pijob,
                 logger.error("call url 2 error ${e.message}")
                 status = "call url 2 error ${e.message}"
                 ee.shutdownNow()
-                throw e
+                throw Exception("call1")
             }
             val c = Calendar.getInstance()
             c.add(Calendar.SECOND, runtime!!)
@@ -170,7 +177,17 @@ class D1TimerWorker(val p: Pijob,
             } catch (e: Exception) {
                 logger.error("Call url 3 error ${e.message}")
                 status = "Call url 3 error ${e.message}"
-                throw e
+                throw Exception("call2")
+            }
+
+            if (runtime != null) {
+                status = "Run time ${runtime}"
+                logger.debug("Run time ${runtime}")
+                TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+            }
+            if (waittime != null) {
+                status = "Wait time  ${waittime}"
+                logger.debug("Wait time  ${waittime}")
             }
             logger.debug("End set new port ")
         } catch (e: Exception) {
