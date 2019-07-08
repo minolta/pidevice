@@ -47,23 +47,23 @@ class Runonecommand(val dhts: DhtvalueService, val ts: TaskService, val notifySe
 
                 var pijob = pjs.findByRefid(o.pijob_id)
 
-                var type = pijob.job?.name
+                var type = pijob?.job?.name
 
                 if (type.equals("DS")) {
-                    var worker = Worker(pijob, gpios, io, ps)
+                    var worker = Worker(pijob!!, gpios, io, ps)
                     logger.debug("Run  ${pijob} in onecommand")
                     notifyService.message("Run onecommand DS job ${pijob.name}")
                     ts.run(worker)
                     if (pijob.runwithid != null) {
                         var runwith = pjs.findByRefid(pijob.runwithid)
-                        var w = Worker(runwith, gpios, io, ps)
+                        var w = Worker(runwith!!, gpios, io, ps)
                         ts.run(w)
                         logger.debug("Run With ==> ${w} in onecommand")
                     }
                 } else if (type.equals("DSOTHER")) {
 
                 } else if (type.equals("cooldown")) {
-                    var w = CountdownWorkerii(pijob, gpios, ss, notifyService, readUtil)
+                    var w = CountdownWorkerii(pijob!!, gpios, ss, notifyService, readUtil)
 
                     var r = ts.run(w)
                     if (r) {
@@ -80,9 +80,9 @@ class Runonecommand(val dhts: DhtvalueService, val ts: TaskService, val notifySe
 
     fun selectWorker(o: Onecommand): PijobrunInterface? {
         var pijob = pjs.findByRefid(o.pijob_id)
-        var jobname = pijob.job?.name
+        var jobname = pijob?.job?.name
         if (jobname?.indexOf("DS", 0) != null) {
-            return Worker(pijob, gpios, io, ps)
+            return Worker(pijob!!, gpios, io, ps)
         }
 
         return null

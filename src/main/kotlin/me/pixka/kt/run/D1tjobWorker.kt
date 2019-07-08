@@ -65,27 +65,29 @@ class D1tjobWorker(p: Pijob,
     }
 
     fun checktmp(p: Pijob): Boolean {
-        logger.debug("D1tjobWorker ${pijob.name} Check temp ${p}")
-        status = "${pijob.name} Check temp ${p}"
+        logger.debug("D1tjobWorker checktmp ${pijob.name} Check temp ${p}")
+        status = "${pijob.name} checktmp Check temp ${p}"
         try {
             var v = readUtil?.readTfromD1Byjob(p)
-            logger.debug("${pijob.name} value from Readtmp ${v}")
-            status = "${pijob.name} value from Readtmp ${v}"
+            logger.debug("${pijob.name} value from Readtmp ${v} checktmp")
+            status = "${pijob.name} value from Readtmp ${v} "
             var l = p.tlow?.toDouble()
             var h = p.thigh?.toDouble()
             var now = v?.t?.toDouble()
-            logger.debug("${pijob.name} temp check ${l} < ${v} < ${h}")
+            logger.debug("${pijob.name} temp check ${l} < ${v} < ${h} checktmp")
             status = "${pijob.name} temp check ${l} < ${v} < ${h}"
             if (l != null && h != null && now != null) {
                 if (l <= now && now <= h) {
+                    logger.debug("${pijob.name} In rang can run")
                     return true //in rang
                 }
 
             }
+            logger.debug("${pijob.name}  Out of rang checktmp")
             return false
         } catch (e: Exception) {
-            logger.error("${pijob.name} Check temp ${e.message}")
-            status = "${pijob.name} Check temp ${e.message}"
+            logger.error("${pijob.name} Check temp ${e.message} checktmp")
+            status = "${pijob.name} Check temp ${e.message} checktmp"
             throw e
         }
     }

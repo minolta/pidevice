@@ -1,6 +1,8 @@
 package me.pixka.kt.run
 
 import me.pixka.kt.base.d.Iptableskt
+import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.t.HttpGetTask
@@ -14,7 +16,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-class D1TimerWorker(val p: Pijob,
+class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
                     val readvalue: ReadUtil, val pijs: PortstatusinjobService, var test: Pijob? = null)
     : DefaultWorker(p, null, readvalue, pijs, logger) {
 
@@ -22,7 +24,13 @@ class D1TimerWorker(val p: Pijob,
     override fun run() {
         try {
             logger.debug("Start run D1Timer ")
-            var t = readvalue.readTmpByjob(p)
+            var t: DS18value? = null
+            try {
+                t = readvalue.readKtype(pijob)
+            } catch (e: Exception) {
+                logger.error("Read tmp not found ${e.message}")
+                status = "Read tmp not found ${e.message}"
+            }
             startRun = Date()
             status = "T: ${t}"
             Thread.currentThread().name = "JOBID:${pijob.id} D1Timer : ${pijob.name} ${startRun}"
@@ -30,7 +38,7 @@ class D1TimerWorker(val p: Pijob,
             isRun = true
             startRun = Date()
             if (t != null) {
-                if (checkrang(t)) {
+                if (checkrang(t.t!!)) {
 
                     //go !!
                     status = "T in rang"
@@ -63,12 +71,12 @@ class D1TimerWorker(val p: Pijob,
                             TimeUnit.SECONDS.sleep(5)
                         }
                     } catch (e: Exception) {
-                        logger.error(e.message)
-                        status = e.message
+                        logger.error("ERROR Check high ${e.message}")
+                        status = "ERROR Check high ${e.message}"
                         isRun = false
                     }
                 } else {
-                    status = "Out of rang"
+                    status = "Out of rang ${t.t}"
                     logger.error("Out of rang")
                     isRun = false
                     throw  Exception("Out of rang")
@@ -77,12 +85,12 @@ class D1TimerWorker(val p: Pijob,
             } else {
                 logger.error("T is null")
                 status = "T is null"
-                isRun=false
+                isRun = false
                 throw Exception("T is null")
             }
         } catch (e: Exception) {
-            logger.error("D1Timer error")
-            status = "${e.message}"
+            logger.error("D1Timer error ${e.message}")
+            status = "Total error ${e.message}"
             isRun = false
             throw e
         }
@@ -110,13 +118,14 @@ class D1TimerWorker(val p: Pijob,
                 if (ip != null) {
 
                     try {
-                        try {
-                            callNewfunction(port, ip, runtime, waittime)
-                        } catch (e: Exception) {
-                            logger.error("Call new fun error ${e.message}")
-                            old(ip, port.portname?.name!!, value, runtime, waittime)
-                        }
-
+//                        try {
+//                            callNewfunction(port, ip, runtime, waittime)
+//                        } catch (e: Exception) {
+//                            logger.error("Call new fun error ${e.message}")
+//                            old(ip, port.portname?.name!!, value, runtime, waittime)
+//                        }
+                        old(ip, port.portname?.name!!, value, runtime, waittime)
+                        display(runtime,ip)
 
                     } catch (e: Exception) {
 
@@ -133,6 +142,24 @@ class D1TimerWorker(val p: Pijob,
 
     }
 
+    fun display(runtime: Int?, ip: Iptableskt) {
+        val c = Calendar.getInstance()
+        c.add(Calendar.SECOND, runtime!!)
+        var nextdate = df.format(c.time)
+        var url3 = "http://${ip.ip}/settext?closetime=${nextdate}"
+        var ee = Executors.newSingleThreadExecutor()
+        var get = HttpGetTask(url3)
+        var f2 = ee.submit(get)
+        try {
+            var re = f2.get(60, TimeUnit.SECONDS)
+            status = "Set text ${nextdate}"
+        } catch (e: Exception) {
+            logger.error("Call url 3 error ${e.message}")
+            status = "Call url 3 error ${e.message}"
+            throw Exception("call2")
+        }
+    }
+
     fun old(ip: Iptableskt, portname: String, value: Int, runtime: Int?, waittime: Int?) {
         val url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"
         logger.debug("Call to ${url}")
@@ -140,7 +167,7 @@ class D1TimerWorker(val p: Pijob,
         var ee = Executors.newSingleThreadExecutor()
         val f = ee.submit(get)
         try {
-            val value = f.get(3, TimeUnit.SECONDS)
+            val value = f.get(15, TimeUnit.SECONDS)
             logger.debug("setremote result ${value}")
             if (runtime != null) {
                 status = "Run time state ${runtime}"
@@ -202,7 +229,7 @@ class D1TimerWorker(val p: Pijob,
             }
             logger.debug("End set new port ")
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("Call new function ${e.message}")
             status = "Error new function ${e.message}"
             throw e
         }
@@ -220,7 +247,8 @@ class D1TimerWorker(val p: Pijob,
             while (true) {
                 var v = BigDecimal.ZERO
                 try {
-                    v = readvalue.readTmpByjob(p)
+                    var dsv = readvalue.readKtype(p)
+                    v = dsv?.t
                 } catch (e: Exception) {
                     logger.error("Read Tmp error ${e.message}")
                     status = "Read Tmp error ${e.message}"
@@ -239,18 +267,21 @@ class D1TimerWorker(val p: Pijob,
                         logger.debug("This job have to wait")
                     }
                 }
+                status = "Wait ${timeout}"
                 TimeUnit.SECONDS.sleep(1) // รอ 1 วินาที
                 timeout--
                 logger.debug("Check high timeout ${timeout}")
                 if (timeout <= 0) {
                     status = "Check high time out"
                     logger.error("Check high time out")
+                    isRun = false
                     throw Exception("Check high time out")
                 }
             }
         } catch (e: Exception) {
             logger.error("Check high  ${e.message}")
             status = "Check high ${e.message}"
+            isRun = false
             throw e
         }
 
@@ -274,6 +305,7 @@ class D1TimerWorker(val p: Pijob,
         logger.error("Check rang Out of rang")
         return false
     }
+
 
     companion object {
         internal var logger = LoggerFactory.getLogger(D1TimerWorker::class.java)

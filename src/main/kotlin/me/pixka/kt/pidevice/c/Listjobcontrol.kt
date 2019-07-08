@@ -102,7 +102,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             var job = pjs.findByRefid(id)
             logger.debug("Job ${job}")
 
-            var url = readUtil.findurl(job.desdevice_id!!, job.ds18sensor_id)
+            var url = readUtil.findurl(job?.desdevice_id!!, job.ds18sensor_id)
             logger.debug("Url ${url} ${job.desdevice_id} ${job.ds18sensor_id} ")
             return readUtil.checktmp(job)
         } catch (e: Exception) {

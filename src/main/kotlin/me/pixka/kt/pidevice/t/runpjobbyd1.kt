@@ -28,6 +28,7 @@ class Runpjobbyd1(val pjs: PijobService,
             for (job in list) {
                 logger.debug("Run ${job}")
                 var c = checkrunwith(job)
+                logger.debug("Run with ${c}")
                 if (c != null && c) {
                     var t = D1pjobWorker(job, readUtil)
                     var run = task.run(t)

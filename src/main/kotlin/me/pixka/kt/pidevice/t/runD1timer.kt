@@ -2,6 +2,7 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
+import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component
 @Component
 class runD1Timer(val pjs: PijobService,
                  val js: JobService,
-                 val task: TaskService,
+                 val task: TaskService,val ips:IptableServicekt,
 //                  val gpios: GpioService,
                  val dhs: Dhtutil, val httpControl: HttpControl, val psij: PortstatusinjobService,
                  val readUtil: ReadUtil) {
@@ -33,7 +34,7 @@ class runD1Timer(val pjs: PijobService,
                 for (job in list) {
                     try {
                         logger.debug("Run ${job}")
-                        var t = D1TimerWorker(job, readUtil, psij)
+                        var t = D1TimerWorker(job,ips, readUtil, psij)
                         var run = task.run(t)
                         logger.debug("RunJOB ${run}")
                     } catch (e: Exception) {

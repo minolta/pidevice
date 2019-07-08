@@ -12,6 +12,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import java.util.concurrent.*
 import java.util.concurrent.ThreadPoolExecutor.AbortPolicy
+import java.util.TimeZone
+import javax.annotation.PostConstruct
+
+
 
 
 @SpringBootApplication
@@ -71,6 +75,12 @@ class PideviceApplication {
                 ThreadPoolExecutor.CallerRunsPolicy())
         return threadpool
     }
+    @PostConstruct
+    fun init() {
+        // Setting Spring Boot SetTimeZone
+//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
+
 }
 
 fun main(args: Array<String>) {

@@ -68,6 +68,38 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
     }
 
+    fun readKtype(p: Pijob): DS18value? {
+        if (p.desdevice == null)
+            throw Exception("Destinition error")
+
+        var ip: Iptableskt? = null
+
+        try {
+            ip = ips.findByMac(p.desdevice?.mac!!)
+            if (ip != null) {
+                var ipstring = ip.ip
+                var t = Executors.newSingleThreadExecutor()
+                var u = "http://${ipstring}/ktype"
+                var get = HttpGetTask(u)
+                var f = t.submit(get)
+                try {
+                    var re = f.get(30, TimeUnit.SECONDS)
+                    var o = om.readValue(re, DS18value::class.java)
+                    logger.debug("${p.name} Get tmp ${o}")
+                    return o
+//                    status = "${p.name} Get pressure ${o}"
+                } catch (e: Exception) {
+                    logger.error("Read ktype error ${e.message}")
+                    throw e
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Read Ktype ${e.message}")
+            throw e
+        }
+        return null
+    }
+
     fun readA0(desid: Long): Int? {
         var ee = Executors.newSingleThreadExecutor()
         try {
@@ -273,6 +305,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         }
         return false
     }
+
     fun checkpressure(p: Pijob): Boolean {
 
         try {
@@ -282,7 +315,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
                 var th = p.hhigh?.toFloat()
                 var v = tmp.pressurevalue?.toFloat()
 
-                if (v!=null && tl != null) {
+                if (v != null && tl != null) {
                     if (tl <= v && v <= th!!) {
                         return true
                     }
@@ -297,6 +330,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         }
         return false
     }
+
     /**
      * ใช้สำหรับอ่านข้อมูล ความร้อนโดยที่จะอ่าน local  ถ้าไม่มีให้อ่าน จาก ที่อื่นแทน
      */

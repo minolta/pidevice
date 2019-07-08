@@ -34,6 +34,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                 save(list)
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             logger.error(e.message)
         }
     }
@@ -50,14 +51,23 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                 if (ref == null) {
                     // Save เข้าถ้าหาไม่เจอเป็น job ใหม่
                     logger.debug("[loadpijob] new Pi job on device ${item}")
-                    ref = newpijobinlocaldevice(item)
+                    try {
+                        ref = newpijobinlocaldevice(item)
+                    } catch (e: Exception) {
+                        logger.error("new job in local error ${e.message}")
+                    }
                 } else {
+                    try {
+                        logger.debug("[loadpijob] Jobs already edit " + ref)
+                        ref = edit(ref, item)
+                    } catch (e: Exception) {
+                        logger.error("Edit job error ${e.message}")
+                    }
 
-                    logger.debug("[loadpijob] Jobs already edit " + ref)
-                    ref = edit(ref, item)
                 }
             } catch (e: Exception) {
-                logger.error(e.message)
+                logger.error("Save error ${e.message}")
+                e.printStackTrace()
             }
             logger.debug("[loadpijob] Found ? ${ref}")
 
@@ -149,9 +159,13 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
         try {
             item.job = newjob(item.job!!)
             if (item.pijobgroup != null) {
-                var pijobgroup = newpijobgroup(item.pijobgroup!!)
-                item.pijobgroup = pijobgroup
-                item.pijobgroup_id = pijobgroup?.id
+                try {
+                    var pijobgroup = newpijobgroup(item.pijobgroup!!)
+                    item.pijobgroup = pijobgroup
+                    item.pijobgroup_id = pijobgroup?.id
+                } catch (e: Exception) {
+                    logger.error("Create pijobgroup error ${e.message}")
+                }
             }
             try {
                 if (item.ds18sensor != null)
@@ -160,20 +174,42 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                 logger.error("Can not create Sensor ${e.message}")
             }
             try {
-                item.desdevice = newotherdevice(item.desdevice!!)
+                if(item.desdevice!=null) {
+                    logger.debug(" ${item.name}  newotherdevice ${item.desdevice}")
+
+                   var ot = newotherdevice(item.desdevice!!)
+                    item.desdevice = ot
+                    item.desdevice_id = ot?.id
+                    logger.debug(" ${item.name} newotherdevice new desdevice ${item.desdevice}")
+                }
             } catch (e: Exception) {
-                logger.error("Can not create Other Device")
+                logger.error(" ${item.name} Can not create otherdevice ${e.message}")
 
             }
-            logger.debug("Item for new pijob ${item}")
             var p: Pijob = service.newpijob(item)
+            p.copy(item)
+            if (item.runwithid != null) {
+                var rw = createLocalrunwith(item)
+                if (rw != null)
+                    p.runwithid = rw.id
+            }
+            logger.debug("Item for new pijob ${item}")
+
             logger.debug("P after newpijob ${p}")
             // ตัวของเราเอง
+
             p.pidevice = null
             p.pidevice_id = null
-            p.runwithid = item.runwithid
+//            p.runwithid = item.runwithid
             p.name = item.name
+            p.refid = item.id
+            p.tlow = item.tlow
+            p.thigh = item.thigh
             p.pijobgroup = item.pijobgroup
+            p.job = item.job
+            p.desdevice_id = item.desdevice_id
+            p.desdevice = item.desdevice
+
             logger.debug("[loadpijob newforsave] new Pi job for save :" + p)
             p = service.save(p)!!
             logger.debug("[loadpijob pijobsaved] Save pi job to device : " + p)
@@ -184,6 +220,86 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
         }
     }
 
+    fun createLocalrunwith(item: Pijob): Pijob? {
+        logger.debug("Create runwith")
+        try {
+            var runwithjob: Pijob? = null
+            try {
+                runwithjob = loadrunwith(item.runwithid!!)
+            } catch (e: Exception) {
+                logger.error("runwith load from server error ${e.message}")
+            }
+
+            if (runwithjob != null) {
+
+                var local = service.findByRefid(runwithjob.id)
+                logger.debug("local is ${local} runwith")
+                if(local==null) {
+                    logger.debug("foundrunwith ==> ${runwithjob}")
+                    var rw = Pijob()
+                    rw.copy(runwithjob)
+                    rw.refid = runwithjob.id
+                    rw.pidevice_id = null
+                    rw.pidevice = null
+                    if (runwithjob.pijobgroup != null) {
+                        var pijobgroup = newpijobgroup(runwithjob.pijobgroup!!)
+                        rw.pijobgroup = pijobgroup
+                        rw.pijobgroup_id = pijobgroup?.id
+                    }
+                    try {
+                        if (runwithjob.ds18sensor != null)
+                            rw.ds18sensor = newdssensor(runwithjob.ds18sensor!!)
+                    } catch (e: Exception) {
+                        logger.error("Can not create Sensor ${e.message}")
+                    }
+
+                    if (runwithjob.desdevice != null) {
+                        try {
+                            rw.desdevice = newotherdevice(runwithjob.desdevice!!)
+                        } catch (e: Exception) {
+                            logger.error("Can not create Other Device ${e.message}")
+
+                        }
+                    }
+                    logger.debug("To save runwith ${rw}")
+                    var localrunwith = service.save(rw)
+                    logger.debug("local runwith ${localrunwith}")
+                    return localrunwith
+                }
+                else
+                {
+                    logger.error("Please edit  runwith job")
+
+                }
+
+            }
+            return null
+        } catch (e: Exception) {
+            logger.error("runwith EEE ${e.message}")
+            throw e
+        }
+
+    }
+
+    fun loadrunwith(id: Long): Pijob {
+
+        val ee = Executors.newSingleThreadExecutor()
+        try {
+            val url = "${host}/rest/pijob/get/${id}"
+            var http = HttpGetTask(url)
+            var f = ee.submit(http)
+            var re = f.get(5, TimeUnit.SECONDS)
+            var found = mapper.readValue(re, Pijob::class.java)
+
+            logger.debug("Found job runwith ${found}")
+            return found
+
+        } catch (e: Exception) {
+            logger.error("load error runwith ${e.message}")
+            throw  e
+        }
+
+    }
 
     private fun saveportstatus(item: Pijob, ref: Pijob) {
         logger.debug("[loadpijob] Save port status ")

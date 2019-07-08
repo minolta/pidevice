@@ -25,7 +25,7 @@ class Runtjobbyd1(val pjs: PijobService,
                   val readUtil: ReadUtil) {
     val om = ObjectMapper()
 
-    @Scheduled(fixedDelay = 3000)
+    @Scheduled(fixedDelay = 5000)
     fun run() {
         try {
             logger.debug("Start run ${Date()}")
@@ -37,11 +37,14 @@ class Runtjobbyd1(val pjs: PijobService,
                         var testjob = pjs.findByRefid(job.runwithid)
                         logger.debug("")
                         var t = D1tjobWorker(job, readUtil, psij, testjob)
+                        task.run(t)
 
-                        if (t.checktmp(job)) {
-                            var canrun = task.run(t)
-                            logger.debug("This job run JOB:${job.name} ==> ${canrun}")
-                        }
+//                        if (t.checktmp(job)) {
+//                            var canrun = task.run(t)
+//                            logger.debug("This job run JOB:${job.name} ==> ${canrun}")
+//                        }
+//                        else
+//                            logger.debug("Job out of rang")
                     } catch (e: Exception) {
                         logger.error("${job.name} ${e.message}")
                     }

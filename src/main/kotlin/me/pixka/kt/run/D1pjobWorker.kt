@@ -169,6 +169,9 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    override fun toString(): String {
+        return "${pijob.name}"
+    }
     companion object {
         internal var logger = LoggerFactory.getLogger(D1pjobWorker::class.java)
     }
