@@ -2,6 +2,7 @@ package me.pixka.kt.pidevice
 
 import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.Portstatusinjob
+import me.pixka.kt.pidevice.u.ReadBuffer
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
@@ -15,20 +16,12 @@ class PideviceApplicationTests {
 
     @Test
     fun contextLoads() {
-        val d = SimpleDateFormat("yyyy/MM/dd HH:mm")
-        val dn = SimpleDateFormat("yyyy/MM/dd")
-        var ds = dn.format(Date())
-        println("DS: ${ds}")
-        var datenow = dn.parse(ds)
-        val c = Calendar.getInstance()
-        c.time = datenow
-        c.add(Calendar.DATE, 1)  // number of days to add
-        var nextdate = dn.format(c.time)
-        var nr = nextdate + " 09:00"
-        var timetorun = d.parse(nr)
 
-        println("*******************************  ${timetorun}  ********************************")
 
+        var df = SimpleDateFormat("hh:mm:ss")
+
+        println(df.parse("10:20:22"))
+        println(df.parse("11:00:00"))
     }
 
 }

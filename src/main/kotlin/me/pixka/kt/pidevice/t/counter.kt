@@ -29,58 +29,36 @@ class CounterOther(val context: ApplicationContext,
                    val js: JobService, val io: Piio, val ps: PortstatusinjobService,
                    val ts: TaskService,
                    val ss: SensorService, val gpio: GpioService, val dps: DisplayService, val ms: MessageService) {
-    // var pool = context.getBean("pool") as ExecutorService
 
     var runjobs = ArrayList<runInfo>()
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun run() {
-        logger.debug("Start find Counter job")
+        try {
+            logger.debug("Start find Counter job")
 
-        var jobs = loadjob()
-        var torun = find(jobs!!)
-
-
-        if (torun != null) {
-
-            for (job in torun) {
-                logger.debug("Start task job ${job.id}")
-                var task = Workercounter(job, ps, gpio, ss, dps, ms, io, dss)
-
-                if (!ts.run(task)) {
-                    logger.error("Reject job #threadinfo ${task}")
-                }
-
-                //var f = pool.submit(task)
-                //logger.debug("Future ${f}")
-                //var run = runInfo(task, f, Date())
+            var jobs = loadjob()
+            var torun = find(jobs!!)
 
 
-                //runjobs.add(run)
-            }
-
-        }
-        /*
-
-        logger.debug("To run ${torun}")
-        if (torun != null) {
-            //ถ้ามี job ที่ตรงกับการจับเวลาระบบ จะทำการสร้าง Task ขึ้นมา run
-            var canrun = checkcanrun(torun)
-
-            logger.debug("Can run size:${canrun.size}")
-            if (canrun.size > 0) {
-                for (job in canrun) {
-                    logger.debug("Start task job ${job.id}")
+            if (torun != null) {
+                logger.debug("counter for run ${torun.size}")
+                for (job in torun) {
+                    logger.debug("Start counterjob ${job.id}")
                     var task = Workercounter(job, ps, gpio, ss, dps, ms, io, dss)
-                    var f = pool.submit(task)
-                    logger.debug("Future ${f}")
-                    var run = runInfo(task, f, Date())
-                    runjobs.add(run)
+
+                    if (!ts.run(task)) {
+                        logger.error("Reject job #threadinfo ${task}")
+                    } else {
+                        logger.info("runcounterjob ${task}")
+                    }
                 }
 
+            } else {
+                logger.error("Not have job to runcounter")
             }
+        } catch (e: Exception) {
+            logger.error(e.message)
         }
-        */
-
     }
 
     /**
@@ -92,6 +70,7 @@ class CounterOther(val context: ApplicationContext,
         for (run in runjobs) {
             var f = run.f
             if (f?.isDone!!) {
+                logger.info("Remove old job")
                 runjobs.remove(run)
             }
         }
@@ -132,7 +111,7 @@ class CounterOther(val context: ApplicationContext,
     fun injob(job: Pijob): Boolean {
         for (info in runjobs) {
             var p = info.job
-            if (p?.runStatus() == true && p?.getPijobid().toInt() == job.id.toInt())
+            if (p?.runStatus() == true && p.getPijobid().toInt() == job.id.toInt())
                 return true
         }
         return false
@@ -153,20 +132,25 @@ class CounterOther(val context: ApplicationContext,
                 var desid = job.desdevice_id
                 var value: DS18value? = null
 
-                var localsensor = dss.find(job.ds18sensor_id)
-                logger.debug("Found local sensor ? ${localsensor}")
-                if (localsensor != null) {
-                    var v = io.readDs18(localsensor.name!!)
-                    value = DS18value()
-                    value.t = v
 
-
+                try {
+                    value = ss.readDsOther(desid!!, senid!!)
+                    logger.debug("Other value ======>${value}")
+                } catch (e: Exception) {
+                    logger.error("Read other error ${e.message}")
                 }
 
-                if (value == null)
-                    value = ss.readDsOther(desid!!, senid!!)
+                if (value == null) {
+                    var localsensor = dss.find(job.ds18sensor_id)
+                    logger.debug("Found local sensor ? ${localsensor}")
+                    if (localsensor != null) {
+                        var v = io.readDs18(localsensor.name!!)
+                        value = DS18value()
+                        value.t = v
 
 
+                    }
+                }
                 logger.debug(" FIND Value: ${value}")
                 if (value != null) {
                     var v = value.t?.toInt()

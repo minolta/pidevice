@@ -10,6 +10,7 @@ import me.pixka.kt.pibase.d.Devicecheckin
 import me.pixka.kt.pibase.d.Message
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.s.MessagetypeService
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DevicecheckinService
 import org.apache.http.client.methods.CloseableHttpResponse
@@ -26,13 +27,14 @@ import java.util.concurrent.TimeUnit
 
 
 @Component
-@Profile("pi", "lite")
-class Checkin(val c: CheckinTask) {
+//@Profile("pi", "lite")
+class Checkin(val c: CheckinTask,val notifyService: NotifyService) {
 
 
     @Scheduled(initialDelay = 15000, fixedDelay = 60000)
     fun checkin() {
         logger.info("Checkin ")
+       // notifyService.message("check in")
         var f = c.run()
         var count = 0
         while (true) {
@@ -66,9 +68,10 @@ class Checkin(val c: CheckinTask) {
 }
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class CheckinTask(val erl: ErrorlogService, val io: Piio, val http: HttpControl,
-                  val ds: DevicecheckinService, val dbcfg: DbconfigService, val mtservice: MessagetypeService, val ips: IptableServicekt) {
+                  val ds: DevicecheckinService, val dbcfg: DbconfigService,
+                  val mtservice: MessagetypeService, val ips: IptableServicekt) {
     var target: String? = null
     var host: String? = null
 

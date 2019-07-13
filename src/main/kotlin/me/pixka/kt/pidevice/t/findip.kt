@@ -2,11 +2,9 @@ package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.ktbase.io.Configfilekt
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
@@ -19,9 +17,9 @@ import java.util.*
 
 
 @Component
-@Profile("pi")
+//@Profile("pi")
 class Findip(val service: IptableServicekt, val cfg: Configfilekt,
-             val es: ErrorlogService, val dbcfg: DbconfigService) {
+             val dbcfg: DbconfigService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)
     }
@@ -30,7 +28,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
     var command: String? = "nmap -n -sP "
 
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 10000)
     fun loadip() {
         logger.info("Scan ip ${Date()}")
         setup()
@@ -98,7 +96,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
             }
         } catch (e: Exception) {
             logger.error("getNet ${e.message}")
-            es.n("load ip ", "110", "${e.message}")
+//            es.n("load ip ", "110", "${e.message}")
             //  e.printStackTrace()
         }
         return buffer
@@ -152,13 +150,13 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
 
 
             for (n in network) {
-                var b = findIP(n!!, command!!)
+                var b = findIP(n, command!!)
                 buf.addAll(b)
             }
 
         } catch (e: Exception) {
             logger.error("R() ${e.message}")
-            es.n("Loadip", "180", "${e.message}")
+//            es.n("Loadip", "180", "${e.message}")
             e.printStackTrace()
         }
         return buf
@@ -174,7 +172,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
 
                     var mac = i.mac
                     //      logger.debug("mac value : ${mac}")
-                    var ii: Iptableskt? = service?.findByMac(mac!!)
+                    var ii: Iptableskt? = service.findByMac(mac!!)
                     //      logger.debug("Address  Found: ${ii}")
                     if (ii == null) {
                         ii = Iptableskt()
@@ -184,12 +182,10 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
                     } else {
                         service.updateiptable(ii, i.ip!!)
                     }
-                }
-                else
-                {
+                } else {
                     logger.info("Saveme: ${i}")
                     //me device
-                    var ii: Iptableskt? = service?.findByMac("")
+                    var ii: Iptableskt? = service.findByMac("")
                     //      logger.debug("Address  Found: ${ii}")
                     if (ii == null) {
                         ii = Iptableskt()
@@ -219,7 +215,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
             val e = NetworkInterface.getNetworkInterfaces()
             while (e.hasMoreElements()) {
                 val n = e.nextElement() as NetworkInterface
-                val ee = n.getInetAddresses()
+                val ee = n.inetAddresses
                 while (ee.hasMoreElements()) {
                     val i = ee.nextElement() as InetAddress
                     //  logger.debug("loadiptable Internet Address ${i.address} ${n.hardwareAddress}")
@@ -269,7 +265,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
             idv.ip = it.ip
             idv.mac = it.mac
             idv.lastcheckin = Date()
-            idv = service!!.save(idv)!!
+            idv = service.save(idv)!!
             logger.debug("loadiptable New iptables : ${idv}")
         } catch (e: Exception) {
             e.printStackTrace()

@@ -12,6 +12,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import java.util.concurrent.*
 import java.util.concurrent.ThreadPoolExecutor.AbortPolicy
+import java.util.TimeZone
+import javax.annotation.PostConstruct
+
+
 
 
 @SpringBootApplication
@@ -25,7 +29,7 @@ class PideviceApplication {
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
-        taskScheduler.poolSize = 100
+        taskScheduler.poolSize = 150
         taskScheduler.threadNamePrefix = "SS-"
 
 
@@ -59,39 +63,24 @@ class PideviceApplication {
                 AbortPolicy() // <-- It will abort if timeout exceeds
         )
 
-        /*
-        val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize =10
-        executor.maxPoolSize = 25
-        executor.setAllowCoreThreadTimeOut(true)
-        executor.keepAliveSeconds = 10
-        executor.setQueueCapacity(500)
-        executor.threadNamePrefix = "PT-"
-        executor.initialize()
-        return executor
-        */
+
 
     }
 
-    /*
-    @Bean(name = arrayOf("longrun"))
-    fun longrun(): Executor {
-        return ThreadPoolExecutor(5, 100, 30,
-                TimeUnit.HOURS, LinkedBlockingDeque<Runnable>(50),
-                ThreadPoolExecutor.CallerRunsPolicy())
 
-    }
-    */
     @Bean(name = arrayOf("pool"))
     fun pool(): ExecutorService? {
-        val threadpool = ThreadPoolExecutor(20, 100, 1,
-                TimeUnit.MINUTES, LinkedBlockingDeque<Runnable>(50),
+        val threadpool = ThreadPoolExecutor(50, 200, 1,
+                TimeUnit.SECONDS, LinkedBlockingDeque<Runnable>(400),
                 ThreadPoolExecutor.CallerRunsPolicy())
-
-
-        //Executors.newFixedThreadPool(20)
         return threadpool
     }
+    @PostConstruct
+    fun init() {
+        // Setting Spring Boot SetTimeZone
+//        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
+
 }
 
 fun main(args: Array<String>) {

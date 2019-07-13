@@ -17,23 +17,20 @@ import org.springframework.stereotype.Component
 import java.io.IOException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
-
+//ไม่ใช้แล้ว
 @Component
 @Profile("pi", "lite")
 class Loadpijob(val task: LoadpijobTask) {
 
-    @Scheduled(initialDelay = 60000, fixedDelay = 60000)
+    //@Scheduled(initialDelay = 60000, fixedDelay = 60000)
     fun run() {
-
         logger.info("Start load pijob")
         var f = task.run()
-
         var count = 0
         while (true) {
             if (f!!.isDone) {
                 logger.info("Load pi job end")
                 break
-
             }
 
             TimeUnit.SECONDS.sleep(1)
@@ -72,26 +69,34 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             setup()
             val list = loadPijob(io.wifiMacAddress())
 
-            for (item in list!!) {
-                logger.debug("[loadpijob] Find Job Refs " + item)
-                var ref: Pijob? = service.findByRefid(item.id) // หาว่ามีในเครื่องเรายัง
+            if (list != null) {
+                for (item in list) {
 
-                logger.debug("[loadpijob] Found ? ${ref}")
+                    var ref: Pijob? = null
+                    try {
+                        logger.debug("[loadpijob] Find Job Refs " + item)
+                        ref = service.findByRefid(item.id) // หาว่ามีในเครื่องเรายัง
+                    } catch (e: Exception) {
+                        logger.error(e.message)
+                    }
+                    logger.debug("[loadpijob] Found ? ${ref}")
 
-                if (ref == null) {// Save เข้าถ้าหาไม่เจอเป็น job ใหม่
-                    logger.debug("[loadpijob] new Pi job on device ${item}")
-                    ref = newpijobinlocaldevice(item)
-                } else {
-                    logger.debug("[loadpijob] Jobs already edit " + ref)
-                    ref = edit(ref, item)
+                    if (ref == null) {
+                        // Save เข้าถ้าหาไม่เจอเป็น job ใหม่
+                        logger.debug("[loadpijob] new Pi job on device ${item}")
+                        ref = newpijobinlocaldevice(item)
+                    } else {
 
+                        logger.debug("[loadpijob] Jobs already edit " + ref)
+                        ref = edit(ref, item)
+
+                    }
+
+
+
+                    saveportstatus(item, ref!!)
                 }
-
-
-
-                saveportstatus(item, ref!!)
             }
-
             return AsyncResult(true)
         } catch (e: Exception) {
             logger.error(" [loadpijob] Error run load pijob : " + e.message)
@@ -106,7 +111,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return job
         } catch (e: Exception) {
             logger.error("loadpijob find job error ${e.message}")
-            err.n("loadpijob", "52-53", "${e.message}")
         }
 
         return null
@@ -120,7 +124,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             logger.debug("New Other device ${pd} Have already in device")
             if (other == null) {
 
-                var p = pds.create(pd.mac!!,pd.id)
+                var p = pds.create(pd.mac!!, pd.id)
                 logger.debug("not found in this device create new ${pd} new obj ${p}")
                 return p
             }
@@ -141,7 +145,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return dss
         } catch (e: Exception) {
             logger.error("loadpijob find ds sensor error ${e.message}")
-            err.n("loadpijob", "60-61", "${e.message}")
+            //   err.n("loadpijob", "60-61", "${e.message}")
         }
 
         return null
@@ -151,9 +155,20 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
 
         try {
             item.job = newjob(item.job!!)
-            item.ds18sensor = newdssensor(item.ds18sensor!!)
-            item.desdevice = newotherdevice(item.desdevice!!)
+            try {
+                item.ds18sensor = newdssensor(item.ds18sensor!!)
+            } catch (e: Exception) {
+                logger.error("Can not create Sensor")
+            }
+            try {
+                item.desdevice = newotherdevice(item.desdevice!!)
+            } catch (e: Exception) {
+                logger.error("Can not create Other Device")
+            }
+
             logger.debug("Item for new pijob ${item}")
+
+
             var p: Pijob = service.newpijob(item)
 
 
@@ -167,6 +182,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return p
         } catch (e: Exception) {
             logger.error("Can not create Pi job ${e.message}")
+            e.printStackTrace()
         }
         return null
     }
@@ -179,7 +195,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             saveport(listofports!!, ref)
         } catch (e: Exception) {
             logger.error("[loadpijob] Save port error: " + e.message)
-            err.n("loadpijob", "102-103", "${e.message}")
         }
 
     }
@@ -190,10 +205,18 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             val ic = item.ds18sensor
             if (ic != null)
                 ref.ds18sensor = dsservice.findorcreate(ic)
+            var dd = item.desdevice
+            if(dd!=null)
+            {
+                var dds = pds.findByMac(dd.mac!!)
+                if(dds==null)
+                    dds = pds.create(dd.mac!!,dd.mac!!)
+                ref.desdevice = dds
+            }
             return service.save(ref)
         } catch (e: Exception) {
-            logger.error("[loadpijob edit error]" + e.message)
-            err.n("loadpijob", "113-117", "${e.message}")
+            logger.error("edit job  ${ref.name} ")
+            throw e
         }
 
         return null

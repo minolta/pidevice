@@ -19,10 +19,13 @@ import java.util.concurrent.TimeUnit
 
 @Profile("pi", "lite")
 class CDWorker(var pj: Pijob, val ss: SensorService, var gi: GpioService,
-               val m: MessageService, val i: Piio, val ppp: PortstatusinjobService, val pjs: PijobService) : Worker(pj, gi, i, ppp) {
+               val m: MessageService, val i: Piio, val ppp: PortstatusinjobService,
+               val pjs: PijobService) : Worker(pj, gi, i, ppp) {
     val d = SimpleDateFormat("yyyy/MM/dd HH:mm")
     val dn = SimpleDateFormat("yyyy/MM/dd")
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun run() {
         startrun = Date()
         try {

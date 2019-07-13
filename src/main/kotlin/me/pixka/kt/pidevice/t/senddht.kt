@@ -1,141 +1,111 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Dhtvalue
-import me.pixka.ktbase.io.Configfilekt
+import me.pixka.kt.pibase.t.HttpPostTask
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.DhtvalueService
-import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
-import org.springframework.scheduling.annotation.Async
-import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.Future
+import java.util.*
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi", "lite")
-class SendDht(val task: SenddhtTask) {
+//@Profile("pi", "lite")
+class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
 
 
-    @Scheduled(initialDelay = 60 * 1000, fixedDelay = 60 * 1000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
 
 
-        var f = task.run()
-        var count = 0
-        while (true) {
-            if (f!!.isDone) {
-                logger.info("Complete")
-                break
-            }
+        println("Date : ${Date()}")
+        var target = System.getProperty("savedht")
 
-            TimeUnit.SECONDS.sleep(1)
-            count++
-            if (count > 30) {
-                logger.error("Time out")
-                f.cancel(true)
-            }
-        }
-    }
+        if (target == null)
+            target = "https://pi-dot-kykub-2.appspot.com/dht/add"
 
+        val list = dhts.notInserver() as List<Dhtvalue>
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(SendDht::class.java)
-    }
-}
-
-@Component
-@Profile("pi", "lite")
-class SenddhtTask(val io: Piio, val dhts: DhtvalueService, val cfg: Configfilekt,
-                  val err: ErrorlogService, val http: HttpControl, val dbcfg: DbconfigService) {
-
-
-    private val mapper = ObjectMapper()
-    var target = "http://localhost:5002/dht/add"
-    private var checkserver = "http://localhost:5002/run"
-
-    @Async("aa")
-    fun run(): Future<Boolean>? {
-
-        try {
-            setup()
-
-            if (http.checkcanconnect(checkserver)) {
-                send()
-            } else {
-                logger.error("[dhtvaluesend] Can not connect to server : " + checkserver)
-            }
-
-            return AsyncResult(true)
-        } catch (e: Exception) {
-            logger.error(e.message)
-        }
-        return null
-    }
-
-    fun send() {
-        try {
-            val list = dhts.notInserver() as List<Dhtvalue>
-
-            logger.info("[dhtvaluesend send] Data for send : " + list?.size)
-
-
-            for (item in list) {
-                var re: CloseableHttpResponse? = null
+        if (list != null) {
+            var t = Executors.newSingleThreadExecutor()
+            logger.debug("Found dht for send ${list.size}")
+            for (dht in list) {
                 try {
-                    val info = Infoobj()
+                    var obj = Infoobj()
+                    obj.dhtvalue = dht
+                    obj.mac = dht.pidevice?.mac
+                    logger.debug("Obj for send ${obj} URL ${target}")
+                    var task = HttpPostTask(target, obj)
+                    try {
+                        var f = t.submit(task)
 
-                    //info.ip = io.wifiIpAddress()
-                    info.mac = io.wifiMacAddress()
-                    info.dhtvalue = item
+                        var value = f.get(5, TimeUnit.SECONDS)
+//                    var value = http.postJson(target, obj)
+                        logger.debug("Return Save DHT ${value.statusLine}")
 
-                    re = http.postJson(target, info)
-                    val entity = re.entity
-                    if (entity != null) {
-                        val response = EntityUtils.toString(entity)
-                        logger.debug("[dhtvaluesend return ok ")
-                        val ret = mapper.readValue(response, Dhtvalue::class.java)
-                        if (ret.id != null) {
-                            item.toserver = true
-                            dhts.save(item)
-                            logger.info("[dhtvalue ] Send complete ")
-                            // dss.clean()
+                        if (value != null) {
+                            dht.toserver = true
+                            dhts.save(dht)
                         }
+                    } catch (e: Exception) {
+                        logger.error("Send Dht ERROR ${e.message}")
                     }
                 } catch (e: Exception) {
-                    logger.error("[dhtvaluesend ] cannot send : " + e.message)
-                    err.n("Senddht", "43-62", "${e.message}")
-                } finally {
-                    if (re != null)
-                        re.close()
-
+                    logger.error("Error ${e.message}")
+                    t.shutdownNow()
                 }
 
+
             }
-
-        } catch (e: Exception) {
-            logger.debug("Send error : ${e.message}")
         }
-        logger.debug("End Send DHT")
-    }
 
-    fun setup() {
-        var host = System.getProperty("piserver")
-        if (host == null)
-            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        target = host + "/dht/add/"
-        checkserver = host + "/run"
+        logger.debug("End send ds")
     }
+//
+//    val mapper = ObjectMapper()
+//    @Throws(Exception::class)
+//    fun postJson(url: String, obj: Any): CloseableHttpResponse {
+//
+//        try {
+//            val provider = BasicCredentialsProvider()
+//            val credentials = UsernamePasswordCredentials("USER_CLIENT_APP", "password")
+//            provider.setCredentials(AuthScope.ANY, credentials)
+//
+//
+//            //เปลียนมาใช้ ฺ Basic Auth
+//            val client = HttpClientBuilder.create()
+//                    .setDefaultCredentialsProvider(provider)
+//                    .build()
+//
+//            val request = HttpPost(url)
+//            val jvalue = mapper.writeValueAsString(obj)
+//            logger.debug("JACK son:" + jvalue)
+//            val params = StringEntity(jvalue)
+//            request.entity = params
+//            request.setHeader("Content-type", "application/json")
+//            var re = client.execute(request)
+//            // handle response here...
+//
+//            return re
+//        } catch (ex: Exception) {
+//            logger.error("HTTP POST " + ex.message)
+//            throw ex
+//
+//            // handle exception here
+//
+//        } finally {
+//
+//            // Deprecated
+//            // httpClient.getConnectionManager().shutdown();
+//        }
+//    }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(SenddhtTask::class.java)
+        var logger = LoggerFactory.getLogger(SendDht::class.java)
+
     }
+
 }

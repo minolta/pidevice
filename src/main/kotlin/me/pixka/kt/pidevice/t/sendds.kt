@@ -6,49 +6,82 @@ import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
+import me.pixka.kt.pibase.t.HttpPostTask
 import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.o.Infoobj
 import me.pixka.pibase.s.Ds18valueService
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi", "lite")
-class Sendds(val task: SenddsTask) {
+//@Profile("pi", "lite")
+class Sendds(val service: Ds18valueService, val io: Piio) {
 
 
     @Scheduled(initialDelay = 1000, fixedDelay = 30000)
     fun sendtask() {
-        try {
+//        try {
+//
+//            var f = task.run()
+//            if (f != null) {
+//                var sendok = f.get(5, TimeUnit.SECONDS)
+//
+//                if (sendok) {
+//                    logger.debug("End Send ds")
+//                } else {
+//                    logger.error("Send ds 18 error")
+//                }
+//            }
+//        } catch (e: Exception) {
+//            logger.error("Error send Sendds ${e.message}")
+//        }
+//
 
-            var f = task.run()
-            var count = 0
-            while (true) {
-                if (f!!.isDone) {
-                    logger.info("Run commplete")
-                    break
-                }
-                TimeUnit.SECONDS.sleep(1)
-                count++
+        var target = System.getProperty("piserver") + "/ds18value/add"
+        val list = service.notInserver()
+        if (list != null) {
+            logger.debug("Found dht for send ${list.size}")
+            var t = Executors.newSingleThreadExecutor()
+            for (item in list) {
+                try {
+                    val info = Infoobj()
+                    info.token = System.getProperty("token")
+                    // info.ip = io.wifiIpAddress()
+                    info.mac = io.wifiMacAddress()
+                    info.ds18value = item
+                    var task = HttpPostTask(target, info)
+                    var f = t.submit(task)
 
-                if (count > 30) {
-                    f.cancel(true)
-                    logger.error("Timeout")
+                    try {
+                        var re = f.get(5, TimeUnit.SECONDS)
+                        if(re.statusLine.statusCode == 200) {
+                            item.toserver = true
+                            service.save(item)
+                        }
+                        else
+                        {
+                            logger.error("ERROR ${re.statusLine.statusCode} ")
+                        }
+                    } catch (e: Exception) {
+                        logger.error("Send ds18vale error ${e.message}")
+                    }
+
+
+                } catch (e: Exception) {
+                    logger.error("Error ${e.message}")
+                    t.shutdownNow()
                 }
+
 
             }
-        } catch (e: Exception) {
-            logger.error("Error send Sendds ${e.message}")
         }
-
-        logger.debug("End Send ds")
     }
 
 
@@ -58,7 +91,7 @@ class Sendds(val task: SenddsTask) {
 }
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class SenddsTask(val io: Piio, val service: Ds18valueService,
                  val http: HttpControl, val cfg: Configfilekt,
                  val err: ErrorlogService, val dbcfg: DbconfigService) {
@@ -116,7 +149,7 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
                     }
                 } catch (e: Exception) {
                     logger.error("[sendds18b20] ERROR " + e.message)
-                    err.n("Sendds", "37-50", "${e.message}")
+//                    err.n("Sendds", "37-50", "${e.message}")
                 } finally {
                     if (re != null)
                         re.close()

@@ -28,7 +28,7 @@ class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
     fun run() {
 
 
-        RunjobByH.logger.info("Start RUN JOB By HT HbyT")
+        logger.info("Start RUN JOB By HT HbyT")
 
         var HJOB = js.findByName("HT")
 

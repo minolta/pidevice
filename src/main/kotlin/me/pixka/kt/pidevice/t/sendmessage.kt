@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 class Sendmessage(val task: SendmessageTask) {
 
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+   // @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun sendtask() {
         try {
 

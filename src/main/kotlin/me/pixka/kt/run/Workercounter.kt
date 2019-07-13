@@ -10,7 +10,6 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.pibase.s.DS18sensorService
-import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.joda.time.DateTime
 import org.joda.time.Interval
@@ -18,6 +17,7 @@ import org.joda.time.Period
 import org.joda.time.Seconds
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
+import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -40,7 +40,9 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
 
     var isRun = true
     var period: Period? = null
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun state(): String? {
         return state
     }
@@ -72,122 +74,125 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
 
     var messageto = false
     override fun run() {
+        try {
+            logger.debug("Start runcounter job ID ***${pijob.id}***")
+            var timeoutcount = 0
+            startRun = Date()
+            var endcounter = false
+            while (true) {
+                var desid = pijob.desdevice_id
+                var sensorid = pijob.ds18sensor_id
+                //อ่านจาก DS เครื่องอื่น
+                var value: BigDecimal? = readValue(pijob)
 
-        logger.debug("Start run counter job ID ***${pijob.id}***")
-        var timeoutcount = 0
-        startRun = Date()
-        var endcounter = false
-        while (true) {
-            var desid = pijob.desdevice_id
-            var sensorid = pijob.ds18sensor_id
-            //อ่านจาก DS เครื่องอื่น
-            var value: DS18value? = null
+                logger.debug("Read value : ${value}")
+                state = "Read value :${value}"
+                if (value != null) {
+                    //ถ้ามีข้อมูล
+                    state = "Start run"
 
-            var localsensor = dss.find(sensorid)
-            logger.debug("find Sensor id : ${localsensor} Localhost Sensor ===============>  ${localsensor}")
-            if (localsensor != null) {
-                //ถ้าเจอ Senosr localhost
-                var v = io.readDs18(localsensor.name!!)
-                logger.debug("Value from ${localsensor} ${v}")
-                if (v != null) {
-                    value = DS18value()
-                    value.t = v
+                    var inrange = checkrang(value)
+
+                    if (inrange) {
+                        //ถ้าข้อมูลอยู่ในช่วงที่กำหนด
+                        if (startdate == null) {
+                            startcounter()
+                        }
+
+                        var havetorun = run?.toInt()!!
+                        var runcomplete = findrun()
+                        completerun = runcomplete
+
+                        if (runcomplete >= havetorun) {
+                            endcounter = countok()
+                            break
+                        }
+                    } else {
+                        logger.error("Value not in range range ${pijob.tlow} <= ${value} => ${pijob.thigh} ")
+                        timeoutcount++
+                        if (timeoutcount >= timeout?.toInt()!!) {
+                            endcounter = timeout(timeoutcount)
+                            break
+                        }
+
+                    }
                 }
-            }
-            else
-            {
 
-
-            }
-
-
-            if (value == null)
-                value = ss.readDsOther(desid!!, sensorid!!)
-
-            logger.debug("Read value : ${value}")
-            state = "Read value :${value}"
-            if (value != null) {
-                //ถ้ามีข้อมูล
-                state = "Start run"
-
-                var v = value.t?.toInt()
-                var l = pijob.tlow?.toInt()
-                var h = pijob.thigh?.toInt()
-
-                if (v!! >= l!! && v!! <= h!!) {
-                    //ถ้าข้อมูลอยู่ในช่วงที่กำหนด
-                    state = "Have Job to run"
-                    logger.debug("Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}")
-                    state = "Value in range ${pijob.tlow} <= ${v} => ${pijob.thigh}"
-                    if (startdate == null) {
-                        startdate = Date()
-                        timeout = pijob.waittime //
-                        run = pijob.runtime //เวลาในการ run เอ็นวินาที
-                        finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
-                        next3 = DateTime().plusSeconds(pijob.runtime?.toInt()!! - 7200).toDate() //เวลาเสร็จ
-                    }
-                    if (!messageto) {
-                        messageto = true
-                        ms.message("Start Counter 90  Close : ${finishrun}", "info")
-                        state = "Start Count end at ${finishrun} "
-                    }
-
-                    //runtime = Date()
-
-                    var rt = DateTime()
-                    var st = DateTime(startdate)
-
-                    runtime = rt.toDate()
-                    period = Interval(st, rt).toPeriod() //ช่วงเวลา
-
-                    var r = Seconds.secondsBetween(st, rt)
-                    var havetorun = run?.toInt()!!
-                    completerun = r.seconds
-                    if (r.seconds >= havetorun) {
-                        logger.debug("End run counter job ID ***${pijob.id}***")
-                        messageto = false
-                        ms.message("Interrup Counter", "info")
-                        isRun = false
-                        state = "Counter is in interrup"
-                        endcounter = true
-                        break
-                    }
-
-                    //var c = rt.minus(startdate?.time!!) //เวลาที่ run ไปแล้ว
-
-
-                    //var d = startdate?.time!! - runtime?.time!! / 1000 // เวลาที่ทำงานไปแล้ว เป็นวินาที
-
-                } else {
-                    logger.error("Value not in range range ${pijob.tlow} <= ${v} => ${pijob.thigh} ")
-                    timeoutcount++
-                    if (timeoutcount >= timeout?.toInt()!!) {
-                        logger.error("Time out count exit ${timeoutcount}")
-                        ms.message("Tmp is under rang exits count", "error")
-                        state = "Value out of rang stop counter"
-                        endcounter = false // เพราะนับไม่สุด
-                        break
-                    }
-
+                try {
+                    display()
+                } catch (e: Exception) {
+                    logger.error("Display error ${e.message}")
                 }
+                logger.debug("Counter Wait in 1 minits")
+                TimeUnit.MINUTES.sleep(1)
             }
-
 
             try {
-                display()
+                if (endcounter) {
+                    runPorts(pijob)
+                }
             } catch (e: Exception) {
-                logger.error("Display error ${e.message}")
+                logger.error("Error ${e.message}")
             }
-            logger.debug("Counter Wait in 1 minits")
-            TimeUnit.MINUTES.sleep(1)
+
+            isRun = false
+        } catch (e: Exception) {
+            logger.error("Have Error ${e.message}")
+            isRun = false
+
         }
 
+        isRun = false
 
-        if (endcounter) {
 
-            runPorts(pijob)
+    }
+
+    fun timeout(timeoutcount: Int): Boolean {
+        logger.error("Time out count exit ${timeoutcount}")
+        state = "Value out of rang stop counter"
+        isRun = false
+        return false
+    }
+
+    fun countok(): Boolean {
+        logger.debug("End run counter job ID ***${pijob.id}***")
+        messageto = false
+        isRun = false
+        state = "Counter is in interrup"
+        return true
+    }
+
+    fun findrun(): Int {
+        var rt = DateTime()
+        var st = DateTime(startdate)
+        runtime = rt.toDate()
+        period = Interval(st, rt).toPeriod() //ช่วงเวลา
+        var r = Seconds.secondsBetween(st, rt)
+        return r.seconds
+
+    }
+
+    fun startcounter() {
+        startdate = Date()
+        timeout = pijob.waittime //
+        run = pijob.runtime //เวลาในการ run เอ็นวินาที
+        finishrun = DateTime().plusSeconds(pijob.runtime?.toInt()!!).toDate() //เวลาเสร็จ
+        next3 = DateTime().plusSeconds(pijob.runtime?.toInt()!! - 7200).toDate() //เวลาเสร็จ
+    }
+
+    fun checkrang(value: BigDecimal): Boolean {
+        try {
+            var v = value.toFloat()
+            var l = pijob.tlow?.toFloat()
+            var h = pijob.thigh?.toFloat()
+
+            if (v >= l!! && v <= h!!)
+                return true
+
+        } catch (e: Exception) {
+            logger.error(e.message)
         }
-
+        return false
 
     }
 
@@ -197,34 +202,60 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
             for (port in ports) {
                 if (!port.status?.name.equals("check")) {
                     var pin = gpio.gpio.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
-                    Worker.logger.debug("Reset pin ${pin}")
+                    logger.debug("Reset pin ${pin}")
                     gpio.resettoDefault(pin)
-                    Worker.logger.debug("Reset Port to default")
+                    logger.debug("Reset Port to default")
                 }
             }
 
     }
 
+    fun readValue(job: Pijob): BigDecimal? {
+        var v: DS18value? = null
+        try {
+            v = ss.readDsOther(job.desdevice_id!!, job.ds18sensor_id!!)
+        } catch (e: Exception) {
+            logger.error("Read other error ${e.message}")
+        }
+        logger.debug("Value ${v}")
+        if (v != null) {
+            return v.t
+
+        } else {
+            //logger.error("Can not read ds18value")
+            //read loacl
+            logger.debug("Read local  ID ${job.id}")
+            var s = dss.find(job.ds18sensor_id)
+            logger.debug("Found Sensor !! ${s}")
+            if (s != null) {
+                var tmp = io.readDs18(s.name!!)
+                logger.debug("Read loacal value ${tmp}")
+                // var tmp = rs.readTmpByjob(job)
+                if (tmp != null) {
+                    return tmp
+                }
+            }
+        }
+        return null
+    }
+
     fun setport(ports: List<Portstatusinjob>) {
         try {
-            Worker.logger.debug("Gpio : ${gpio}")
-
-
+            logger.debug("Gpio : ${gpio}")
             for (port in ports) {
-
                 if (port.enable == null || port.enable == false || port.status?.name.equals("check")) {//ถ้า Enable == null หรือ false ให้ไปทำงาน port ต่อไปเลย
-                    Worker.logger.error("Not set port ${port}")
+                    logger.error("Not set port ${port}")
                 } else {
-                    Worker.logger.debug("Port for pijob ${port}")
+                    logger.debug("Port for pijob ${port}")
                     var pin = gpio.gpio?.getProvisionedPin(port.portname?.name) as GpioPinDigitalOutput
-                    Worker.logger.debug("Pin: ${pin}")
+                    logger.debug("Pin: ${pin}")
 
                     //save old state
                     //  var b = Pinbackup(pin, pin.state)
                     //   pinbackuplist.add(b)
 
                     var sn = port.status?.name
-                    Worker.logger.debug("Set to " + sn)
+                    logger.debug("Set to " + sn)
                     if (sn?.indexOf("low") != -1) {
                         gpio.setPort(pin, false)
                         //pin.setState(false)
@@ -232,11 +263,11 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
                     // pin.setState(true)
                         gpio.setPort(pin, true)
 
-                    Worker.logger.debug("Set pin state: ${pin.state}")
+                    logger.debug("Set pin state: ${pin.state}")
                 }
             }
         } catch (e: Exception) {
-            Worker.logger.error("Set port ${e.message}")
+            logger.error("Set port ${e.message}")
             throw e
         }
     }
@@ -255,7 +286,7 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
                 TimeUnit.SECONDS.sleep(nextrun)
 
 
-            Worker.logger.debug("Run port is end")
+            logger.debug("Run port is end")
 
 
         }
@@ -283,16 +314,17 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
             try {
                 logger.debug("Start lock display ")
                 var display = dps.lockdisplay(this)
-                display.showMessage("Counter in ${completerun}  Next gas 3 ${df.format(next3)}" +
-                        " Sec Close AT: ${df.format(finishrun)}  ")
-                ms.message("Counter in ${completerun}  Next gas 3 ${df.format(next3)} " +
-                        "Sec Close AT: ${df.format(finishrun)} ", "counterinfo")
+                display.showMessage("Counter in ${completerun} " +
+                        " Close AT: ${df.format(finishrun)}  ")
+                // ms.message("Counter in ${completerun}  Next gas 3 ${df.format(next3)} " +
+                //          "Sec Close AT: ${df.format(finishrun)} ", "counterinfo")
                 logger.debug("Display ok.")
+                if (dps.lock)
+                    dps.unlock(this)
             } catch (e: Exception) {
                 logger.error("Error: ${e.message}")
             } finally {
-                if (dps.lock)
-                    dps.unlock(this)
+
             }
 
 

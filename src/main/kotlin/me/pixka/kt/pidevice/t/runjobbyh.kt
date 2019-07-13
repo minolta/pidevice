@@ -42,6 +42,9 @@ class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
             return
         }
         var lasth = dhts.last()
+        if(lasth == null)
+            lasth = io.readDHT()
+
         logger.debug("Last dhtvalue : ${lasth}")
         if (lasth != null) {
             var jobs = pjs.findByH(lasth.h!!, HJOB.id)

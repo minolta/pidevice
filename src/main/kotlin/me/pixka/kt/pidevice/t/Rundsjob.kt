@@ -9,30 +9,35 @@ import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("pi")
 class Rundsjob(val pjs: PijobService, val js: JobService, val io: Piio, val ts: TaskService,
-               val ps: PortstatusinjobService, val gpios: GpioService ) {
+               val ps: PortstatusinjobService, val gpios: GpioService) {
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
         logger.debug("Start run DS job #runlocaljob")
         var jobs = loadjob()
+        if (jobs != null)
+            logger.debug("runds found job for check ${jobs.size}")
         var jobtoruns = check(jobs!!)
 
         if (jobtoruns.size > 0) {
+            logger.debug("#rundsjob Job for run ${jobtoruns.size}")
             for (job in jobtoruns) {
                 var w = Worker(job, gpios, io, ps)
-                if(ts.checkalreadyrun(w)!=null)
-                {
-                    ts.run(w)
+                if (ts.checkalreadyrun(w) != null) {
+                    var canrun = ts.run(w)
+
                 }
             }
         }
 
-            logger.debug("End local ds job")
+        logger.debug("End local ds job")
 
     }
 
@@ -46,17 +51,30 @@ class Rundsjob(val pjs: PijobService, val js: JobService, val io: Piio, val ts: 
 
 
             var sensor = job.ds18sensor
-
+            logger.debug("runds check ${job.name} Sensor ${sensor?.name}")
+            //logger.debug("#runds Job Sensor ${sensor}")
 
             if (sensor != null) {
 
                 var tempvalue = io.readDs18(sensor.name!!)
+                logger.debug("#runds value Local sensor  ${tempvalue}")
                 if (tempvalue != null) {
                     var t = tempvalue?.toFloat()
+                    logger.debug("#runds value ===== > ${t}")
                     if (l!! <= t && t <= h!!) {
+                        logger.debug("#runds run this job")
                         buf.add(job)
+
+                    } else {
+                        logger.error("#runds value not in rang ${l}  < ${t} > ${h}")
                     }
+                } else {
+                    logger.error("#runds Can not read sensor ${sensor} ")
                 }
+            }
+            else
+            {
+                logger.error("Sendor not found ${job.name}")
             }
 
 

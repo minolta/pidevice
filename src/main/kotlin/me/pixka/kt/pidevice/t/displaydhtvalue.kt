@@ -19,7 +19,7 @@ class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val db
     @Scheduled(fixedDelay = 20000)
     fun run() {
 
-        var run = dbcfg.findorcreate("Displaydhtvalue", "true").value
+        var run = dbcfg.findorcreate("Displaydhtvalue", "false").value
         logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue

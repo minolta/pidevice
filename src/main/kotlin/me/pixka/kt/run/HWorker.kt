@@ -13,7 +13,9 @@ import java.util.concurrent.TimeUnit
 @Profile("pi", "lite")
 class HWorker(var pj: Pijob, var gi: GpioService, val m: MessageService, val i: Piio, val ppp: PortstatusinjobService)
     : Worker(pj, gi, i, ppp) {
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun setport(ports: List<Portstatusinjob>) {
         var runtime = pijob.runtime
         try {

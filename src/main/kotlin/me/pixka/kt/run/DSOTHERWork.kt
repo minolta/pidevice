@@ -17,7 +17,9 @@ class DSOTHERWorker(var pijob: Pijob,
     override fun state(): String? {
         return state
     }
-
+    override fun setrun(p: Boolean) {
+        isRun = p
+    }
     override fun startRun(): Date? {
         return startRun
     }
@@ -56,6 +58,7 @@ class DSOTHERWorker(var pijob: Pijob,
             isRun = true
             startRun = Date()
             state = " Star Run "+Date()
+            Thread.currentThread().name="JOBID:${pijob.id}  DSOTHER ${pijob.name} ${startRun}"
             var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
                     //pijob.ports
             var runtime = pijob.runtime
