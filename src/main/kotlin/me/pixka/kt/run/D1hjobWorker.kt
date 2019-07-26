@@ -5,10 +5,13 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.d.ErrorlogII
+import me.pixka.kt.pidevice.d.ErrorlogServiceII
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -21,12 +24,17 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     var startrun: Date? = null
     var waitstatus = false
 
+    @Autowired
+    lateinit var errorlog: ErrorlogServiceII
+
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
     override fun setrun(p: Boolean) {
         isRun = p
     }
+
     override fun runStatus(): Boolean {
         return isRun
     }
@@ -64,7 +72,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             if (pijob.tlow != null) {
 
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
-                logger.debug("Slow start")
+                logger.debug("Slow start ${pijob.tlow}")
                 //prility
             }
 
@@ -85,6 +93,8 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 }
 
 
+            } else {
+                logger.warn("Dht not found")
             }
 
 
@@ -103,8 +113,11 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     fun checkH(l: Float, h: Float, v: Float): Boolean {
         state = "Check value ${l} < ${v} > ${h}"
         if (v >= l && v <= h) {
+            logger.debug("Run this job ${pijob.name}")
             return true
         }
+        logger.debug("Check value ${l} < ${v} > ${h} Not run this job ${pijob.name}")
+        TimeUnit.SECONDS.sleep(2)
         return false
     }
 
@@ -117,6 +130,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             for (port in ports) {
 
                 if (port.enable == null || !port.enable!!) {
+                    logger.debug("Port disable ${port}")
                     continue //ข้ามไปเลย
                 }
                 var pw = port.waittime
@@ -156,16 +170,21 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     state = "Set port ${url}"
                     var get = HttpGetTask(url)
                     var f = ee.submit(get)
-                    var value = f.get(30, TimeUnit.SECONDS)
-                    state = "Delay  ${runtime} + ${waittime}"
-                    logger.debug("D1h Value ${value}")
-                    state = "${value} and run ${runtime}"
-                    TimeUnit.SECONDS.sleep(runtime)
+                    try {
+                        var value = f.get(30, TimeUnit.SECONDS)
+                        state = "Delay  ${runtime} + ${waittime}"
+                        logger.debug("D1h Value ${value}")
+                        state = "${value} and run ${runtime}"
+                        TimeUnit.SECONDS.sleep(runtime)
 
-                    if (waittime != null) {
+                        if (waittime != null) {
 
-                        state = "Wait time of port ${waittime}"
-                        TimeUnit.SECONDS.sleep(waittime)
+                            state = "Wait time of port ${waittime}"
+                            TimeUnit.SECONDS.sleep(waittime)
+                        }
+                    } catch (e: Exception) {
+                        logger.error("Set port error  ${e.message}")
+                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
                     }
                 } catch (e: Exception) {
                     logger.error("Error ${e.message}")
