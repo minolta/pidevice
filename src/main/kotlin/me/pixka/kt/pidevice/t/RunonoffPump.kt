@@ -1,14 +1,10 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.TimeUtil
-import me.pixka.kt.run.PijobrunInterface
+import me.pixka.kt.run.OffpumpWorker
 import me.pixka.pibase.s.JobService
 import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
@@ -17,7 +13,6 @@ import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 
 @Component
@@ -40,15 +35,43 @@ class RunoffPump(val pjs: PijobService,
                 var t = Executors.newSingleThreadExecutor()
                 for (job in jobs) {
 
-                    try {
-                        if (checktime(job)) {
-                            var ip = dhts.mactoip(job.desdevice?.mac!!)
-                            var task = HttpGetTask("http://${ip?.ip}/off")
-                            var f = t.submit(task)
-                            f.get(2,TimeUnit.SECONDS)
+                    var offpumpWorker = OffpumpWorker(job, dhts)
+                    task.run(offpumpWorker)
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("runoffpumb ${e.message}")
+
+        }
+
+
+/*
+                    var count = 0
+                    while (true) {
+                        try {
+                            if (checktime(job)) {
+                                count++
+                                if (count > 3) {
+                                    logger.error("Off pumb error time out ${job}")
+                                    break
+                                }
+                                var ip = dhts.mactoip(job.desdevice?.mac!!)
+                                var task = HttpGetTask("http://${ip?.ip}/off")
+                                var f = t.submit(task)
+                                try {
+                                    f.get(30, TimeUnit.SECONDS)
+                                    break //if off is ok
+                                } catch (e: Exception) {
+                                    logger.error("Off pumb error ${e.message} ${job}")
+                                }
+                            } else {
+                                logger.debug("Out of rang off pumb ${job}")
+                                break
+                            }
+                        } catch (e: Exception) {
+                            logger.error("offpump ${e.message} ${job}")
+                            break
                         }
-                    } catch (e: Exception) {
-                        logger.error("offpump ${e.message}")
                     }
 
                 }
@@ -56,7 +79,7 @@ class RunoffPump(val pjs: PijobService,
         } catch (e: Exception) {
             logger.error(e.message)
         }
-
+*/
     }
 
     var df = SimpleDateFormat("HH:mm")

@@ -129,22 +129,21 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         try {
             url = findurl(desid, senid)
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("readother error ${e.message}")
             throw e
         }
+        logger.debug("readother url for ${url}")
         var ee = Executors.newSingleThreadExecutor()
         try {
             var get = HttpGetTask(url!!)
-
             var f = ee.submit(get)
             var value = f.get(2, TimeUnit.SECONDS)
             if (value != null) {
                 return Stringtods18value(value)
             }
             throw Exception("Not found Ds18value ")
-
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("read other error ${e.message}")
             ee.shutdownNow()
             throw e
         }
@@ -179,13 +178,12 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
     }
 
     fun findurl(desid: Long, sensorid: Long?): String? {
-
         var desdevice: PiDevice? = null
         try {
             desdevice = findDevice(desid)
         } catch (e: Exception) {
             logger.error("${desdevice?.name} findurl URL ${e.message}")
-            throw e
+            throw Exception("${desdevice?.name} findurl URL ${e.message}")
         }
         logger.debug("${desid}  findurl Device name ${desdevice} ${desdevice.mac}")
         var sensor: DS18sensor? = null
@@ -193,6 +191,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             sensor = dss.find(sensorid)
         } catch (e: Exception) {
             logger.error("${sensorid}  findurl Sensor Error ${e.message}")
+            throw  Exception("${sensorid}  findurl Sensor Error ${e.message}")
         }
         logger.debug("${desdevice.name}  2 Find sensor [${sensorid}] found ===> [${sensor}] #readother findurl")
 
@@ -201,7 +200,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             ip = findIp(desdevice)
         } catch (e: Exception) {
             logger.error("${desdevice.name}  findurl findip ${e.message} findurl")
-            throw e
+            throw Exception("${desdevice.name}  findurl findip ${e.message} findurl")
         }
         var url = ""
 
@@ -339,6 +338,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             var desid = job.desdevice_id
             var sensorid = job.ds18sensor_id
 
+            logger.debug("readtmpbyjob desid : ${desid} sensorid : ${sensorid}")
 
             var value: DS18value? = null
             if (desid != null) {
@@ -349,15 +349,16 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
                         return value.t
                     }
                 } catch (e: Exception) {
-                    logger.error(e.message)
+                    logger.error("readtmpbyjob error ${e.message} ")
+                    throw Exception("readtmpbyjob error ${e.message} ")
                 }
 
                 try {
                     var p = readBuffer(job)
                     return p
                 } catch (e: Exception) {
-                    logger.error(e.message)
-                    throw e
+                    logger.error("readtmpbyjob Save buffer ${e.message}")
+                    throw Exception("readtmpbyjob Save buffer ${e.message}")
                 }
             }
 
@@ -365,25 +366,24 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             try {
                 value = readLocal(job)
                 if (value != null) {
-
                     savebuffer(job, value.t!!)
                     return value.t
                 }
             } catch (e: Exception) {
-                logger.error(e.message)
+                logger.error("readtmpbyjob readlocal error ${e.message}")
                 try {
                     var p = readBuffer(job)
                     return p
                 } catch (e: Exception) {
-                    logger.error(e.message)
-                    throw e
+                    logger.error("readtmpbyjob Read buffer error ${e.message}")
+                    throw Exception("readtmpbyjob Read buffer error ${e.message}")
                 }
             }
 
 
         } catch (e: Exception) {
-            logger.error("8 ${e.message}")
-            throw e
+            logger.error("readtmpbyjob 8 ${e.message}")
+            throw Exception("readtmpbyjob 8 ${e.message}")
         }
 
         throw Exception("Not found readTmpByjob")
@@ -466,10 +466,15 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         var ee = Executors.newSingleThreadExecutor()
         //mac to ip
         try {
+            logger.debug("readtfromd1byjob Info Des device ${job.desdevice?.mac} ${job}")
             var ip = findip(job.desdevice!!.mac!!)
-            var url = "http://${ip}/ktype"
-            var get = HttpGetTask(url)
 
+            logger.debug("readtfromd1byjob IP :${ip} ${job}")
+            logger.debug("readtfromd1byjob MAC :${job.desdevice!!.mac} ${job}")
+            var url = "http://${ip}/ktype"
+
+            logger.debug("readtfromd1byjob read URL ${url} ${job}")
+            var get = HttpGetTask(url)
             var f = ee.submit(get)
             var value = f.get(15, TimeUnit.SECONDS)
             if (value != null)
@@ -477,9 +482,9 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             else
                 throw Exception("Value is null")
         } catch (e: Exception) {
-            logger.error("ReadTfromD1Byjob ${e.message}")
+            logger.error("readtfromd1byjob ${e.message} ${job}")
             ee.shutdownNow()
-            throw e
+            throw Exception("readtfromd1byjob ${e.message} ${job}")
         }
     }
 
@@ -506,7 +511,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 
         } catch (e: Exception) {
             logger.error("findip ${e.message}")
-            throw e
+            throw Exception("findip ${e.message}")
         }
     }
 

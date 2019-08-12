@@ -44,32 +44,36 @@ class TaskService(val context: ApplicationContext) {
      */
     fun checkalreadyrun(w: PijobrunInterface): PijobrunInterface? {
 
-        logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")
-        if (runinglist.size > 0) {
-            logger.debug("CheckJOB have thread run ${runinglist.size}")
-            for (b in runinglist) {
-                try {
-                    logger.debug("CheckJOB runstatus ${b.runStatus()} id: ${w.getPijobid()}")
-                    logger.debug("CheckJOB ${b.getPijobid()} == ${w.getPijobid()}")
-                    if (b.getPijobid().toInt() == w.getPijobid().toInt()) {
-                        if (b.runStatus()) {
-                            logger.error("CheckJOB Reject run ${w}")
-                            return null //ถ้าเจอเหมือน null
+        try {
+            logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")
+            if (runinglist.size > 0) {
+                logger.debug("CheckJOB have thread run ${runinglist.size}")
+                for (b in runinglist) {
+                    try {
+                        logger.debug("CheckJOB runstatus ${b.runStatus()} id: ${w.getPijobid()}")
+                        logger.debug("CheckJOB ${b.getPijobid()} == ${w.getPijobid()}")
+                        if (b.getPijobid().toInt() == w.getPijobid().toInt()) {
+                            if (b.runStatus()) {
+                                logger.error("CheckJOB Reject run ${w}")
+                                return null //ถ้าเจอเหมือน null
+                            }
                         }
+                        logger.debug("CheckJOB Next Check")
+                    } catch (e: Exception) {
+                        logger.error("Check run error ${e.message}")
                     }
-                    logger.debug("CheckJOB Next Check")
-                } catch (e: Exception) {
-                    logger.error("Check run error ${e.message}")
                 }
+
+                logger.debug("CheckJOB This jobcanrun ${w}")
+                return w //ถ้าไม่เจอ return w ไป exec
+            } else {
+                logger.debug("CheckJOB This jobcanrun ${w}")
+                return w
             }
 
-            logger.debug("CheckJOB This jobcanrun ${w}")
-            return w //ถ้าไม่เจอ return w ไป exec
-        } else {
-            logger.debug("CheckJOB This jobcanrun ${w}")
-            return w
+        } catch (e: Exception) {
+            logger.error("Error check run ${e.message}")
         }
-
 
 
 
