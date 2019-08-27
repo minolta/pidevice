@@ -152,7 +152,7 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
 
 
                 var ip = readUtil?.findIp(traget!!)
-                logger.debug("Found traget ip ${ip}")
+                logger.debug("Found traget ${traget} ===> ip ${ip} ${pijob.name}")
                 if (ip != null) {
                     var url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"
                     logger.debug("Call to ${url}")

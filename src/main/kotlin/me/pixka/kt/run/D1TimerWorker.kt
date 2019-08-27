@@ -6,6 +6,7 @@ import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
@@ -17,7 +18,8 @@ import java.util.concurrent.TimeUnit
 
 
 class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
-                    val readvalue: ReadUtil, val pijs: PortstatusinjobService, var test: Pijob? = null)
+                    val readvalue: ReadUtil, val pijs: PortstatusinjobService, var test: Pijob? = null,
+                    val line: NotifyService)
     : DefaultWorker(p, null, readvalue, pijs, logger) {
 
     //    var httpControl = HttpControl()
@@ -46,6 +48,9 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
                         if (checkhigh()) {
 
                             //ใช้ข้อมูลของ port run
+                            if (pijob.token != null) {
+                                line.message("Start job ${pijob.name} at ${Date()} ", pijob.token!!)
+                            }
                             var list = pijs.findByPijobid(p.id)
                             logger.debug("${p.name} Port in job ${list.size}")
                             if (list != null) {
@@ -125,7 +130,7 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
 //                            old(ip, port.portname?.name!!, value, runtime, waittime)
 //                        }
                         old(ip, port.portname?.name!!, value, runtime, waittime)
-                        display(runtime,ip)
+                        display(runtime, ip)
 
                     } catch (e: Exception) {
 

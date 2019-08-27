@@ -2,6 +2,7 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.t.HttpGetTask
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit
 
 
 @Component
-class Runsavedevice(val service: PideviceService) {
+class Runsavedevice(val service: PideviceService,val ips:IptableServicekt) {
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runsavedevice::class.java)
@@ -42,8 +43,17 @@ class Runsavedevice(val service: PideviceService) {
                     logger.debug("Local Device ${localdevice}")
                     if(localdevice!=null) {
                         localdevice.name = d.name
+
                         localdevice.description = d.description
                         service.save(localdevice)
+
+                        var ip = ips.findByMac(localdevice.mac!!)
+                        if(ip!=null)
+                        {
+                            ip.devicename = d.name
+                            ips.save(ip)
+                        }
+
                     }
                 }
             }
