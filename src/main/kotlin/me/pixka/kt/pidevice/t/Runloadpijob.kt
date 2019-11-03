@@ -167,6 +167,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                     logger.error("Create pijobgroup error ${e.message}")
                 }
             }
+
             try {
                 if (item.ds18sensor != null)
                     item.ds18sensor = newdssensor(item.ds18sensor!!)

@@ -52,7 +52,8 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
                                 line.message("Start job ${pijob.name} at ${Date()} ", pijob.token!!)
                             }
                             var list = pijs.findByPijobid(p.id)
-                            logger.debug("${p.name} Port in job ${list.size}")
+                            if (list != null)
+                                logger.debug("${p.name} Port in job ${list.size}")
                             if (list != null) {
                                 status = "Set remote port"
                                 setRemoteport(list as List<Portstatusinjob>)
@@ -168,23 +169,31 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
     fun old(ip: Iptableskt, portname: String, value: Int, runtime: Int?, waittime: Int?) {
         val url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"
         logger.debug("Call to ${url}")
-        val get = HttpGetTask(url)
-        var ee = Executors.newSingleThreadExecutor()
-        val f = ee.submit(get)
-        try {
-            val value = f.get(15, TimeUnit.SECONDS)
-            logger.debug("setremote result ${value}")
-            if (runtime != null) {
-                status = "Run time state ${runtime}"
-                logger.debug("Run time state ${runtime}")
-                TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+
+        var count = 0
+        while (true) {
+            val get = HttpGetTask(url)
+            var ee = Executors.newSingleThreadExecutor()
+            val f = ee.submit(get)
+            try {
+                val value = f.get(15, TimeUnit.SECONDS)
+                logger.debug("setremote result ${value}")
+                if (runtime != null) {
+                    status = "Run time state ${runtime}"
+                    logger.debug("Run time state ${runtime}")
+                    TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+                }
+                break  //ถ้าติดต่อระบบได้ก็จบการทำงาน
+
+            } catch (e: Exception) {
+                logger.error("Can not connect to traget device [${e.message}]")
+                ee.shutdownNow()
             }
 
-        } catch (e: Exception) {
-            logger.error("Can not connect to traget device [${e.message}]")
-            ee.shutdownNow()
+            count++
+            if(count>5)
+                throw Exception("Set port Time out")
         }
-
         if (waittime != null) {
             status = "Wait time state ${waittime}"
             logger.debug("Wait time state ${waittime}")

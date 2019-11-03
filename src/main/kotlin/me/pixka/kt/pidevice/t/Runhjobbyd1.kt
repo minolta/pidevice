@@ -26,27 +26,31 @@ class Runhjobbyd1(val pjs: PijobService,
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
+        try {
+            var list = loadjob()
+            if (list != null)
+                logger.debug("Job for Runhjobbyd1 ${list.size}")
+            if (list != null) {
+                for (job in list) {
+                    logger.debug("Run ${job}")
 
-        var list = loadjob()
-        if (list != null)
-            logger.debug("Job for Runhjobbyd1 ${list.size}")
-        if (list != null) {
-            for (job in list) {
-                logger.debug("Run ${job}")
+                    var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
 
-                var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
-
-                if (groups.canrun(t)) {
-                    if (checktime(job)) {
-                        var run = task.run(t)
-                        logger.debug("${job} RunJOB ${run}")
+                    if (groups.canrun(t)) {
+                        if (checktime(job)) {
+                            var run = task.run(t)
+                            logger.debug("${job} RunJOB ${run}")
+                        } else {
+                            logger.error("${job} Not in time rang ")
+                        }
                     } else {
-                        logger.error("${job} Not in time rang ")
+                        logger.debug("${job} ********************** Somedeviceusewater ***************")
                     }
-                } else {
-                    logger.debug("${job} ********************** Somedeviceusewater ***************")
                 }
+
             }
+        } catch (e: Exception) {
+            logger.error("Read h by d1 ERROR ${e.message}")
         }
     }
 

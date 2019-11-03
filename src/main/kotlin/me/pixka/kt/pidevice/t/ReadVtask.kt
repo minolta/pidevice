@@ -20,16 +20,20 @@ class ReadVtask(val pjs: PijobService,
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
-        var list = loadjob()
-        if (list != null)
-            logger.debug("Job for ReadVtask ${list.size}")
+        try {
+            var list = loadjob()
+            if (list != null)
+                logger.debug("Job for ReadVtask ${list.size}")
 
-        if (list != null) {
-            for (job in list) {
+            if (list != null) {
+                for (job in list) {
 
-                var job = D1readvoltWorker(job, readUtil, portstatusinjobService, pss)
-                task.run(job)
+                    var job = D1readvoltWorker(job, readUtil, portstatusinjobService, pss)
+                    task.run(job)
+                }
             }
+        } catch (e: Exception) {
+            logger.error("ERROR READ V ${e.message}")
         }
     }
 

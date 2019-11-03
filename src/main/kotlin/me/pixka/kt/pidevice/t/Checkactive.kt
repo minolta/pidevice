@@ -48,7 +48,7 @@ class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskServi
             var job = js.findByName("checkactive")
             if (job != null) {
 
-                var jobs = pjs.findJob(job.id)
+                var jobs = pjs.findJob(job.id!!)
                 logger.debug("Found Job !! ${jobs}")
                 return jobs
             }
