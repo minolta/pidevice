@@ -20,6 +20,55 @@ import java.util.concurrent.ExecutorService
 class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
                val ips: IptableServicekt, val context: ApplicationContext) {
 
+    @CrossOrigin
+    @RequestMapping(value = "/tx", method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun getthread(): List<Any>? {
+
+        try {
+            var buf = ArrayList<tl>()
+            var list = taskService.runinglist
+            for (i in list) {
+                var t = tl()
+                t.id = i.getPijobid()
+                t.name = i.getPJ().name
+                t.startrun = i.startRun()
+                t.state = i.state()
+                buf.add(t)
+            }
+            return buf
+
+//            return taskService.runinglist as List<Any>
+        } catch (e: Exception) {
+            logger.error("TXERROR ${e.message}")
+            return null
+        }
+    }
+
+    fun short(b: ArrayList<tl>) {
+        var bb = ArrayList<tl>()
+        val array = arrayOfNulls<tl>(b.size)
+        var a = arrayOfNulls<tl>(b.size)
+        b.toArray(array)
+        var t: tl? = null
+        var v: tl? = null
+        for (i in 0..b.size) {
+            if (t == null) {
+                t = array[i]
+                continue
+            }
+
+            for (j in i..b.size) {
+                if(array[j]?.id!! < t.id!! )
+                {
+                    v = array[j]
+
+                }
+            }
+
+        }
+
+    }
 
     @CrossOrigin
     @RequestMapping(value = "/listtask", method = arrayOf(RequestMethod.GET))

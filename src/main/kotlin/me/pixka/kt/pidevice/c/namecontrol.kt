@@ -18,6 +18,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 
@@ -91,6 +92,13 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
     fun version(): String? {
         return version
     }
+    @CrossOrigin
+    @RequestMapping(value = "/tx", method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun getthread(): ArrayList<PijobrunInterface> {
+        return tsk.runinglist
+    }
+
 
     @CrossOrigin
     @RequestMapping(value = "/thread", method = arrayOf(RequestMethod.GET))

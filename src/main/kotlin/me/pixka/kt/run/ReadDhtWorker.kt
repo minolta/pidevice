@@ -24,6 +24,11 @@ class ReadDhtWorker(pijob: Pijob, val dhts: Dhtutil, val dhtvalueService: Dhtval
                 status = "Save ${r}"
             }
 
+            if (pijob.runtime != null) {
+                logger.debug("RUN next run ${pijob.runtime}")
+                status = "RUN next run ${pijob.runtime}"
+                TimeUnit.SECONDS.sleep(pijob.runtime!!.toLong())
+            }
             if (pijob.waittime != null) {
                 logger.debug("Wait next run ${pijob.waittime}")
                 status = "Wait next run ${pijob.waittime}"
@@ -42,6 +47,10 @@ class ReadDhtWorker(pijob: Pijob, val dhts: Dhtutil, val dhtvalueService: Dhtval
 
     companion object {
         internal var logger = LoggerFactory.getLogger(ReadDhtWorker::class.java)
+    }
+
+    override fun toString(): String {
+        return "READ DHT name: ${getPJ().name} Start ${startRun()}"
     }
 
 }

@@ -1,5 +1,4 @@
 package me.pixka.kt.run
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.base.s.IptableServicekt
@@ -69,7 +68,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
             var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
             logger.debug("Found jobs ${ports.size} ${pijob.name}")
             for (port in ports) {
-                if (port.enable!=null && port.enable!!) {
+                if (port.enable != null && port.enable!!) {
                     val device = port.device
                     logger.debug("Find device ip ${device} mac ${device!!.mac} ${pijob.name}")
                     var ip = ips.findByMac(device!!.mac!!)
@@ -79,33 +78,25 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
                         var http = HttpGetTask(url)
                         var t = Executors.newSingleThreadExecutor()
                         var f = t.submit(http)
-
                         try {
                             state = "startcall ${url} ${pijob.name}"
                             logger.debug("startcall ${url} ${pijob.name}")
-                            var re = f.get(15, TimeUnit.SECONDS)
+                            var re = f.get(30, TimeUnit.SECONDS)
                             logger.debug("return from get ${re}")
                             try {
                                 state = "return status ${re} ${pijob.name}"
-
                                 var status = om.readValue<Status>(re, Status::class.java)
                                 //end
-                                state = "return status ${status} ${pijob.name}"
-                                TimeUnit.SECONDS.sleep(3)
+                                state = "return status ${status} ${pijob.name} "
+
                             } catch (e: Exception) {
                                 logger.error("Error  ${e.message}")
                                 if (token != null)
                                     ntfs.message("device not respone ${device.name} ${pijob.name} ${e.message}", token)
                                 else
                                     ntfs.message("device not respone ${device.name} ${pijob.name}  ${e.message}")
-//                            isRun=false
                             }
 
-
-
-
-
-                            isRun = false
                         } catch (e: Exception) {
                             if (token == null)
                                 ntfs.message("device not respone ${device.name} ${e.message}")
@@ -113,7 +104,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
                                 ntfs.message("device not respone ${device.name} ${e.message}", token)
 
                             state = "error ${e.message} ${pijob.name}"
-                            isRun = false
+
 
                         }
                     } else {
@@ -144,10 +135,14 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
         isRun = false
     }
 
+    override fun toString(): String {
+        return "CHECKACTIVE NAME ${pijob.name} ${startrun} ${state}"
+    }
+
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class Status(var message: String? = null, var ip: String? = null,
+class Status(var message: String? = null, var ip: String? = null,var uptime:Long?=0,
              var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
              var version: String? = null) {
     override fun toString(): String {

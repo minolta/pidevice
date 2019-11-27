@@ -37,7 +37,6 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
 
             if (jobs != null)
                 for (i in jobs) {
-
                     logger.debug("Run job ${i}")
                     if (i.ds18sensor != null) {
                         var t = ReadTmpTask(i, readUtil, ips, dvs, pideviceService, dss)
@@ -45,7 +44,6 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
                     } else {
                         var t = ReadTmpTask(i, readUtil, ips, dvs, pideviceService, dss)
                         taskService.run(t)
-
                     }
 
                 }
