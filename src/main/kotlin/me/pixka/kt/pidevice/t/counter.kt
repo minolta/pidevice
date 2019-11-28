@@ -80,7 +80,7 @@ class CounterOther(val context: ApplicationContext,
         try {
             var counter = js.findByName("Counter")
             logger.debug("JOB for run ${counter}")
-            var jobs = pijobService.findByCounter(counter.id)
+            var jobs = pijobService.findByCounter(counter?.id!!)
             return jobs
         } catch (e: Exception) {
             logger.error(e.message)

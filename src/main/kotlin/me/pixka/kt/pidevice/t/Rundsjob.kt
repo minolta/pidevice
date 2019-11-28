@@ -86,7 +86,7 @@ class Rundsjob(val pjs: PijobService, val js: JobService, val io: Piio, val ts: 
 
     fun loadjob(): List<Pijob>? {
         var DSJOB = js.findByName("DS")
-        var jobs = pjs.findJob(DSJOB.id)
+        var jobs = pjs.findJob(DSJOB!!.id)
         return jobs
     }
 
