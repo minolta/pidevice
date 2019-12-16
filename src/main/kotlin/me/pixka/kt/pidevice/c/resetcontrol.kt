@@ -13,7 +13,7 @@ class ResetControl(val portstatusinjobService: PortstatusinjobService,val pijobS
 
 
     @CrossOrigin
-    @RequestMapping(value = "/resetpijob", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/resetpijob"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun value(): Boolean? {

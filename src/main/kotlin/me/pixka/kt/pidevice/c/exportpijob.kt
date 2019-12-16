@@ -24,7 +24,7 @@ import java.io.FileOutputStream
 @Profile("pi", "lite")
 class Exportpijob(val ps: PijobService, val piio: Piio, val psijs: PortstatusinjobService) {
     @CrossOrigin
-    @RequestMapping(value = "/pijob", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/pijob"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun value(): List<Pijob> {
@@ -46,7 +46,7 @@ class Exportpijob(val ps: PijobService, val piio: Piio, val psijs: Portstatusinj
         return buf
     }
 
-    @RequestMapping(value = "/exportjob", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/exportjob"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @CrossOrigin
     fun exportjobs(): ResponseEntity<InputStreamResource>? {

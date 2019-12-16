@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.s
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.repository.JpaRepository
 open class DefaultService<T> {
 
@@ -31,8 +32,10 @@ open class DefaultService<T> {
     fun search(s: String, page: Long, limit: Long): List<T>? {
         try {
             var i = repo as search<T>
-            var p = PageRequest(page.toInt(), limit.toInt())
+//            var p = PageRequest(page.toInt(), limit.toInt())
+            var p = PageRequest.of(page.toInt(), limit.toInt(), Sort.by("id"))
             return i.search(s, p)
+
         } catch (e: Exception) {
             throw e
         }

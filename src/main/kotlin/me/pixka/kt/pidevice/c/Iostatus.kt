@@ -13,7 +13,7 @@ class IostatusControl(val gpios:GpioService)
 {
 
     @CrossOrigin
-    @RequestMapping(value = "/io", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/io"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun value(): String? {

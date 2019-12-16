@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*
 @Profile("pi")
 class DS18Control(val service: Ds18valueService, val dss: DS18sensorService, val io: Piio) {
     @CrossOrigin
-    @RequestMapping(value = "/ds18value", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/ds18value"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun value(): DS18value? {
@@ -39,7 +39,7 @@ class DS18Control(val service: Ds18valueService, val dss: DS18sensorService, val
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/ds18valuebysensor/{sensor}", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/ds18valuebysensor/{sensor}"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun value(@PathVariable("sensor") sensor: String): DS18value? {
@@ -56,33 +56,6 @@ class DS18Control(val service: Ds18valueService, val dss: DS18sensorService, val
         }
 
         return null
-
-        /*
-        logger.debug("[ds18value] read by bysensor name")
-        try {
-            val ds = dss.findByname(sensor)
-            if (ds == null) {
-                logger.error("Sensor Not found in this device " + sensor)
-                throw Exception("Sensor Not found in this device " + sensor)
-            }
-            var last: DS18value? = null
-            if (ds != null) {
-                last = service.lastBysensor(ds.id)
-                logger.debug("[ds18value] read by forread sensor : " + last!!)
-            } else {
-                last = service.last()
-                logger.debug("[ds18value] read by default sensor : " + last!!)
-            }
-            logger.debug("[ds18value ] read value : " + last)
-            // ds.print("DS value : " + last.getT());
-            logger.debug("[ds18value] end status")
-            return last
-        } catch (e: Exception) {
-            logger.error("[ds18value] Error: " + e.message)
-        }
-        return null
-        */
-
     }
 
 

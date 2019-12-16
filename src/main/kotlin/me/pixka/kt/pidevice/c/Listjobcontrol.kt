@@ -21,7 +21,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
                val ips: IptableServicekt, val context: ApplicationContext) {
 
     @CrossOrigin
-    @RequestMapping(value = "/tx", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/tx"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun getthread(): List<Any>? {
 
@@ -70,7 +70,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/listtask", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/listtask"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun list(): ArrayList<tl> {
 
@@ -93,7 +93,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/l3/{name}", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/l3/{name}"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun lt(@PathVariable("name") name: String): ArrayList<tl> {
         logger.debug("Call Tl")
@@ -119,7 +119,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/listpool", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/listpool"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun listpool(): ArrayList<tl> {
         var tp = context.getBean("pool") as ExecutorService
@@ -161,7 +161,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/listjobs", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/listjobs"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun listjob(): MutableList<Pijob>? {
 
@@ -169,7 +169,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/testjob/{localid}", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/testjob/{localid}"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun testjob(@PathVariable("localid") id: Long): Boolean {
 
@@ -188,7 +188,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 
 
     @CrossOrigin
-    @RequestMapping(value = "/listips", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/listips"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun listips(): MutableList<Iptableskt>? {
 

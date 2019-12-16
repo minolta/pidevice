@@ -141,7 +141,7 @@ class CounterOther(val context: ApplicationContext,
                 }
 
                 if (value == null) {
-                    var localsensor = dss.find(job.ds18sensor_id)
+                    var localsensor = dss.find(job.ds18sensor_id!!)
                     logger.debug("Found local sensor ? ${localsensor}")
                     if (localsensor != null) {
                         var v = io.readDs18(localsensor.name!!)

@@ -28,7 +28,7 @@ class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: Portstatus
 
             while (true) {
 
-                pijob = pjs.find(pijob.id)
+                pijob = pjs.find(pijob.id!!)!!
                 logger.debug("Pijob ${pijob}")
                 if (pijob.enable == false) {
                     isRun = false

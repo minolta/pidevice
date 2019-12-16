@@ -188,7 +188,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
         logger.debug("${desid}  findurl Device name ${desdevice} ${desdevice.mac}")
         var sensor: DS18sensor? = null
         try {
-            sensor = dss.find(sensorid)
+            sensor = dss.find(sensorid!!)
         } catch (e: Exception) {
             logger.error("${sensorid}  findurl Sensor Error ${e.message}")
             throw  Exception("${sensorid}  findurl Sensor Error ${e.message}")
@@ -255,7 +255,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
     }
 
     fun readLocal(job: Pijob): DS18value? {
-        var localsensor = dss.find(job.ds18sensor_id)
+        var localsensor = dss.find(job.ds18sensor_id!!)
         logger.debug("4 Found local sensor ? ${localsensor} #readtmpbyjob")
         var value: DS18value? = null
         if (localsensor != null && value == null) {
