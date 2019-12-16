@@ -59,8 +59,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             }
 
             for (j in i..b.size) {
-                if(array[j]?.id!! < t.id!! )
-                {
+                if (array[j]?.id!! < t.id!!) {
                     v = array[j]
 
                 }
@@ -80,8 +79,35 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         for (run in runs) {
             try {
                 var pj = run.getPJ()
-                var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(), run.runStatus(), pj.ports)
+                var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
+                        run.runStatus(), pj.ports,run.getPJ().job?.name)
                 list.add(t)
+            } catch (e: Exception) {
+                logger.error("List task error ${e.message}")
+                throw e
+            }
+        }
+
+        return list
+
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = "/l3/{name}", method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun lt(@PathVariable("name") name: String): ArrayList<tl> {
+        logger.debug("Call Tl")
+        var list = ArrayList<tl>()
+        var runs = taskService.runinglist
+        var n = name.toLowerCase()
+        for (run in runs) {
+            try {
+                var pj = run.getPJ()
+                if (run.getPJ() != null && run.getPJ().name?.toLowerCase()?.indexOf(n) != -1) {
+                    var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state()
+                            , run.runStatus(), pj.ports,run.getPJ().job?.name)
+                    list.add(t)
+                }
             } catch (e: Exception) {
                 logger.error("List task error ${e.message}")
                 throw e
@@ -175,4 +201,4 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 }
 
 class tl(var id: Long? = null, var name: String? = null, var startrun: Date? = null,
-         var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null)
+         var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null,var jobtype:String?=null)

@@ -100,8 +100,8 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
         } catch (e: Exception) {
             isRun = false
-            logger.error("ERROR ${e.message}")
-            state = "ERROR ${e.message}"
+            logger.error("ERROR 1 ${e.message}")
+            state = "ERROR 1 ${e.message}"
             waitstatus = true
             throw e
         }
@@ -161,10 +161,15 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 try {
                     var url = ""
 
-                    if (port.device != null)
-                        url = findUrl(port.device!!, portname!!, runtime, waittime, value)
-                    else
-                        url = findUrl(portname!!, runtime, waittime, value)
+                    try {
+                        if (port.device != null)
+                            url = findUrl(port.device!!, portname!!, runtime, waittime, value)
+                        else
+                            url = findUrl(portname!!, runtime, waittime, value)
+                    } catch (e: Exception) {
+                        logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
+                    }
+//                    logger.debug("URL ${url}")
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
@@ -178,7 +183,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                         TimeUnit.SECONDS.sleep(runtime)
 
                         if (waittime != null) {
-
                             state = "Wait time of port ${waittime}"
                             TimeUnit.SECONDS.sleep(waittime)
                         }
@@ -187,8 +191,8 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                         errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
                     }
                 } catch (e: Exception) {
-                    logger.error("Error ${e.message}")
-                    state = " Error ${e.message}"
+                    logger.error("Error 2 ${e.message}")
+                    state = " Error 2 ${e.message}"
                     ee.shutdownNow()
                 }
             }

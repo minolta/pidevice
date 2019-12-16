@@ -21,7 +21,7 @@ class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
     fun run() {
 
 
-        println("Date : ${Date()}")
+//        println("Date : ${Date()}")
         var target = System.getProperty("savedht")
 
         if (target == null)

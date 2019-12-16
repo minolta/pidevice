@@ -92,12 +92,6 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
     fun version(): String? {
         return version
     }
-    @CrossOrigin
-    @RequestMapping(value = "/tx", method = arrayOf(RequestMethod.GET))
-    @ResponseBody
-    fun getthread(): ArrayList<PijobrunInterface> {
-        return tsk.runinglist
-    }
 
 
     @CrossOrigin
