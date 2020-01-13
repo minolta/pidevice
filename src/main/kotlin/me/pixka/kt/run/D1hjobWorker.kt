@@ -61,6 +61,32 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         return state
     }
 
+    fun checkCanrun(): Boolean {
+        var h: Float? = 0.0F
+        try {
+            var dhtvalue = dhts.readByPijob(pijob)
+            logger.debug("DHTVALUE ${dhtvalue}")
+            state = "Get value from traget [${dhtvalue}]"
+            if (dhtvalue != null) {
+                if (dhtvalue.h != null)
+                    h = dhtvalue.h?.toFloat()
+                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
+                    return true
+                } else {
+                    state = "H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}"
+                    logger.error("H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}")
+                }
+
+            }
+        } catch (e: Exception) {
+            logger.error("Check Can run ERROR ${e.message}")
+            state = "Check Can run ERROR ${e.message} H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${h}"
+
+
+        }
+        return false
+    }
+
     override fun run() {
 
         startrun = Date()
@@ -76,32 +102,20 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 //prility
             }
 
-            var dhtvalue = dhts.readByPijob(pijob)
-            logger.debug("DHTVALUE ${dhtvalue}")
-            state = "Get value from traget [${dhtvalue}]"
-            if (dhtvalue != null) {
-                try {
-
-                    if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
-                        logger.debug("Go!!")
-                        waitstatus = false
-                        go()
-                        waitstatus = true
-                        var waittime = pijob.waittime
-                        if (waittime != null) {
-                            state = "Wait time of job ${waittime}"
-                            TimeUnit.SECONDS.sleep(waittime)
-                        }
-                    }
-                } catch (e: Exception) {
-                    logger.error("ERROR in GO ")
-                    state = "ERROR ${e.message} Pijobinfo Hlow : ${pijob.hlow}  Hhigh : ${pijob.hhigh} DHTVALUE : ${dhtvalue.h}"
-                    isRun = false
-                    return
+            if (checkCanrun()) {
+                waitstatus = false
+                go()
+                waitstatus = true
+                var waittime = pijob.waittime
+                if (waittime != null) {
+                    state = "Wait time of job ${waittime}"
+                    TimeUnit.SECONDS.sleep(waittime)
                 }
-
             } else {
                 logger.warn("Dht not found")
+                waitstatus = true
+                isRun = false
+                state = "End job"
             }
 
 
@@ -112,6 +126,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             waitstatus = true
             throw e
         }
+
         waitstatus = true
         isRun = false
         state = "End job"
@@ -159,17 +174,15 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     waittime = pijob.waittime!!
                 }
                 var value = 0
-                if (v != null && v.name !=null) {
-                    if (v.name.equals("high") || v.name?.indexOf("1")!=-1) {
+                if (v != null && v.name != null) {
+                    if (v.name.equals("high") || v.name?.indexOf("1") != -1) {
                         value = 1
                     } else value = 0
-                }
-                else
-                {
-                    if(v!=null)
-                    state = "Value to set ERROR ${v.name}"
+                } else {
+                    if (v != null)
+                        state = "Value to set ERROR ${v.name}"
                     else
-                    state = "Port state Error is Null"
+                        state = "Port state Error is Null"
 
                     TimeUnit.SECONDS.sleep(5)
                 }

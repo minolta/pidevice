@@ -29,22 +29,29 @@ class Runhjobbyd1(val pjs: PijobService,
         try {
             var list = loadjob()
             if (list != null)
-                logger.debug("Job for Runhjobbyd1 ${list.size}")
+                logger.debug("Job for Runhjobbyd1 Hjobsize  ${list.size}")
             if (list != null) {
                 for (job in list) {
-                    logger.debug("Run ${job}")
+                    logger.debug("RunH  ${job}")
 
                     var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
 
                     if (groups.canrun(t)) {
                         if (task.checktime(job)) {
-                            var run = task.run(t)
-                            logger.debug("${job} RunJOB ${run}")
+                            if (!t.checkCanrun()) {
+                                t.state = "H not in ranger"
+                            } else {
+                                var run = task.run(t)
+                                logger.debug("${job} RunJOB ${run}")
+                            }
                         } else {
                             logger.error("${job} Not in time rang ")
+                            t.state = "Not in run in this time"
                         }
                     } else {
                         logger.debug("${job} ********************** Somedeviceusewater ***************")
+                        t.state = " Somedeviceusewate"
+
                     }
                 }
 

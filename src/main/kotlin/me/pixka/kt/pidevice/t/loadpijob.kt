@@ -19,7 +19,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 //ไม่ใช้แล้ว
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class Loadpijob(val task: LoadpijobTask) {
 
     //@Scheduled(initialDelay = 60000, fixedDelay = 60000)
