@@ -37,7 +37,7 @@ class Runhjobbyd1(val pjs: PijobService,
                     var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
 
                     if (groups.canrun(t)) {
-                        if (checktime(job)) {
+                        if (task.checktime(job)) {
                             var run = task.run(t)
                             logger.debug("${job} RunJOB ${run}")
                         } else {

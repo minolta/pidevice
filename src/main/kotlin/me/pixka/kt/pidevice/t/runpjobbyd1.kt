@@ -31,15 +31,18 @@ class Runpjobbyd1(val pjs: PijobService,
                     logger.debug("Run with ${c}")
                     if (c != null && c) {
                         var t = D1pjobWorker(job, readUtil)
-                        var run = task.run(t)
-                        logger.debug("RunJOB ${run}")
+                        if (task.checktime(job)) {
+                            var run = task.run(t)
+                            logger.debug("RunJOB ${run}")
+                        } else {
+                            logger.debug("Not run on this time")
+                        }
                     } else {
                         logger.warn("Run with is false")
                     }
                 }
             }
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error("run p job by d1 ${e.message}")
         }
     }

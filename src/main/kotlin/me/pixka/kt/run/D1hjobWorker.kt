@@ -80,18 +80,25 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             logger.debug("DHTVALUE ${dhtvalue}")
             state = "Get value from traget [${dhtvalue}]"
             if (dhtvalue != null) {
-                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
-                    logger.debug("Go!!")
-                    waitstatus = false
-                    go()
-                    waitstatus = true
-                    var waittime = pijob.waittime
-                    if (waittime != null) {
-                        state = "Wait time of job ${waittime}"
-                        TimeUnit.SECONDS.sleep(waittime)
-                    }
-                }
+                try {
 
+                    if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
+                        logger.debug("Go!!")
+                        waitstatus = false
+                        go()
+                        waitstatus = true
+                        var waittime = pijob.waittime
+                        if (waittime != null) {
+                            state = "Wait time of job ${waittime}"
+                            TimeUnit.SECONDS.sleep(waittime)
+                        }
+                    }
+                } catch (e: Exception) {
+                    logger.error("ERROR in GO ")
+                    state = "ERROR ${e.message} Pijobinfo Hlow : ${pijob.hlow}  Hhigh : ${pijob.hhigh} DHTVALUE : ${dhtvalue.h}"
+                    isRun = false
+                    return
+                }
 
             } else {
                 logger.warn("Dht not found")
@@ -152,10 +159,19 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     waittime = pijob.waittime!!
                 }
                 var value = 0
-                if (v != null) {
-                    if (v.name.equals("high")) {
+                if (v != null && v.name !=null) {
+                    if (v.name.equals("high") || v.name?.indexOf("1")!=-1) {
                         value = 1
                     } else value = 0
+                }
+                else
+                {
+                    if(v!=null)
+                    state = "Value to set ERROR ${v.name}"
+                    else
+                    state = "Port state Error is Null"
+
+                    TimeUnit.SECONDS.sleep(5)
                 }
 
                 try {

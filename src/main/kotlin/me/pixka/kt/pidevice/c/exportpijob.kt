@@ -21,7 +21,7 @@ import java.io.FileOutputStream
 
 
 @RestController
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class Exportpijob(val ps: PijobService, val piio: Piio, val psijs: PortstatusinjobService) {
     @CrossOrigin
     @RequestMapping(value = ["/pijob"], method = arrayOf(RequestMethod.GET))

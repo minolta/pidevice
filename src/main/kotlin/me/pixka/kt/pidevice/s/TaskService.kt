@@ -1,13 +1,18 @@
 package me.pixka.kt.pidevice.s
 
+import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pidevice.t.Runhjobbyd1
 import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 /**
  * ใช้สำหรับ run task ต่างๆ
@@ -158,7 +163,41 @@ class TaskService(val context: ApplicationContext) {
         }
         logger.debug("THREADISRUN ======================================================================================")
     }
+    var df = SimpleDateFormat("HH:mm")
+    fun checktime(job: Pijob): Boolean {
+        try {
+//            df.timeZone = TimeZone.getTimeZone("+0700")
+            var n = df.format(Date())
 
+            var now = df.parse(n)
+            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
+            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
+            if (job.stimes != null && job.etimes != null) {
+                var st = df.parse(job.stimes).time
+                var et = df.parse(job.etimes).time
+                logger.debug("checktime ${st} <= ${now} <= ${et}")
+                if (st <= now.time && now.time <= et)
+                    return true
+            } else if (job.stimes != null && job.etimes == null) {
+                var st = df.parse(job.stimes).time
+                logger.debug("checktime ${st} <= ${now} ")
+                if (st <= now.time)
+                    return true
+            } else if (job.stimes == null && job.etimes != null) {
+                var st = df.parse(job.etimes).time
+                logger.debug("checktime ${st} >= ${now}")
+                if (st <= now.time)
+                    return true
+            } else {
+                logger.debug("${job.name} checktime not set ")
+                return true
+            }
+        } catch (e: Exception) {
+            logger.error("checktime ${e.message}")
+        }
+
+        return false
+    }
     companion object {
         internal var logger = LoggerFactory.getLogger(TaskService::class.java)
     }
