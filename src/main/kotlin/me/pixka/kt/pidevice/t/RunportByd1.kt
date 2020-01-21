@@ -1,11 +1,12 @@
 package me.pixka.kt.pidevice.t
 
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
-import me.pixka.kt.run.D1hjobWorker
+import me.pixka.kt.run.D1portjobWorker
 import me.pixka.kt.run.GroupRunService
 import me.pixka.pibase.s.DhtvalueService
 import me.pixka.pibase.s.JobService
@@ -17,7 +18,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Component
-class Runhjobbyd1(val pjs: PijobService,
+class RunportByd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,
                   val dhs: Dhtutil, val httpControl: HttpControl,
@@ -26,36 +27,35 @@ class Runhjobbyd1(val pjs: PijobService,
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
+        logger.debug("Start get task Runportbyd1 ${Date()}")
         try {
             var list = loadjob()
             if (list != null)
-                logger.debug("Job for Runhjobbyd1 Hjobsize  ${list.size}")
+                logger.debug("Job for Runportbyd1 Port jobsize  ${list.size}")
             if (list != null) {
                 for (job in list) {
-                    logger.debug("RunH  ${job}")
+                    logger.debug("Run Port  ${job}  Description :${job.description}")
 
-                    var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
+                    var t = D1portjobWorker(job, pjs, dhs, httpControl, task)
 
-                    if (groups.canrun(t)) {
-                        if (task.checktime(job)) {
-                            if (!t.checkCanrun()) {
-                                t.state = "H not in ranger"
-                            } else {
-                                var run = task.run(t)
-                                logger.debug("${job} RunJOB ${run}")
-                            }
+                    if (task.checktime(job)) {
+                        if (!t.checkCanrun()) {
+                            t.state = "H not in ranger"
                         } else {
-                            logger.debug("${job} Not in time rang ")
-                            t.state = "Not in run in this time"
+                            var run = task.run(t)
+                            logger.debug("${job} RunJOB ${run}")
+
                         }
                     } else {
-                        logger.debug("${job} ********************** Somedeviceusewater ***************")
-                        t.state = " Somedeviceusewate"
-
+                        logger.debug("${job} Not in time rang ")
+                        t.state = "Not in run in this time"
                     }
                 }
 
+
             }
+
+
         } catch (e: Exception) {
             logger.error("Read h by d1 ERROR ${e.message}")
         }
@@ -98,7 +98,7 @@ class Runhjobbyd1(val pjs: PijobService,
     }
 
     fun loadjob(): List<Pijob>? {
-        var job = js.findByName("runhbyd1")
+        var job = js.findByName("runportbyd1")
 
         if (job != null) {
 
@@ -109,6 +109,6 @@ class Runhjobbyd1(val pjs: PijobService,
     }
 
     companion object {
-        internal var logger = LoggerFactory.getLogger(Runhjobbyd1::class.java)
+        internal var logger = LoggerFactory.getLogger(RunportByd1::class.java)
     }
 }

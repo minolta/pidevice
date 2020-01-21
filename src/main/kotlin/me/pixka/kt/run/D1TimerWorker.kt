@@ -47,9 +47,16 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
                     try {
                         if (checkhigh()) {
 
+
                             //ใช้ข้อมูลของ port run
-                            if (pijob.token != null) {
-                                line.message("Start job ${pijob.name} at ${Date()} ", pijob.token!!)
+
+                            //ส่ง Line message
+                            for (i in 0..5) {
+                                if (pijob.token != null) {
+                                    line.message("Start Timer job ${pijob.name} at ${Date()} ", pijob.token!!)
+                                } else
+                                    line.message("Start Timer job ${pijob.name} at ${Date()} ")
+                                TimeUnit.SECONDS.sleep(5)
                             }
                             var list = pijs.findByPijobid(p.id)
                             if (list != null)
@@ -63,6 +70,13 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
                                 }
                                 logger.debug("End job ")
                                 status = "End job ${pijob.name}"
+                                for (i in 0..5) {
+                                    if (pijob.token != null) {
+                                        line.message("End Timer job ${pijob.name} at ${Date()} ", pijob.token!!)
+                                    } else
+                                        line.message("End Timer job ${pijob.name} at ${Date()} ")
+                                    TimeUnit.SECONDS.sleep(5)
+                                }
                                 isRun = false
                             } else {
                                 status = "no have remote port"
@@ -179,9 +193,11 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
                 val value = f.get(15, TimeUnit.SECONDS)
                 logger.debug("setremote result ${value}")
                 if (runtime != null) {
-                    status = "Run time state ${runtime}"
-                    logger.debug("Run time state ${runtime}")
-                    TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
+                    for (rt in 0..runtime.toInt()) {
+                        status = "Run time state ${rt}/${runtime}"
+                        logger.debug("Run time state ${rt}/${runtime}")
+                        TimeUnit.SECONDS.sleep(1) //หยุดรอถ้ามีการกำหนดมา
+                    }
                 }
                 break  //ถ้าติดต่อระบบได้ก็จบการทำงาน
 
@@ -191,7 +207,7 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
             }
 
             count++
-            if(count>5)
+            if (count > 5)
                 throw Exception("Set port Time out")
         }
         if (waittime != null) {
@@ -250,6 +266,7 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
 
     }
 
+    //ความร้อนได้ตามที่กำหนดแล้วหรือยังถ้าได้ให้
     fun checkhigh(): Boolean {
         try {
             var timeout = 120 //สองนาที

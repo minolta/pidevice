@@ -21,13 +21,20 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt) {
 
         try {
             var f = ee.submit(get)
-            var rep = f.get(30, TimeUnit.SECONDS)
+            var rep: String? = null
+
+            try {
+                rep = f.get(15, TimeUnit.SECONDS)
+            } catch (e: Exception) {
+                logger.error("Get DHT value ERROR ${e.message} ${e}")
+                ee.shutdownNow()
+                throw Exception("Get DHT value ERROR ${e.message} ${e}")
+            }
             var dhtvalue = om.readValue<Dhtvalue>(rep, Dhtvalue::class.java)
             return dhtvalue
         } catch (e: Exception) {
             logger.error("line 56 ${e.message} ${url}")
             ee.shutdownNow()
-
             throw e
         }
         return null

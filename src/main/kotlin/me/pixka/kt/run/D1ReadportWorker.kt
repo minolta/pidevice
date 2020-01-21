@@ -1,5 +1,8 @@
 package me.pixka.kt.run
 
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
@@ -9,23 +12,24 @@ import me.pixka.kt.pidevice.d.ErrorlogII
 import me.pixka.kt.pidevice.d.ErrorlogServiceII
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
-import me.pixka.pibase.s.DhtvalueService
+import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
-                   val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService)
+class D1portjobWorker(var pijob: Pijob, val service: PijobService,
+                      val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
     var startrun: Date? = null
     var waitstatus = false
-
+    val mapper = ObjectMapper()
     @Autowired
     lateinit var errorlog: ErrorlogServiceII
+
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -61,28 +65,120 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         return state
     }
 
-    fun checkCanrun(): Boolean {
-        var h: Float? = 0.0F
+    fun getSensorstatus(p: Pijob): DPortstatus? {
         try {
-            var dhtvalue = dhts.readByPijob(pijob)
-            logger.debug("DHTVALUE ${dhtvalue}")
-            state = "Get value from traget [${dhtvalue}]"
-            if (dhtvalue != null) {
-                if (dhtvalue.h != null)
-                    h = dhtvalue.h?.toFloat()
-                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
-                    return true
-                } else {
-                    state = "H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}"
-                    logger.error("H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}")
-                }
+            var ip = dhts.mactoip(p.desdevice?.mac!!)
+            var url = "http://${ip?.ip}"
+            var ee = Executors.newSingleThreadExecutor()
+            var get = HttpGetTask(url)
+            var f2 = ee.submit(get)
+//            val re = httpControl.get(url)
+            var re: String? = null
 
+            try {
+                re = f2.get(5, TimeUnit.SECONDS)
+            } catch (e: Exception) {
+                state = "Time out to get level water status"
+                TimeUnit.SECONDS.sleep(10)
+                throw Exception("Time out to get level water status")
+            }
+                var dp = mapper.readValue(re, DPortstatus::class.java)
+                return dp
+
+
+
+        } catch (e: Exception) {
+            logger.error("Get Sensor status ${e.message}")
+        }
+        return null
+    }
+
+    fun getsensorstatusvalue(n: String, c: Int, sensorstatus: DPortstatus?): Boolean {
+        val nn = n.toLowerCase()
+        try {
+            if (nn.equals("d1")) {
+                if (sensorstatus?.d1 == c)
+                    return true
+            } else if (nn.equals("d2")) {
+                if (sensorstatus?.d2 == c)
+                    return true
+            } else if (nn.equals("d3")) {
+                if (sensorstatus?.d3 == c)
+                    return true
+            } else if (nn.equals("d4")) {
+                if (sensorstatus?.d4 == c)
+                    return true
+            } else if (nn.equals("d5")) {
+                if (sensorstatus?.d5 == c)
+                    return true
+            } else if (nn.equals("d6")) {
+                if (sensorstatus?.d6 == c)
+                    return true
+            } else if (nn.equals("d7")) {
+                if (sensorstatus?.d7 == c)
+                    return true
+            } else if (nn.equals("d8")) {
+                if (sensorstatus?.d8 == c)
+                    return true
             }
         } catch (e: Exception) {
-            logger.error("Check Can run ERROR ${e.message}")
-            state = "Check Can run ERROR ${e.message} H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${h}"
+            logger.error("ERROR in getsensorstatusvalue message: ${e.message}")
+        }
+
+
+        return false
+    }
+
+
+    fun checkCanrun(): Boolean {
+
+        //เอา port ที่สำหรับไว้ตรวจสอบออกมา
+        var checks = getPorttocheck(pijob)
+        var sensorstatus = getSensorstatus(pijob)
+        logger.debug("Checks ${checks} Status:${sensorstatus}")
+
+        if (checks != null) {
+            var r = false
+            for (c in checks) {
+                r = r || getsensorstatusvalue(c.name!!, c.check!!, sensorstatus!!)
+            }
+            logger.debug("R is ${r}")
+            return r
         }
         return false
+    }
+
+    fun getPorttocheck(p: Pijob): ArrayList<PorttoCheck>? {
+        try {
+            var bufs = ArrayList<PorttoCheck>()
+            logger.debug("Description ${p.description}")
+            var c = p.description?.split(",")
+            logger.debug("C: ${c}")
+            if (c.isNullOrEmpty()) {
+                return null
+            }
+
+            var c1 = PorttoCheck()
+            var ii = 1
+
+            c.map {
+                logger.debug("Value : ${it}")
+                if (it.toIntOrNull() == null)
+                    c1.name = it
+                else {
+                    c1.check = it.toInt()
+                    bufs.add(c1)
+                    c1 = PorttoCheck()
+                }
+            }
+
+            return bufs
+
+
+        } catch (e: Exception) {
+            logger.debug("ERROR ${e.message}")
+        }
+        return null
     }
 
     override fun run() {
@@ -90,44 +186,18 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         startrun = Date()
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
-        Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} ${startrun}"
-
+        Thread.currentThread().name = "JOBID:${pijob.id} D1PORT : ${pijob.name} ${startrun}"
         try {
-            if (pijob.tlow != null) {
-
-                TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
-                logger.debug("Slow start ${pijob.tlow}")
-                //prility
-            }
-
             if (checkCanrun()) {
                 waitstatus = false
                 go()
-                waitstatus = true
-                var waittime = pijob.waittime
-                if (waittime != null) {
-                    state = "Wait time of job ${waittime}"
-                    TimeUnit.SECONDS.sleep(waittime)
-                }
-            } else {
-                logger.warn("Dht not found")
-                waitstatus = true
-                isRun = false
-                state = "End job"
             }
-
-
-        } catch (e: Exception) {
-            isRun = false
-            logger.error("ERROR 1 ${e.message}")
-            state = "ERROR 1 ${e.message}"
             waitstatus = true
-            throw e
-        }
+            isRun = false
+            state = "End job"
+        } catch (e: Exception) {
 
-        waitstatus = true
-        isRun = false
-        state = "End job"
+        }
     }
 
     fun checkH(l: Float, h: Float, v: Float): Boolean {
@@ -195,6 +265,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                             url = findUrl(portname!!, runtime, waittime, value)
                     } catch (e: Exception) {
                         logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
+                        TimeUnit.SECONDS.sleep(10)
                     }
 //                    logger.debug("URL ${url}")
                     startrun = Date()
@@ -221,6 +292,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     logger.error("Error 2 ${e.message}")
                     state = " Error 2 ${e.message}"
                     ee.shutdownNow()
+                    TimeUnit.SECONDS.sleep(10)
                 }
             }
 
@@ -256,20 +328,26 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(D1hjobWorker::class.java)
-    }
 
     override fun toString(): String {
-
         return "name ${pijob.name}"
     }
 
     fun checkgroup(job: Pijob): Pijob? {
         var runs = task.runinglist
-
         for (run in runs) {
             if (run is D1hjobWorker) {
+                //ถ้า job รอแล้ว
+                logger.debug("Wait status is ${run.waitstatus} RunGROUPID ${run.pijob.pijobgroup_id} " +
+                        "JOBGROUPID ${job.pijobgroup_id} ")
+
+                if (/*ทำงานอยู่*/run.isRun && /*อยู่ในการพักอยู่*/ !run.waitstatus &&
+                        /*ไม่ใช่ตัวเอง*/run.getPijobid().toInt() != job.id.toInt()) {
+                    if (run.pijob.pijobgroup_id?.toInt() == job.pijobgroup_id?.toInt()) {
+                        return null //อยู่ในกลุ่มเดียวกัน
+                    }
+                }
+            } else if (run is D1portjobWorker) {
                 //ถ้า job รอแล้ว
                 logger.debug("Wait status is ${run.waitstatus} RunGROUPID ${run.pijob.pijobgroup_id} " +
                         "JOBGROUPID ${job.pijobgroup_id} ")
@@ -284,5 +362,27 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         }
         logger.debug("No Job in this group run ${job}")
         return job
+    }
+
+
+    companion object {
+        internal var logger = LoggerFactory.getLogger(D1portjobWorker::class.java)
+    }
+}
+
+//สำหรับเก็บว่า pijob นั้นกำหนดให้ port ค่าอะไรบ้าง
+class PorttoCheck(var name: String? = null, var check: Int? = null) {
+    override fun toString(): String {
+        return "name:${name} Check ${check}"
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class DPortstatus(var version: Int? = null,
+                  var d1: Int? = null, var d2: Int? = 0, var d3: Int? = 0,
+                  var d4: Int? = 0, var d5: Int? = 0, var d6: Int? = 0,
+                  var d7: Int? = 0, var d8: Int? = 0, var name: String? = null, var value: Int? = null) {
+    override fun toString(): String {
+        return "D1:${d1} D2:${d2} D3:${d3} D4:${d4} D5:${d5} D6:${d6} D7:${d7} D8:${d8}"
     }
 }

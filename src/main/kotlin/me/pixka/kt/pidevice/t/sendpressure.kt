@@ -39,10 +39,10 @@ class Sendpressure(val service: PressurevalueService, val http: HttpControl) {
                         var sp = service.save(p)
                         logger.debug("Send pressure ${sp}")
                     } else {
-                        logger.error("Send pressure error ${re.statusLine.statusCode}")
+                        logger.error("Send pressure error ${re.statusLine.statusCode} ${target}  P:${p}")
                     }
                 } catch (e: Exception) {
-                    logger.error("Send pressure error ${e.message}")
+                    logger.error("Send pressure error ${e.message} ${target}")
                 }
             }
         }
