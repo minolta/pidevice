@@ -3,7 +3,6 @@ package me.pixka.kt.run
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.t.RunoffPump
 import me.pixka.kt.pidevice.u.Dhtutil
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
@@ -17,43 +16,10 @@ class OffpumpWorker(var pijob: Pijob, val dhts: Dhtutil) : PijobrunInterface, Ru
     var startrun: Date? = null
 
     var df = SimpleDateFormat("HH:mm")
-    override fun setP(pijob: Pijob) {
+    override fun setP(p: Pijob) {
+        this.pijob = p
     }
 
-    fun checktime(job: Pijob): Boolean {
-        try {
-//            df.timeZone = TimeZone.getTimeZone("+0700")
-            var n = df.format(Date())
-
-            var now = df.parse(n)
-            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
-            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
-            if (job.stimes != null && job.etimes != null) {
-                var st = df.parse(job.stimes).time
-                var et = df.parse(job.etimes).time
-                logger.debug("checktime ${st} <= ${now} <= ${et}")
-                if (st <= now.time && now.time <= et)
-                    return true
-            } else if (job.stimes != null && job.etimes == null) {
-                var st = df.parse(job.stimes).time
-                logger.debug("checktime ${st} <= ${now} ")
-                if (st <= now.time)
-                    return true
-            } else if (job.stimes == null && job.etimes != null) {
-                var st = df.parse(job.etimes).time
-                logger.debug("checktime ${st} >= ${now}")
-                if (st <= now.time)
-                    return true
-            } else {
-                logger.debug("${job.name} checktime not set ")
-                return true
-            }
-        } catch (e: Exception) {
-            logger.error("checktime ${e.message}")
-        }
-
-        return false
-    }
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -62,15 +28,15 @@ class OffpumpWorker(var pijob: Pijob, val dhts: Dhtutil) : PijobrunInterface, Ru
     override fun runStatus() = isRun
 
     override fun getPijobid(): Long {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return pijob.id
     }
 
     override fun getPJ(): Pijob {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return pijob
     }
 
     override fun startRun(): Date? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return startrun
     }
 
     override fun state(): String? {
@@ -78,49 +44,36 @@ class OffpumpWorker(var pijob: Pijob, val dhts: Dhtutil) : PijobrunInterface, Ru
     }
 
     override fun setrun(p: Boolean) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        isRun = p
     }
 
     override fun run() {
-
         isRun = true
         startrun = Date()
         state = "Start run ${startrun}"
+        logger.debug("Start run ${startrun}")
         var t = Executors.newSingleThreadExecutor()
-        var count = 0
-        while (true) {
+        try {
+            var ip = dhts.mactoip(pijob.desdevice?.mac!!)
+            var task = HttpGetTask("http://${ip?.ip}/off")
+            state = "call url http://${ip?.ip}/off"
+            var f = t.submit(task)
             try {
-                if (checktime(pijob)) {
-                    count++
-                    if (count > 3) {
-                        logger.error("Off pumb error time out ${pijob.name}")
-                        state = "Off pumb error time out ${pijob.name}"
-                        break
-                    }
-                    var ip = dhts.mactoip(pijob.desdevice?.mac!!)
-                    var task = HttpGetTask("http://${ip?.ip}/off")
-                    state =  "call url http://${ip?.ip}/off"
-                    var f = t.submit(task)
-                    try {
-                        var re = f.get(30, TimeUnit.SECONDS)
-                        state = "call is ok result ${re}"
-                        break //if off is ok
-                    } catch (e: Exception) {
-                        logger.error("Off pumb error  offpump ${e.message} ${pijob.name}")
-                        state = "Off pumb error  offpump ${e.message} ${pijob.name}"
-                    }
-                } else {
-                    logger.debug("Out of rang offpump ${pijob.name}")
-                    state = "Out of rang offpump ${pijob.name}"
-                    break
-                }
+                var re = f.get(30, TimeUnit.SECONDS)
+                state = "Off pumb is ok ${re}"
+                TimeUnit.SECONDS.sleep(5)
             } catch (e: Exception) {
-                logger.error("offpump ${e.message} ${pijob.name}")
-                state = "offpump ${e.message} ${pijob.name}"
-                break
-            }
-        }
+                logger.error("Off pumb error  offpump ${e.message} ${pijob.name}")
+                state = "Off pumb error  offpump ${e.message} ${pijob.name}"
+                TimeUnit.SECONDS.sleep(5)
 
+            }
+        } catch (e: Exception) {
+            logger.error("offpump ${e.message} ${pijob.name}")
+            state = "offpump ${e.message} ${pijob.name}"
+            TimeUnit.SECONDS.sleep(10)
+
+        }
         isRun = false
     }
 

@@ -16,7 +16,6 @@ import java.util.concurrent.Executors
 
 
 @Component
-//@Profile("pi")
 class RunoffPump(val pjs: PijobService,
                  val js: JobService,
                  val task: TaskService,
@@ -25,18 +24,33 @@ class RunoffPump(val pjs: PijobService,
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
-
         logger.debug("Run off pump")
         try {
             var jobs = loadjob()
-            logger.debug("Found job ${jobs}")
+            logger.debug("Found job ${jobs?.size}")
 
             if (jobs != null) {
                 var t = Executors.newSingleThreadExecutor()
                 for (job in jobs) {
+                    var intime = task.checktime(job)
+                    logger.debug("Check job ${job.name} Stime ${job.stimes} ${job.etimes} intime ${intime}")
 
-                    var offpumpWorker = OffpumpWorker(job, dhts)
-                    task.run(offpumpWorker)
+                    if (intime) {
+                        var offpumpWorker = OffpumpWorker(job, dhts)
+                        logger.debug("Run ${job.name}")
+                        try {
+                            if (task.run(offpumpWorker)) {
+                                logger.debug("Send to taskserver ${job.name}")
+                            } else {
+                                logger.debug("Can not run ${job.name}")
+                            }
+                        } catch (e: Exception) {
+                            logger.error("Tsak ERROR  ${job.name} : ${e.message}")
+                        }
+
+                    } else {
+                        logger.debug("Out of time to run ${job.name}")
+                    }
                 }
             }
         } catch (e: Exception) {

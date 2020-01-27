@@ -94,7 +94,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
         try {
             if (pijob.tlow != null) {
-
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
                 logger.debug("Slow start ${pijob.tlow}")
                 //prility

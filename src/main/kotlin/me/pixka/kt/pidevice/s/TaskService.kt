@@ -1,7 +1,6 @@
 package me.pixka.kt.pidevice.s
 
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pidevice.t.Runhjobbyd1
 import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
@@ -18,7 +17,6 @@ import kotlin.collections.ArrayList
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
-//@Profile("pi", "lite")
 class TaskService(val context: ApplicationContext) {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
     fun run(work: PijobrunInterface): Boolean {
@@ -163,41 +161,45 @@ class TaskService(val context: ApplicationContext) {
         }
         logger.debug("THREADISRUN ======================================================================================")
     }
+
     var df = SimpleDateFormat("HH:mm")
     fun checktime(job: Pijob): Boolean {
+        var can = false
         try {
 //            df.timeZone = TimeZone.getTimeZone("+0700")
-            var n = df.format(Date())
 
+            var n = df.format(Date())
             var now = df.parse(n)
-            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
-            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
+            logger.debug("checktime  ${job.name} : N:${n} now ${now} now time ${now.time}")
+            logger.debug("checktime  ${job.name} : s: ${job.stimes} ${now} e:${job.etimes}")
             if (job.stimes != null && job.etimes != null) {
                 var st = df.parse(job.stimes).time
                 var et = df.parse(job.etimes).time
-                logger.debug("checktime ${st} <= ${now} <= ${et}")
                 if (st <= now.time && now.time <= et)
-                    return true
+                    can = true
+                logger.debug("checktime  ${job.name} : ${st} <= ${now} <= ${et} can:${can}")
+
             } else if (job.stimes != null && job.etimes == null) {
                 var st = df.parse(job.stimes).time
-                logger.debug("checktime ${st} <= ${now} ")
                 if (st <= now.time)
-                    return true
+                    can = true
+                logger.debug("checktime ${job.name} : ${st} <= ${now} Can:${can}")
             } else if (job.stimes == null && job.etimes != null) {
                 var st = df.parse(job.etimes).time
-                logger.debug("checktime ${st} >= ${now}")
                 if (st <= now.time)
-                    return true
+                    can = true
+                logger.debug("checktime ${job.name} : ${st} >= ${now} can:${can}")
             } else {
                 logger.debug("${job.name} checktime not set ")
-                return true
+                can = true
             }
         } catch (e: Exception) {
-            logger.error("checktime ${e.message}")
+            logger.error("checktime  ${job.name} : ${e.message}")
         }
 
-        return false
+        return can
     }
+
     companion object {
         internal var logger = LoggerFactory.getLogger(TaskService::class.java)
     }
