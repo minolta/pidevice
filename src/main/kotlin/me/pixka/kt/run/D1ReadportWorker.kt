@@ -196,20 +196,14 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
             isRun = false
             state = "End job"
         } catch (e: Exception) {
-
+            logger.error("Run By port is ERROR ${e.message}")
         }
+
+        waitstatus = true
+        isRun = false
+        state = "End job"
     }
 
-    fun checkH(l: Float, h: Float, v: Float): Boolean {
-        state = "Check value ${l} < ${v} > ${h}"
-        if (v >= l && v <= h) {
-            logger.debug("Run this job ${pijob.name}")
-            return true
-        }
-        logger.debug("Check value ${l} < ${v} > ${h} Not run this job ${pijob.name}")
-        TimeUnit.SECONDS.sleep(2)
-        return false
-    }
 
     fun go() {//Run
         var ee = Executors.newSingleThreadExecutor()

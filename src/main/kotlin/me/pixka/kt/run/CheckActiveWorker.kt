@@ -1,4 +1,5 @@
 package me.pixka.kt.run
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.base.s.IptableServicekt
@@ -25,8 +26,8 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
     var isRun = false
     var state = "Init"
     var startrun: Date? = null
-    override fun setP(pijob: Pijob) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun setP(p: Pijob) {
+        this.pijob = p
     }
 
     override fun setG(gpios: GpioService) {
@@ -62,8 +63,6 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
         startrun = Date()
         logger.debug("Start run ${startrun} ${pijob.name}")
         var token = pijob.description
-
-
         try {
             var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
             logger.debug("Found jobs ${ports.size} ${pijob.name}")
@@ -87,8 +86,8 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
                                 state = "return status ${re} ${pijob.name}"
                                 var status = om.readValue<Status>(re, Status::class.java)
                                 //end
-                                state = "return status ${status} ${pijob.name} "
-
+                                state = "return status ${status} ${pijob.name}  Uptime ${status.uptime}"
+                                TimeUnit.SECONDS.sleep(5)
                             } catch (e: Exception) {
                                 logger.error("Error  ${e.message}")
                                 if (token != null)
@@ -142,7 +141,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class Status(var message: String? = null, var ip: String? = null,var uptime:Long?=0,
+class Status(var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
              var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
              var version: String? = null) {
     override fun toString(): String {
