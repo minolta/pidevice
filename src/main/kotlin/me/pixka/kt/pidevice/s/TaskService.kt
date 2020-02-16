@@ -68,6 +68,7 @@ class TaskService(val context: ApplicationContext) {
                 }
 
                 logger.debug("CheckJOB This jobcanrun ${w}")
+                logger.debug("#Runjob TASKSERVICE  ${w.getPJ().name} ")
                 return w //ถ้าไม่เจอ return w ไป exec
             } else {
                 logger.debug("CheckJOB This jobcanrun ${w}")

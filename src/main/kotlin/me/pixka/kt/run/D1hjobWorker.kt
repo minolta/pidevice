@@ -62,6 +62,8 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     }
 
     fun checkCanrun(): Boolean {
+
+
         var h: Float? = 0.0F
         try {
             var dhtvalue = dhts.readByPijob(pijob)
@@ -76,6 +78,12 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     state = "H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}"
                     logger.error("H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}")
                 }
+
+            }
+            else
+            {
+                logger.error("DHT Value is null ${pijob.name}")
+                    dhts.ntfs.error("DHT Value is null ${pijob.name}")
 
             }
         } catch (e: Exception) {

@@ -1,15 +1,14 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.ktbase.io.Configfilekt
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.io.PrintWriter
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
@@ -18,8 +17,7 @@ import java.util.*
 
 @Component
 //@Profile("pi")
-class Findip(val service: IptableServicekt, val cfg: Configfilekt,
-             val dbcfg: DbconfigService) {
+class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: NotifyService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)
     }
@@ -28,7 +26,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
     var command: String? = "nmap -n -sP "
 
 
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 5000)
     fun loadip() {
         logger.info("Scan ip ${Date()}")
         setup()
@@ -57,31 +55,10 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
 
     fun setup() {
         // logger.debug("Set ups")
-        command = dbcfg.findorcreate("nmap", "nmap -n -sP").value
+        command = "nmap -n -sP"
+        //dbcfg.findorcreate("nmap", "nmap -n -sP").value
     }
 
-    fun editIptable(indevice: Iptableskt, it: Iptableskt) {
-        var indevice = indevice
-        try {
-            indevice.ip = it.ip
-            indevice.lastcheckin = it.lastcheckin
-            indevice = service.save(indevice)!!
-            logger.debug("Update iptable : ${indevice}")
-        } catch (e: Exception) {
-            e.printStackTrace()
-            logger.error("loadiptable editiptable() " + e.message)
-        }
-
-    }
-
-    fun saveMeip(ip: String) {
-        logger.debug("iptable  save own ip ${ip}")
-        val out = PrintWriter("/sensor/wlan")
-        out.print(ip)
-        out.close()
-
-
-    }
 
     var meip: Ip? = null
     fun getNet(): ArrayList<String> {
@@ -104,14 +81,10 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
 
     fun findIP(network: String, cmd: String): ArrayList<Ip> {
         val c = cmd + " " + network
-
         val proc = Runtime.getRuntime().exec(c)
-
+        logger.debug("Command is ${c}")
         val stdInput = BufferedReader(InputStreamReader(proc.inputStream))
-
-
         // read the output from the command
-
         val buf = ArrayList<Ip>()
         var ip: Ip? = null
         while (readline(stdInput) != null) {
@@ -147,10 +120,14 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
         var buf = ArrayList<Ip>()
         try {
             var network = getNet()
+            logger.debug("Network found ${network}")
 
-
+//            network.map {
+//                findIP(it,command!!)
+//            }
             for (n in network) {
                 var b = findIP(n, command!!)
+                logger.debug("Ip found ${b}")
                 buf.addAll(b)
             }
 
@@ -163,49 +140,70 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt,
     }
 
     fun savetoDB(buf: ArrayList<Ip>) {
-        try {
-            for (i in buf) {
-                //  logger.debug("find iptables : ${i}")
-                if (i.mac != null) {
 
-                    //      logger.debug("I for find ADDRESS: ${i.mac} Service is ${service}")
+       buf.map {
+            var oldip = service.findByMac(it.mac!!)
+            if (oldip != null) {
+                //edit
+                oldip.ip = it.ip
+                oldip.lastupdate = Date()
+                oldip = service.save(oldip)
+                logger.debug("Update ${oldip?.devicename}  TO IP ${oldip?.ip} MAC:${oldip?.mac}")
 
-                    var mac = i.mac
-                    //      logger.debug("mac value : ${mac}")
-                    var ii: Iptableskt? = service.findByMac(mac!!)
-                    //      logger.debug("Address  Found: ${ii}")
-                    if (ii == null) {
-                        ii = Iptableskt()
-                        ii.ip = i.ip
-                        ii.mac = i.mac
-                        newIptable(ii)
-                    } else {
-                        service.updateiptable(ii, i.ip!!)
-                    }
-                } else {
-                    logger.info("Saveme: ${i}")
-                    //me device
-                    var ii: Iptableskt? = service.findByMac("")
-                    //      logger.debug("Address  Found: ${ii}")
-                    if (ii == null) {
-                        ii = Iptableskt()
-                        ii.ip = i.ip
-                        ii.mac = i.mac
-                        newIptable(ii)
-                    } else {
-                        service.updateiptable(ii, i.ip!!)
-                    }
+            } else {
+                var newip = Iptableskt()
+                newip.mac = it.mac
+                newip.ip = it.ip
+                newip.lastupdate = Date()
+                newip.adddate = Date()
 
-                }
+                var np = service.save(newip)!!
+                logger.debug("New Ip address MAC:${np.mac} IP:${np.ip}")
             }
-
-
-            buf.clear()
-            logger.debug("Clear buffer : ${buf} buf size: ${buf.size}")
-        } catch (e: Exception) {
-            logger.debug("Error in for : ${e}")
-            e.printStackTrace()
         }
+//        try {
+//            for (i in buf) {
+//                //  logger.debug("find iptables : ${i}")
+//                if (i.mac != null) {
+//
+//                    //      logger.debug("I for find ADDRESS: ${i.mac} Service is ${service}")
+//
+//                    var mac = i.mac
+//                    //      logger.debug("mac value : ${mac}")
+//                    var ii: Iptableskt? = service.findByMac(mac!!)
+//                    //      logger.debug("Address  Found: ${ii}")
+//                    if (ii == null) {
+//                        ii = Iptableskt()
+//                        ii.ip = i.ip
+//                        ii.mac = i.mac
+//                        newIptable(ii)
+//                    } else {
+//                        service.updateiptable(ii, i.ip!!)
+//                    }
+//                } else {
+//                    logger.info("Saveme: ${i}")
+//                    //me device
+//                    var ii: Iptableskt? = service.findByMac("")
+//                    //      logger.debug("Address  Found: ${ii}")
+//                    if (ii == null) {
+//                        ii = Iptableskt()
+//                        ii.ip = i.ip
+//                        ii.mac = i.mac
+//                        newIptable(ii)
+//                    } else {
+//                        service.updateiptable(ii, i.ip!!)
+//                    }
+//
+//                }
+//            }
+//
+//
+//            buf.clear()
+//            logger.debug("Clear buffer : ${buf} buf size: ${buf.size}")
+//        } catch (e: Exception) {
+//            logger.debug("Error in for : ${e}")
+//            e.printStackTrace()
+//        }
     }
 
     @Throws(SocketException::class)

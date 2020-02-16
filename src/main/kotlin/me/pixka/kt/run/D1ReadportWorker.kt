@@ -69,6 +69,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         try {
             var ip = dhts.mactoip(p.desdevice?.mac!!)
             var url = "http://${ip?.ip}"
+            logger.debug("Get port status url ${url} Mac : ${p.desdevice?.mac}")
             var ee = Executors.newSingleThreadExecutor()
             var get = HttpGetTask(url)
             var f2 = ee.submit(get)
@@ -82,13 +83,12 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                 TimeUnit.SECONDS.sleep(10)
                 throw Exception("Time out to get level water status")
             }
-                var dp = mapper.readValue(re, DPortstatus::class.java)
-                return dp
-
+            var dp = mapper.readValue(re, DPortstatus::class.java)
+            return dp
 
 
         } catch (e: Exception) {
-            logger.error("Get Sensor status ${e.message}")
+            logger.error("Get Sensor status JOB NAME ${p.name} ${e.message}")
         }
         return null
     }
