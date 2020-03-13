@@ -209,7 +209,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         var ee = Executors.newSingleThreadExecutor()
         state = "Run set port "
         var ports = pijob.ports
-        logger.debug("Ports ${ports}")
+        logger.debug("Ports ${pijob.job?.name} ${ports}")
         if (ports != null)
             for (port in ports) {
 

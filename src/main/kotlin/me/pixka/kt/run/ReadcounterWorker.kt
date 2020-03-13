@@ -36,7 +36,7 @@ class ReadcounterWorker(val service: CountfgService, val p: Pijob, var pijs: Por
                 var get = HttpGetTask(url3)
                 var f2 = ee.submit(get)
                 try {
-                    var re = f2.get(60, TimeUnit.SECONDS)
+                    var re = f2.get(5, TimeUnit.SECONDS)
                     var countvalue = om.readValue<Countfg>(re, Countfg::class.java)
                     logger.debug("RETURN ${re}")
                     status = "RETURN ${re}"

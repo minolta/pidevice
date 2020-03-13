@@ -61,6 +61,9 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         return state
     }
 
+    /**
+     * สพหรับตรวจสอบ h ว่าอยู่ในช่วงแล้วหรือยัง
+     */
     fun checkCanrun(): Boolean {
 
 

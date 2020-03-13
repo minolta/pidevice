@@ -7,14 +7,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class GroupRunService(val task: TaskService) {
-
+    /**
+     * ใช้สำหรับตรวจสอบว่ามร job ที่ทำงานอยู่หรือเปล่าถ้ามีไม่ทำงาน
+     */
     fun canrun(job: PijobrunInterface): Boolean {
         var pijobid = job.getPijobid().toInt()
         var groupid = job.getPJ().pijobgroup_id
         var grouprun = task.runinglist
 //        logger.debug("Groups ${grouprun}")
         for (r in grouprun) {
-
             if (r is D1hjobWorker) {
                 logger.debug("checkgroup D1Hworker [${job.getPJ().name}] check to  r:[${r.getPJ().name}] Run ? ${r.isRun} wait ${r.waitstatus}")
                 //ถ้ามี job นี้ กำลัง run อยู

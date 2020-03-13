@@ -18,7 +18,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class LoadPortnameTask(val task: LoadPortTask) {
 
 
@@ -117,6 +117,7 @@ class LoadPortTask(val service: PortnameService,
         if (host == null)
             host = cfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
         target = host + "/portname/lists/0/1000"
+        logger.debug("Target port ${target}")
     }
 
     companion object {

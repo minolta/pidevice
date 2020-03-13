@@ -27,8 +27,6 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt, val ntfs: Notify
                 rep = f.get(15, TimeUnit.SECONDS)
             } catch (e: Exception) {
                 logger.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
-
-
                 ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
                 ee.shutdownNow()
                 throw Exception("GetDHT value ERROR ${e.message} ${e}")

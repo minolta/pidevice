@@ -87,6 +87,15 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
                                 var status = om.readValue<Status>(re, Status::class.java)
                                 //end
                                 state = "return status ${status} ${pijob.name}  Uptime ${status.uptime}"
+                                if (status.errormessage != null) {
+                                    //ถ้า มี ERROR MESSAGE ให้ ส่งเข้า line เลย
+                                    if (status.errormessage?.isNotEmpty()!!) {
+                                        if (token != null)
+                                            ntfs.message("Have ERROR  ${device.name} ${pijob.name} ${status.errormessage}", token)
+                                        else
+                                            ntfs.message("Have ERROR ${device.name} ${pijob.name}  ${status.errormessage}")
+                                    }
+                                }
                                 TimeUnit.SECONDS.sleep(5)
                             } catch (e: Exception) {
                                 logger.error("Error  ${e.message}")
@@ -143,7 +152,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Status(var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
              var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
-             var version: String? = null) {
+             var version: String? = null, var errormessage: String? = null) {
     override fun toString(): String {
         return "${name} ${message} ${ssid} ${version} ${t} ${h} ${ip}"
     }

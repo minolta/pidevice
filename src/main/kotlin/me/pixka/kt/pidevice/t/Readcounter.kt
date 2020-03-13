@@ -16,7 +16,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-class Readcounter(val pjs: PijobService, val js: JobService, val iptableServicekt: IptableServicekt, val ts: TaskService,
+class Readcounter(val pjs: PijobService, val js: JobService,
+                  val iptableServicekt: IptableServicekt, val ts: TaskService,
                   val cfgs: CountfgService) {
     @Scheduled(initialDelay = 3000, fixedDelay = 10000)
     fun read() {
