@@ -8,8 +8,6 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.d.ErrorlogII
-import me.pixka.kt.pidevice.d.ErrorlogServiceII
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.pibase.s.PijobService
@@ -27,8 +25,6 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
     var startrun: Date? = null
     var waitstatus = false
     val mapper = ObjectMapper()
-    @Autowired
-    lateinit var errorlog: ErrorlogServiceII
 
 
     override fun setG(gpios: GpioService) {
@@ -280,7 +276,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                         }
                     } catch (e: Exception) {
                         logger.error("Set port error  ${e.message}")
-                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
+//                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
                     }
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")

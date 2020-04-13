@@ -5,8 +5,6 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.d.ErrorlogII
-import me.pixka.kt.pidevice.d.ErrorlogServiceII
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.pibase.s.DhtvalueService
@@ -24,8 +22,8 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     var startrun: Date? = null
     var waitstatus = false
 
-    @Autowired
-    lateinit var errorlog: ErrorlogServiceII
+//    @Autowired
+//    lateinit var errorlog: ErrorlogServiceII
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -225,7 +223,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                         }
                     } catch (e: Exception) {
                         logger.error("Set port error  ${e.message}")
-                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
+//                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
                     }
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")

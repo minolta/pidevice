@@ -1,6 +1,5 @@
 package me.pixka.kt.pidevice.d
 
-import me.pixka.kt.base.d.En
 import me.pixka.kt.pidevice.s.DefaultService
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
@@ -9,7 +8,7 @@ import javax.persistence.Entity
 
 @Entity
 class Countfg(var mac: String? = null, var count: Long? = null, var odd: Long? = null, var ip: String? = null,
-              var toserver:Boolean=false) : En()
+              var toserver:Boolean=false) : BaseIdEntity()
 
 @Repository
 interface CountfgRepo : JpaRepository<Countfg, Long>

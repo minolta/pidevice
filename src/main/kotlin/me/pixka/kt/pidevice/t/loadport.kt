@@ -68,7 +68,7 @@ class LoadPortTask(val service: PortnameService,
             return AsyncResult(true)
         } catch (e: Exception) {
             logger.error("Error Portname : " + e.message)
-            err.n("Load port name", "35", e.message!!)
+//            err.n("Load port name", "35", e.message!!)
         }
 
         return null
@@ -91,7 +91,7 @@ class LoadPortTask(val service: PortnameService,
             }
         } catch (e: Exception) {
             logger.error("savetodevice Portname error : " + e.message)
-            err.n("Load port name", "53", e.message!!)
+//            err.n("Load port name", "53", e.message!!)
         }
 
     }
