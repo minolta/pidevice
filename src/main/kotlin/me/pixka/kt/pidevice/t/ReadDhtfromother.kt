@@ -35,24 +35,27 @@ class ReadDhtfromother(val http: HttpControl,
 
     @Scheduled(fixedDelay = 2000)
     fun run(): Dhtvalue? {
-
-        var list = loadjob()
-        if (list != null)
-            logger.debug("Job for read dht ${list.size}")
-        else {
-            logger.error("Not job for run ")
-            throw Exception("JOB Readdht not found")
-        }
-
-        for (i in list) {
-
-            try {
-
-                var rt = ReadDhtWorker(i, dhtutil, dhts)
-                task.run(rt)
-            } catch (e: Exception) {
-                logger.error("Run " + e.message)
+        try {
+            var list = loadjob()
+            if (list != null)
+                logger.debug("Job for read dht ${list.size}")
+            else {
+                logger.error("Not job for run ")
+                throw Exception("JOB Readdht not found")
             }
+
+            for (i in list) {
+
+                try {
+
+                    var rt = ReadDhtWorker(i, dhtutil, dhts)
+                    task.run(rt)
+                } catch (e: Exception) {
+                    logger.error("Run " + e.message)
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("Read DHT ERROR ${e.message}")
         }
         return null
     }

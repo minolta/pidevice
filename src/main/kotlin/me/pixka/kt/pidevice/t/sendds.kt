@@ -124,7 +124,8 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
             val mapper = ObjectMapper()
             val list = service.notInserver()
 
-            logger.debug("Values for send ${list.size}")
+
+            logger.debug("Values for send ${list!!.size}")
             for (item in list) {
                 logger.debug("[sendds18b20]  " + item)
                 var re: CloseableHttpResponse? = null

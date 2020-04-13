@@ -66,7 +66,7 @@ class RunjobByH(val dhts: DhtvalueService, val ts: TaskService
             var ports = ps.findByPijobid(job.id)
             //job.ports
             var t = 1
-            t = ports.size
+            t = ports!!.size
 
             //rt x t == เวลาการเปิดน้ำทั้งหมด
             var n = Date(Date().time + (rt * t))

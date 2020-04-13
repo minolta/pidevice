@@ -18,7 +18,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class LoadPortnameTask(val task: LoadPortTask) {
 
 
@@ -68,7 +68,7 @@ class LoadPortTask(val service: PortnameService,
             return AsyncResult(true)
         } catch (e: Exception) {
             logger.error("Error Portname : " + e.message)
-            err.n("Load port name", "35", e.message!!)
+//            err.n("Load port name", "35", e.message!!)
         }
 
         return null
@@ -91,7 +91,7 @@ class LoadPortTask(val service: PortnameService,
             }
         } catch (e: Exception) {
             logger.error("savetodevice Portname error : " + e.message)
-            err.n("Load port name", "53", e.message!!)
+//            err.n("Load port name", "53", e.message!!)
         }
 
     }
@@ -117,6 +117,7 @@ class LoadPortTask(val service: PortnameService,
         if (host == null)
             host = cfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
         target = host + "/portname/lists/0/1000"
+        logger.debug("Target port ${target}")
     }
 
     companion object {

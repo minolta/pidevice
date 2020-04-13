@@ -167,6 +167,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                     logger.error("Create pijobgroup error ${e.message}")
                 }
             }
+
             try {
                 if (item.ds18sensor != null)
                     item.ds18sensor = newdssensor(item.ds18sensor!!)
@@ -302,12 +303,12 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
     }
 
     private fun saveportstatus(item: Pijob, ref: Pijob) {
-        logger.debug("[loadpijob] Save port status ")
+        logger.debug("[saveportstatus] Save port status ")
         try {
             val listofports = loadPortstate(item.id)
             saveport(listofports!!, ref)
         } catch (e: Exception) {
-            logger.error("[loadpijob] Save port error: " + e.message)
+            logger.error("[saveportstatus] Save port error: " + e.message)
         }
 
     }
@@ -320,15 +321,15 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             if (re != null) {
 
                 val list = mapper.readValue<List<Portstatusinjob>>(re)
-                logger.debug("[loadpijob] Found Port states  for me  ***************************************")
-                logger.debug("${list}")
+                logger.debug("[saveportstatus] Found Port states  for me  ***************************************")
+                logger.debug(" saveportstatus ${list}")
                 logger.debug("******************************************************************************")
                 return list
             }
 
-            throw Exception("Not found  port status")
+            throw Exception(" saveportstatus Not found  port status")
         } catch (e: IOException) {
-            logger.error("[loadpijob] Load port status : " + e.message)
+            logger.error("[saveportstatus] Load port status : " + e.message)
             throw e
         }
     }

@@ -78,6 +78,10 @@ class ReadTmpTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
                     var d = rps.save(o)
                     logger.debug("Save Tmp ${d}")
                     status = "Save Tmp  ${d}"
+                    if (pijob.runtime != null) {
+                        status = "RUN time ${pijob.runtime}"
+                        TimeUnit.SECONDS.sleep(pijob.runtime!!)
+                    }
                     if (pijob.waittime != null) {
                         status = "Wait time ${pijob.waittime}"
                         TimeUnit.SECONDS.sleep(pijob.waittime!!)

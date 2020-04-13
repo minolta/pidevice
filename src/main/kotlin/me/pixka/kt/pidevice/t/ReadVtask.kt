@@ -2,6 +2,7 @@ package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressurevalueService
+import me.pixka.kt.pidevice.d.VbattService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1readvoltWorker
@@ -16,20 +17,24 @@ import org.springframework.stereotype.Component
 class ReadVtask(val pjs: PijobService,
                 val js: JobService,
                 val task: TaskService, val readUtil: ReadUtil, val portstatusinjobService: PortstatusinjobService,
-                val pss: PressurevalueService) {
+                val pss: VbattService) {
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
-        var list = loadjob()
-        if (list != null)
-            logger.debug("Job for ReadVtask ${list.size}")
+        try {
+            var list = loadjob()
+            if (list != null)
+                logger.debug("Job for ReadVtask ${list.size}")
 
-        if (list != null) {
-            for (job in list) {
+            if (list != null) {
+                for (job in list) {
 
-                var job = D1readvoltWorker(job, readUtil, portstatusinjobService, pss)
-                task.run(job)
+                    var job = D1readvoltWorker(job, readUtil, portstatusinjobService, pss)
+                    task.run(job)
+                }
             }
+        } catch (e: Exception) {
+            logger.error("ERROR READ V ${e.message}")
         }
     }
 

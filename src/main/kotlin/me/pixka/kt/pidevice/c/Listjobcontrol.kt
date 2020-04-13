@@ -20,9 +20,57 @@ import java.util.concurrent.ExecutorService
 class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
                val ips: IptableServicekt, val context: ApplicationContext) {
 
+    @CrossOrigin
+    @RequestMapping(value = ["/tx"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun getthread(): List<Any>? {
+
+        try {
+            var buf = ArrayList<tl>()
+            var list = taskService.runinglist
+            for (i in list) {
+                var t = tl()
+                t.id = i.getPijobid()
+                t.name = i.getPJ().name
+                t.startrun = i.startRun()
+                t.state = i.state()
+                buf.add(t)
+            }
+            return buf
+
+//            return taskService.runinglist as List<Any>
+        } catch (e: Exception) {
+            logger.error("TXERROR ${e.message}")
+            return null
+        }
+    }
+
+    fun short(b: ArrayList<tl>) {
+        var bb = ArrayList<tl>()
+        val array = arrayOfNulls<tl>(b.size)
+        var a = arrayOfNulls<tl>(b.size)
+        b.toArray(array)
+        var t: tl? = null
+        var v: tl? = null
+        for (i in 0..b.size) {
+            if (t == null) {
+                t = array[i]
+                continue
+            }
+
+            for (j in i..b.size) {
+                if (array[j]?.id!! < t.id!!) {
+                    v = array[j]
+
+                }
+            }
+
+        }
+
+    }
 
     @CrossOrigin
-    @RequestMapping(value = "/listtask", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/listtask"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun list(): ArrayList<tl> {
 
@@ -31,7 +79,8 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         for (run in runs) {
             try {
                 var pj = run.getPJ()
-                var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(), run.runStatus(), pj.ports)
+                var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
+                        run.runStatus(), pj.ports,run.getPJ().job?.name)
                 list.add(t)
             } catch (e: Exception) {
                 logger.error("List task error ${e.message}")
@@ -44,7 +93,33 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/listpool", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/l3/{name}"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun lt(@PathVariable("name") name: String): ArrayList<tl> {
+        logger.debug("Call Tl")
+        var list = ArrayList<tl>()
+        var runs = taskService.runinglist
+        var n = name.toLowerCase()
+        for (run in runs) {
+            try {
+                var pj = run.getPJ()
+                if (run.getPJ() != null && run.getPJ().name?.toLowerCase()?.indexOf(n) != -1) {
+                    var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state()
+                            , run.runStatus(), pj.ports,run.getPJ().job?.name)
+                    list.add(t)
+                }
+            } catch (e: Exception) {
+                logger.error("List task error ${e.message}")
+                throw e
+            }
+        }
+
+        return list
+
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = ["/listpool"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun listpool(): ArrayList<tl> {
         var tp = context.getBean("pool") as ExecutorService
@@ -86,7 +161,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/listjobs", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/listjobs"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun listjob(): MutableList<Pijob>? {
 
@@ -94,7 +169,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/testjob/{localid}", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/testjob/{localid}"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun testjob(@PathVariable("localid") id: Long): Boolean {
 
@@ -113,7 +188,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 
 
     @CrossOrigin
-    @RequestMapping(value = "/listips", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/listips"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun listips(): MutableList<Iptableskt>? {
 
@@ -126,4 +201,4 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 }
 
 class tl(var id: Long? = null, var name: String? = null, var startrun: Date? = null,
-         var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null)
+         var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null,var jobtype:String?=null)

@@ -1,7 +1,6 @@
 package me.pixka.kt.run
 
 import com.pi4j.io.gpio.GpioPinDigitalOutput
-import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
@@ -9,20 +8,20 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PortstatusinjobService
-import org.springframework.beans.factory.annotation.Autowired
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
-                             var readUtil: ReadUtil?=null,
-                             val ps: PortstatusinjobService?=null, var logger: org.slf4j.Logger)
+abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService? = null,
+                             var readUtil: ReadUtil? = null,
+                             val ps: PortstatusinjobService? = null, var logger: org.slf4j.Logger)
     : PijobrunInterface, Runnable {
 
     override fun setrun(p: Boolean) {
         isRun = p
     }
+
     var status: String? = null
     var isRun: Boolean = false
     var startRun: Date? = null
@@ -138,11 +137,13 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
     /**
      * สำหรับ D1
      */
-   open fun setRemoteport(ports: List<Portstatusinjob>) {
+    open fun setRemoteport(ports: List<Portstatusinjob>) {
         var ee = Executors.newSingleThreadExecutor()
         logger.debug("Set remoteport ${ports}")
         for (port in ports) {
 
+            if (port.enable != null && port.enable == false)
+                continue // port is disable next port
             try {
                 var traget = port.device
                 var runtime = port.runtime
@@ -152,7 +153,7 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
 
 
                 var ip = readUtil?.findIp(traget!!)
-                logger.debug("Found traget ip ${ip}")
+                logger.debug("Found traget ${traget} ===> ip ${ip} ${pijob.name}")
                 if (ip != null) {
                     var url = "http://${ip.ip}/run?port=${portname}&value=${value}&delay=${runtime}&waittime=${waittime}"
                     logger.debug("Call to ${url}")
@@ -161,12 +162,10 @@ abstract class DefaultWorker(var pijob: Pijob, var gpios: GpioService?=null,
                     try {
                         var value = f.get(3, TimeUnit.SECONDS)
                         logger.debug("Set remote result ${value}")
-                        if(runtime!=null)
-                        {
+                        if (runtime != null) {
                             TimeUnit.SECONDS.sleep(runtime.toLong()) //หยุดรอถ้ามีการกำหนดมา
                         }
-                        if(waittime!=null)
-                        {
+                        if (waittime != null) {
                             TimeUnit.SECONDS.sleep(waittime.toLong()) //หยุดรอถ้ามีการกำหนดมา
                         }
                     } catch (e: Exception) {

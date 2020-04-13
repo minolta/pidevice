@@ -7,13 +7,13 @@ import java.io.BufferedReader
 import java.io.File
 
 @RestController
-@Profile("pi", "lite")
+//@Profile("pi", "lite")
 class ResetControl(val portstatusinjobService: PortstatusinjobService,val pijobService: PijobService,val ps:PideviceService,val ss:DS18sensorService,val js:JobService)
 {
 
 
     @CrossOrigin
-    @RequestMapping(value = "/resetpijob", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/resetpijob"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun value(): Boolean? {

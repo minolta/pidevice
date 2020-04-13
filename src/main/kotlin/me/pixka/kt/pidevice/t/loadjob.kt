@@ -6,6 +6,7 @@ import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.d.Job
+import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.pibase.s.JobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -14,41 +15,44 @@ import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
+import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 
 @Component
-@Profile("pi", "lite")
-class LoadMainJobTask(val task: LoadjobTask) {
+//@Profile("pi", "lite")
+class LoadMainJobTask(val jobService: JobService) {
+    val om = ObjectMapper()
 
-
-    @Scheduled(initialDelay = 30000, fixedDelay = 60000)
+    @Scheduled(fixedDelay = 15000)
     fun run() {
-        logger.info("in loadmainjob")
+        var traget = System.getProperty("piserver")
 
-        var count = 0
+        var url = "${traget}/job/lists/0/1000"
+        var t = Executors.newSingleThreadExecutor()
+        var http = HttpGetTask(url)
+        var f = t.submit(http)
+
         try {
-            logger.debug("in while  loadmainjob")
-
-            var f = task.run()
-            while (true) {
-                if (f!!.isDone) {
-                    break
-                    logger.info("End load job ")
-                }
-                TimeUnit.SECONDS.sleep(1)
-                count++
-                if (count > 30) {
-                    logger.error("Time out")
-                    f.cancel(true)
+            var r = f.get(5, TimeUnit.SECONDS)
+            println(r)
+            val list = om.readValue<List<Job>>(r!!)
+            for (j in list) {
+                var job = jobService.findByName(j.name!!)
+                if (job == null) {
+                    var nj = Job()
+                    nj.name = j.name
+                    nj.refid = j.id
+                    jobService.save(nj)
+                    logger.info("New Job in localhost ${nj}")
                 }
             }
 
         } catch (e: Exception) {
-            logger.error("Error loadmainjob : " + e.message)
-
+            logger.error("Load main job ${e.message} ")
         }
+
 
     }
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
@@ -20,6 +21,7 @@ class runD1Timer(val pjs: PijobService,
                  val js: JobService,
                  val task: TaskService,val ips:IptableServicekt,
 //                  val gpios: GpioService,
+                 val line:NotifyService,
                  val dhs: Dhtutil, val httpControl: HttpControl, val psij: PortstatusinjobService,
                  val readUtil: ReadUtil) {
     val om = ObjectMapper()
@@ -34,7 +36,7 @@ class runD1Timer(val pjs: PijobService,
                 for (job in list) {
                     try {
                         logger.debug("Run ${job}")
-                        var t = D1TimerWorker(job,ips, readUtil, psij)
+                        var t = D1TimerWorker(job,ips, readUtil, psij,null,line)
                         var run = task.run(t)
                         logger.debug("RunJOB ${run}")
                     } catch (e: Exception) {

@@ -9,6 +9,7 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -21,12 +22,17 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     var startrun: Date? = null
     var waitstatus = false
 
+//    @Autowired
+//    lateinit var errorlog: ErrorlogServiceII
+
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
+
     override fun setrun(p: Boolean) {
         isRun = p
     }
+
     override fun runStatus(): Boolean {
         return isRun
     }
@@ -53,6 +59,41 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         return state
     }
 
+    /**
+     * สพหรับตรวจสอบ h ว่าอยู่ในช่วงแล้วหรือยัง
+     */
+    fun checkCanrun(): Boolean {
+
+
+        var h: Float? = 0.0F
+        try {
+            var dhtvalue = dhts.readByPijob(pijob)
+            logger.debug("DHTVALUE ${dhtvalue}")
+            state = "Get value from traget [${dhtvalue}]"
+            if (dhtvalue != null) {
+                if (dhtvalue.h != null)
+                    h = dhtvalue.h?.toFloat()
+                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
+                    return true
+                } else {
+                    state = "H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}"
+                    logger.error("H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}")
+                }
+
+            }
+            else
+            {
+                logger.error("DHT Value is null ${pijob.name}")
+                    dhts.ntfs.error("DHT Value is null ${pijob.name}")
+
+            }
+        } catch (e: Exception) {
+            logger.error("Check Can run ERROR ${e.message}")
+            state = "Check Can run ERROR ${e.message} H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${h}"
+        }
+        return false
+    }
+
     override fun run() {
 
         startrun = Date()
@@ -62,39 +103,36 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
         try {
             if (pijob.tlow != null) {
-
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
-                logger.debug("Slow start")
+                logger.debug("Slow start ${pijob.tlow}")
                 //prility
             }
 
-            var dhtvalue = dhts.readByPijob(pijob)
-            logger.debug("DHTVALUE ${dhtvalue}")
-            state = "Get value from traget [${dhtvalue}]"
-            if (dhtvalue != null) {
-                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
-                    logger.debug("Go!!")
-                    waitstatus = false
-                    go()
-                    waitstatus = true
-                    var waittime = pijob.waittime
-                    if (waittime != null) {
-                        state = "Wait time of job ${waittime}"
-                        TimeUnit.SECONDS.sleep(waittime)
-                    }
+            if (checkCanrun()) {
+                waitstatus = false
+                go()
+                waitstatus = true
+                var waittime = pijob.waittime
+                if (waittime != null) {
+                    state = "Wait time of job ${waittime}"
+                    TimeUnit.SECONDS.sleep(waittime)
                 }
-
-
+            } else {
+                logger.warn("Dht not found")
+                waitstatus = true
+                isRun = false
+                state = "End job"
             }
 
 
         } catch (e: Exception) {
             isRun = false
-            logger.error("ERROR ${e.message}")
-            state = "ERROR ${e.message}"
+            logger.error("ERROR 1 ${e.message}")
+            state = "ERROR 1 ${e.message}"
             waitstatus = true
             throw e
         }
+
         waitstatus = true
         isRun = false
         state = "End job"
@@ -103,8 +141,11 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     fun checkH(l: Float, h: Float, v: Float): Boolean {
         state = "Check value ${l} < ${v} > ${h}"
         if (v >= l && v <= h) {
+            logger.debug("Run this job ${pijob.name}")
             return true
         }
+        logger.debug("Check value ${l} < ${v} > ${h} Not run this job ${pijob.name}")
+        TimeUnit.SECONDS.sleep(2)
         return false
     }
 
@@ -117,6 +158,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             for (port in ports) {
 
                 if (port.enable == null || !port.enable!!) {
+                    logger.debug("Port disable ${port}")
                     continue //ข้ามไปเลย
                 }
                 var pw = port.waittime
@@ -138,38 +180,54 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     waittime = pijob.waittime!!
                 }
                 var value = 0
-                if (v != null) {
-                    if (v.name.equals("high")) {
+                if (v != null && v.name != null) {
+                    if (v.name.equals("high") || v.name?.indexOf("1") != -1) {
                         value = 1
                     } else value = 0
+                } else {
+                    if (v != null)
+                        state = "Value to set ERROR ${v.name}"
+                    else
+                        state = "Port state Error is Null"
+
+                    TimeUnit.SECONDS.sleep(5)
                 }
 
                 try {
                     var url = ""
 
-                    if (port.device != null)
-                        url = findUrl(port.device!!, portname!!, runtime, waittime, value)
-                    else
-                        url = findUrl(portname!!, runtime, waittime, value)
+                    try {
+                        if (port.device != null)
+                            url = findUrl(port.device!!, portname!!, runtime, waittime, value)
+                        else
+                            url = findUrl(portname!!, runtime, waittime, value)
+                    } catch (e: Exception) {
+                        logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
+                    }
+//                    logger.debug("URL ${url}")
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
                     var get = HttpGetTask(url)
                     var f = ee.submit(get)
-                    var value = f.get(30, TimeUnit.SECONDS)
-                    state = "Delay  ${runtime} + ${waittime}"
-                    logger.debug("D1h Value ${value}")
-                    state = "${value} and run ${runtime}"
-                    TimeUnit.SECONDS.sleep(runtime)
+                    try {
+                        var value = f.get(30, TimeUnit.SECONDS)
+                        state = "Delay  ${runtime} + ${waittime}"
+                        logger.debug("D1h Value ${value}")
+                        state = "${value} and run ${runtime}"
+                        TimeUnit.SECONDS.sleep(runtime)
 
-                    if (waittime != null) {
-
-                        state = "Wait time of port ${waittime}"
-                        TimeUnit.SECONDS.sleep(waittime)
+                        if (waittime != null) {
+                            state = "Wait time of port ${waittime}"
+                            TimeUnit.SECONDS.sleep(waittime)
+                        }
+                    } catch (e: Exception) {
+                        logger.error("Set port error  ${e.message}")
+//                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
                     }
                 } catch (e: Exception) {
-                    logger.error("Error ${e.message}")
-                    state = " Error ${e.message}"
+                    logger.error("Error 2 ${e.message}")
+                    state = " Error 2 ${e.message}"
                     ee.shutdownNow()
                 }
             }

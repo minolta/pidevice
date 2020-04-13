@@ -2,6 +2,7 @@ package me.pixka.kt.run
 
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.u.ReadUtil
@@ -52,9 +53,10 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
     override fun run() {
         startrun = Date()
         isRun = true
+        var v:PressureValue?=null
         Thread.currentThread().name = "JOBID:${pijob.id} D1P ${pijob.name} ${startrun}"
         try {
-            var v = readUtil.readPressureByjob(pijob)
+            v = readUtil.readPressureByjob(pijob)
             logger.debug("D1 Found pressure : ${v}")
             state = "D1 Found pressure : ${v}"
             if (v != null) {
@@ -76,8 +78,8 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
             }
         } catch (e: Exception) {
             isRun = false
-            logger.error("ERROR ${e.message}")
-            state = "ERROR ${e.message}"
+            logger.error("ERROR ${e.message}  HLOW:${pijob.hlow} HHIGH:${pijob.hhigh}  ${v}")
+            state = "ERROR ${e.message} HLOW:${pijob.hlow} HHIGH:${pijob.hhigh} ${v}"
             throw e
         }
 

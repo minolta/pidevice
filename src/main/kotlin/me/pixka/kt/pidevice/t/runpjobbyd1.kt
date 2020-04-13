@@ -20,25 +20,30 @@ class Runpjobbyd1(val pjs: PijobService,
     val om = ObjectMapper()
     @Scheduled(fixedDelay = 1000)
     fun run() {
-
-        var list = loadjob()
-        if (list != null)
-            logger.debug("Job for Runhjobbyd1 ${list.size}")
-        if (list != null) {
-            for (job in list) {
-                logger.debug("Run ${job}")
-                var c = checkrunwith(job)
-                logger.debug("Run with ${c}")
-                if (c != null && c) {
-                    var t = D1pjobWorker(job, readUtil)
-                    var run = task.run(t)
-                    logger.debug("RunJOB ${run}")
-                }
-                else
-                {
-                    logger.warn("Run with is false")
+        try {
+            var list = loadjob()
+            if (list != null)
+                logger.debug("Job for Runhjobbyd1 ${list.size}")
+            if (list != null) {
+                for (job in list) {
+                    logger.debug("Run ${job}")
+                    var c = checkrunwith(job)
+                    logger.debug("Run with ${c}")
+                    if (c != null && c) {
+                        var t = D1pjobWorker(job, readUtil)
+                        if (task.checktime(job)) {
+                            var run = task.run(t)
+                            logger.debug("RunJOB ${run}")
+                        } else {
+                            logger.debug("Not run on this time")
+                        }
+                    } else {
+                        logger.warn("Run with is false")
+                    }
                 }
             }
+        } catch (e: Exception) {
+            logger.error("run p job by d1 ${e.message}")
         }
     }
 

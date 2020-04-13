@@ -26,65 +26,76 @@ class Runhjobbyd1(val pjs: PijobService,
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
-
-        var list = loadjob()
-        if (list != null)
-            logger.debug("Job for Runhjobbyd1 ${list.size}")
-        if (list != null) {
-            for (job in list) {
-                logger.debug("Run ${job}")
-
-                var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
-
-                if (groups.canrun(t)) {
-                    if (checktime(job)) {
-                        var run = task.run(t)
-                        logger.debug("${job} RunJOB ${run}")
-                    } else {
-                        logger.error("${job} Not in time rang ")
-                    }
-                } else {
-                    logger.debug("${job} ********************** Somedeviceusewater ***************")
-                }
-            }
-        }
-    }
-
-    var df = SimpleDateFormat("HH:mm")
-    fun checktime(job: Pijob): Boolean {
         try {
-//            df.timeZone = TimeZone.getTimeZone("+0700")
-            var n = df.format(Date())
+            var list = loadjob()
+            if (list != null)
+                logger.debug("Job for Runhjobbyd1 Hjobsize  ${list.size}")
+            if (list != null) {
+                for (job in list) {
+                    logger.debug("RunH  ${job}")
 
-            var now = df.parse(n)
-            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
-            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
-            if (job.stimes != null && job.etimes != null) {
-                var st = df.parse(job.stimes).time
-                var et = df.parse(job.etimes).time
-                logger.debug("checktime ${st} <= ${now} <= ${et}")
-                if (st <= now.time && now.time <= et)
-                    return true
-            } else if (job.stimes != null && job.etimes == null) {
-                var st = df.parse(job.stimes).time
-                logger.debug("checktime ${st} <= ${now} ")
-                if (st <= now.time)
-                    return true
-            } else if (job.stimes == null && job.etimes != null) {
-                var st = df.parse(job.etimes).time
-                logger.debug("checktime ${st} >= ${now}")
-                if (st <= now.time)
-                    return true
-            } else {
-                logger.debug("${job.name} checktime not set ")
-                return true
+                    var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
+
+                    if (groups.canrun(t)) {
+                        if (task.checktime(job)) {
+                            if (!t.checkCanrun()) {
+                                t.state = "H not in ranger"
+                            } else {
+                                var run = task.run(t)
+                                logger.debug("${job} RunJOB ${run}")
+                            }
+                        } else {
+                            logger.debug("${job} Not in time rang ")
+                            t.state = "Not in run in this time"
+                        }
+                    } else {
+                        logger.debug("${job} ********************** Somedeviceusewater ***************")
+                        t.state = " Somedeviceusewate"
+
+                    }
+                }
+
             }
         } catch (e: Exception) {
-            logger.error("checktime ${e.message}")
+            logger.error("Read h by d1 ERROR ${e.message}")
         }
-
-        return false
     }
+
+//    var df = SimpleDateFormat("HH:mm")
+//    fun checktime(job: Pijob): Boolean {
+//        try {
+////            df.timeZone = TimeZone.getTimeZone("+0700")
+//            var n = df.format(Date())
+//
+//            var now = df.parse(n)
+//            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
+//            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
+//            if (job.stimes != null && job.etimes != null) {
+//                var st = df.parse(job.stimes).time
+//                var et = df.parse(job.etimes).time
+//                logger.debug("checktime ${st} <= ${now} <= ${et}")
+//                if (st <= now.time && now.time <= et)
+//                    return true
+//            } else if (job.stimes != null && job.etimes == null) {
+//                var st = df.parse(job.stimes).time
+//                logger.debug("checktime ${st} <= ${now} ")
+//                if (st <= now.time)
+//                    return true
+//            } else if (job.stimes == null && job.etimes != null) {
+//                var st = df.parse(job.etimes).time
+//                logger.debug("checktime ${st} >= ${now}")
+//                if (st <= now.time)
+//                    return true
+//            } else {
+//                logger.debug("${job.name} checktime not set ")
+//                return true
+//            }
+//        } catch (e: Exception) {
+//            logger.error("checktime ${e.message}")
+//        }
+//
+//        return false
+//    }
 
     fun loadjob(): List<Pijob>? {
         var job = js.findByName("runhbyd1")

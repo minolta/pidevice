@@ -45,7 +45,7 @@ class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpio
                 logger.info("Job: ${last}")
                 var t = last.ds18value?.t
                 var sensorid = last.dssensor?.id
-                var dsjobid = DSJOB.id
+                var dsjobid = DSJOB!!.id
                 if (t != null && sensorid != null && dsjobid != null) {
 
                     var jobs = pjs.findDSJOBBySensor(t, sensorid, dsjobid)

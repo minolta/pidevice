@@ -1,6 +1,5 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18sensor
@@ -14,7 +13,6 @@ import me.pixka.pibase.s.*
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.*
 
 /**
  * ใช้สำหรับ อ่านค่า temp ทุกอย่าง
@@ -27,92 +25,31 @@ import java.util.*
 class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, val io: Piio,
               val dvs: Ds18valueService, val ss: SensorService, val dss: DS18sensorService,
               val pideviceService: PideviceService,
-              val ips: IptableServicekt,val taskService: TaskService,val readUtil: ReadUtil) {
+              val ips: IptableServicekt, val taskService: TaskService, val readUtil: ReadUtil) {
 
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
-        logger.debug("Run #readtemp")
-        var jobs = loadjob()
-        logger.debug("Found job ${jobs}")
+        try {
+            logger.debug("Run #readtemp")
+            var jobs = loadjob()
+            logger.debug("Found job ${jobs}")
 
-        if (jobs != null)
-            for (i in jobs) {
+            if (jobs != null)
+                for (i in jobs) {
+                    logger.debug("Run job ${i}")
+                    if (i.ds18sensor != null) {
+                        var t = ReadTmpTask(i, readUtil, ips, dvs, pideviceService, dss)
+                        taskService.run(t)
+                    } else {
+                        var t = ReadTmpTask(i, readUtil, ips, dvs, pideviceService, dss)
+                        taskService.run(t)
+                    }
 
-                logger.debug("Run job ${i}")
-                if (i.ds18sensor != null) {
-                    var t = ReadTmpTask(i,readUtil , ips,dvs,pideviceService,dss)
-                    taskService.run(t)
-//                    var value = checkLocal(i.ds18sensor!!)
-//
-//                    if (value != null) {
-//                        logger.debug("Local value is ${value}")
-//                        dvs.save(value)
-//
-//                    } else {//ถ้าไม่เจอ local Sensor ต้องอ่านจากตัวอื่น
-//                        try {
-//                            value = ss.readDsOther(i.desdevice_id!!, i.ds18sensor_id)
-//                            logger.debug("Read othre value ${value} ")
-//                            if (value != null) {
-//                                //   logger.debug("Value is ${value.t} PI:${value.pidevice} SENSOR:${value.ds18sensor} ")
-//
-//                                var d = i.ds18sensor
-//                                if (d != null && d.name != "") {
-//                                    d = dss.findorcreate(d.name!!)
-//                                    logger.debug(" Found Sensor ${d}")
-//                                } else {
-//                                    d = dss.findorcreate(i.desdevice?.mac!!)
-//                                    logger.debug("Ds18Sensor not found")
-//                                }
-//                                value.ds18sensor = d
-//                                value.pidevice = i.desdevice
-//                                value.valuedate = Date()
-//                                dvs.save(value)
-//                                logger.info("Save DSOTHER")
-//                            }
-//                        } catch (e: Exception) {
-//                            logger.error(e.message)
-//                        }
-//
-//
-//                    }
-                } else {
-
-
-                    var t = ReadTmpTask(i,readUtil , ips,dvs,pideviceService,dss)
-                    taskService.run(t)
-
-//                    try {
-//                        var value = readOther(i.desdevice_id!!, i.ds18sensor_id)
-//                        logger.debug("Read other value ${value}")
-//                        if (value != null) {
-//                            //   logger.debug("Value is ${value.t} PI:${value.pidevice} SENSOR:${value.ds18sensor} ")
-//
-//                            var d = i.ds18sensor
-//                            if (d != null) {
-//                                d = dss.findorcreate(d.name!!)
-//                                logger.debug(" Found Sensor ${d}")
-//                            } else {
-//                                logger.debug("Ds18Sensor not found")
-//                                var des = i.desdevice
-//                                d = dss.findorcreate(des?.mac!!)
-//                                logger.debug("New Sensor ${d}")
-//                            }
-//
-//                            value.ds18sensor = d
-//                            value.pidevice = i.desdevice
-//                            value.valuedate = Date()
-//                            dvs.save(value)
-//                            logger.info("Save DSOTHER")
-//                        }
-//
-//                    } catch (e: Exception) {
-//                        logger.error("Read other Error ${e.message}")
-//                    }
                 }
-
-            }
-
+        } catch (e: Exception) {
+            logger.error("Read OTher ds ERROR ${e.message}")
+        }
         logger.debug("End #readtemp")
     }
 

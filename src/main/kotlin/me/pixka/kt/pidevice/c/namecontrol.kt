@@ -18,6 +18,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 
@@ -27,7 +28,7 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
 
     val version = "1.0.6"
     @CrossOrigin
-    @RequestMapping(value = "/name", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/name"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun value(): String? {
@@ -37,7 +38,7 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
     }
 
     @CrossOrigin
-    @RequestMapping(value = "/showname", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/showname"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     @Throws(Exception::class)
     fun showname() {
@@ -86,14 +87,15 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
 
 
     @CrossOrigin
-    @RequestMapping(value = "/version", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/version"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun version(): String? {
         return version
     }
 
+
     @CrossOrigin
-    @RequestMapping(value = "/thread", method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/thread"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun showthread(): ShowThread {
         var b = HashMap<String, String>()

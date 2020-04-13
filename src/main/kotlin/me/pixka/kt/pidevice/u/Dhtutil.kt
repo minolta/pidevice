@@ -7,27 +7,38 @@ import me.pixka.kt.base.s.IptableServicekt
 import me.pixka.kt.pibase.d.Dhtvalue
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.NotifyService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Service
-class Dhtutil(val http: HttpControl, val ips: IptableServicekt) {
+class Dhtutil(val http: HttpControl, val ips: IptableServicekt, val ntfs: NotifyService) {
     val om = ObjectMapper()
     fun readDhtfromOther(url: String): Dhtvalue? {
         var ee = Executors.newSingleThreadExecutor()
         var get = HttpGetTask(url)
-
         try {
             var f = ee.submit(get)
-            var rep = f.get(30, TimeUnit.SECONDS)
+            var rep: String? = null
+
+            try {
+                rep = f.get(15, TimeUnit.SECONDS)
+            } catch (e: Exception) {
+                logger.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
+                ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
+                ee.shutdownNow()
+                throw Exception("GetDHT value ERROR ${e.message} ${e}")
+            }
             var dhtvalue = om.readValue<Dhtvalue>(rep, Dhtvalue::class.java)
+
             return dhtvalue
         } catch (e: Exception) {
             logger.error("line 56 ${e.message} ${url}")
-            ee.shutdownNow()
 
+            ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
+            ee.shutdownNow()
             throw e
         }
         return null
@@ -48,6 +59,7 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt) {
                 throw Exception("Value is null")
             }
         } catch (e: Exception) {
+            logger.error("Read dht error ${e.message}")
             throw e
         }
         return null
