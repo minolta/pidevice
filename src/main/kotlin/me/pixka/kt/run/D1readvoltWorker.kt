@@ -2,8 +2,6 @@ package me.pixka.kt.run
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.d.Vbatt
@@ -24,7 +22,7 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
         startRun = Date()
         Thread.currentThread().name = "JOBID:${pijob.id} D1readvolt : ${pijob.name} ${startRun}"
         try {
-            var p = pijob as Pijob
+            var p = pijob
 //            var ip = getip(pijob.desdevice)
             var ip = readvalue.findIp(pijob.desdevice!!)
             if (ip != null) {
@@ -43,6 +41,7 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
                     psv.pidevice = pijob.desdevice
                     psv.valuedate = Date()
                     psv.v = espstatus.batt_volt
+                    this.status = "Vbatt :" + psv.v
                     pss.save(psv)
                 } catch (e: Exception) {
                     logger.debug("Readvbatt status error ${e.message}")
@@ -50,17 +49,19 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
             }
             var run = pijob.runtime
             TimeUnit.SECONDS.sleep(run?.toLong()!!)
+            status = "Wait ${pijob.waittime?.toLong()}"
             TimeUnit.SECONDS.sleep(pijob.waittime?.toLong()!!)
         } catch (e: Exception) {
             isRun = false
             logger.error(e.message)
+            status = e.message
             throw e
         }
 
         isRun = false
+        status = "End job"
 
     }
-
 
 
     companion object {
@@ -69,5 +70,6 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
 
 
 }
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Espstatus(var batt_volt: BigDecimal? = null)

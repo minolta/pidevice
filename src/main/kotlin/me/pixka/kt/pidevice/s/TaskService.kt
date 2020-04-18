@@ -40,12 +40,37 @@ class TaskService(val context: ApplicationContext) {
         }
         return false
     }
+    /**
+     *
+     * สำหรับตรวจสอบว่า มี การ run อยู่เปล่า
+     * return false where not found job
+     */
+
+  fun checkrun(w: Pijob): Boolean {
+
+        var run = runinglist.filter {
+            it.getPijobid() == w.id && it.runStatus()
+        }
+        if(run.isEmpty())
+            return false
+
+      return true
 
 
+  }
     /**
      * สำหรับตรวจว่า job ไหน ยัง run ไม่เสร็จก็ไม่ต้อง run ทับละ
      */
     fun checkalreadyrun(w: PijobrunInterface): PijobrunInterface? {
+//
+//        var run = runinglist.filter {
+//            it.getPijobid() == w.getPijobid() && it.runStatus()
+//        }
+//
+//        if(run.isEmpty())
+//            return null
+
+
 
         try {
             logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")

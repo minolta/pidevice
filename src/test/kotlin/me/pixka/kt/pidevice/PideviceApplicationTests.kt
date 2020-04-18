@@ -2,6 +2,7 @@ package me.pixka.kt.pidevice
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.run.D1portjobWorker
 import me.pixka.kt.run.DPortstatus
 import me.pixka.kt.run.PorttoCheck
@@ -20,11 +21,12 @@ class PideviceApplicationTests {
 
     @Test
     fun contextLoads() {
-      test1()
+//        test1()
+        testQueue()
     }
 
-    fun testgetStatus()
-    {
+
+    fun testgetStatus() {
         val mapper = ObjectMapper()
         val re = http.get("http://192.168.88.160")
 //        val list = mapper.readValue<List<DPortstatus>>(re)
@@ -33,6 +35,7 @@ class PideviceApplicationTests {
         var dp = mapper.readValue(re, DPortstatus::class.java)
         println(dp)
     }
+
     fun test2() {
         var bufs = ArrayList<PorttoCheck>()
 
@@ -43,11 +46,50 @@ class PideviceApplicationTests {
         }
 
     }
+    @Test
+    fun testQueue() {
+        var queue = LinkedList<Pijob>()
+
+        var pijob = Pijob()
+        pijob.id = 1
+        pijob.name = "1"
+        queue.add(pijob)
+
+        pijob = Pijob()
+        pijob.id = 2
+        pijob.name = "2"
+        queue.add(pijob)
+
+        queue.map { println(it) }
+
+        println(queue.contains(pijob))
+
+
+        pijob = Pijob()
+        pijob.id = 3
+        pijob.name = "3"
+        queue.add(pijob)
+
+        pijob = Pijob()
+        pijob.id = 9
+        pijob.name = "3"
+        queue.add(pijob)
+        pijob = Pijob()
+        pijob.id = 4
+        pijob.name = "4"
+        queue.add(pijob)
+        queue.map { println(it) }
+        println("peek: "+queue.poll())
+
+        queue.map { println(it) }
+
+
+    }
 
     fun test1() {
         var description = "D5,1,D6,1"
         var bufs = ArrayList<PorttoCheck>()
-        var c = description?.split(",")
+        var c = description.split(",")
         if (c == null || c.size < 1) {
             println("False")
         }
@@ -55,18 +97,18 @@ class PideviceApplicationTests {
         var c1 = PorttoCheck()
         c.map {
             D1portjobWorker.logger.debug("Value : ${it}")
-            if(it.toIntOrNull()==null)
+            if (it.toIntOrNull() == null)
                 c1.name = it
             else {
                 c1.check = it.toInt()
                 bufs.add(c1)
-             //   c1 = PorttoCheck()
+                //   c1 = PorttoCheck()
             }
         }
         var ps = DPortstatus()
-        ps.d5=1
-        ps.d6=1
-        getsensorstatusvalue(c1.name?.toLowerCase()!!,c1.check!!,ps)
+        ps.d5 = 1
+        ps.d6 = 1
+        getsensorstatusvalue(c1.name?.toLowerCase()!!, c1.check!!, ps)
         println(bufs)
     }
 

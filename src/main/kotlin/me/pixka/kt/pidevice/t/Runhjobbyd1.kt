@@ -13,7 +13,6 @@ import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.text.SimpleDateFormat
 import java.util.*
 
 @Component
@@ -24,35 +23,38 @@ class Runhjobbyd1(val pjs: PijobService,
                   val dhtvalueService: DhtvalueService, val groups: GroupRunService) {
     val om = ObjectMapper()
 
+
+    //สำหรับจัดคิวให้ทุก job ได้ทำงานไม่ต้องแยงกัน
+    var queue = LinkedList<Pijob>()
+
     @Scheduled(fixedDelay = 1000)
     fun run() {
+
         try {
+            printqueue()
+
+            //ถ้ามี job ใน คิวให้้ run ให้หมดก่อน
+
+            if (queue.size > 0) {
+                runQueue()//พยาม run ที่อยู่ในคิวก่อน
+//                return //ออกจากระบบจนว่า
+            }
+
+
             var list = loadjob()
             if (list != null)
                 logger.debug("Job for Runhjobbyd1 Hjobsize  ${list.size}")
+
+
+
             if (list != null) {
                 for (job in list) {
                     logger.debug("RunH  ${job}")
-
-                    var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
-
-                    if (groups.canrun(t)) {
-                        if (task.checktime(job)) {
-                            if (!t.checkCanrun()) {
-                                t.state = "H not in ranger"
-                            } else {
-                                var run = task.run(t)
-                                logger.debug("${job} RunJOB ${run}")
-                            }
-                        } else {
-                            logger.debug("${job} Not in time rang ")
-                            t.state = "Not in run in this time"
-                        }
-                    } else {
-                        logger.debug("${job} ********************** Somedeviceusewater ***************")
-                        t.state = " Somedeviceusewate"
+                    if (!queue.contains(job)) {
+                        t(job)
 
                     }
+
                 }
 
             }
@@ -61,41 +63,83 @@ class Runhjobbyd1(val pjs: PijobService,
         }
     }
 
-//    var df = SimpleDateFormat("HH:mm")
-//    fun checktime(job: Pijob): Boolean {
-//        try {
-////            df.timeZone = TimeZone.getTimeZone("+0700")
-//            var n = df.format(Date())
-//
-//            var now = df.parse(n)
-//            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
-//            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
-//            if (job.stimes != null && job.etimes != null) {
-//                var st = df.parse(job.stimes).time
-//                var et = df.parse(job.etimes).time
-//                logger.debug("checktime ${st} <= ${now} <= ${et}")
-//                if (st <= now.time && now.time <= et)
-//                    return true
-//            } else if (job.stimes != null && job.etimes == null) {
-//                var st = df.parse(job.stimes).time
-//                logger.debug("checktime ${st} <= ${now} ")
-//                if (st <= now.time)
-//                    return true
-//            } else if (job.stimes == null && job.etimes != null) {
-//                var st = df.parse(job.etimes).time
-//                logger.debug("checktime ${st} >= ${now}")
-//                if (st <= now.time)
-//                    return true
-//            } else {
-//                logger.debug("${job.name} checktime not set ")
-//                return true
-//            }
-//        } catch (e: Exception) {
-//            logger.error("checktime ${e.message}")
-//        }
-//
-//        return false
-//    }
+    //run Job
+    fun t(job: Pijob): Boolean {
+
+        var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
+        if (!groups.canrun(t) && task.checktime(job)) {
+            //อยู่ในช่วงเวลาแต่ groups ใช้น้ำอยู่
+            logger.debug("${job} ********************** Somedeviceusewater ***************")
+            t.state = " Somedeviceusewate"
+            addtoqueue(job) //ถ้ามีคนใช้ให้เข้าคิวไว้ก่อน
+            return false
+
+
+        } else {
+            if (task.checktime(job)) {
+                if (!t.checkCanrun()) {
+                    t.state = "H not in ranger"
+                } else {
+                    var run = task.run(t)
+                    logger.debug("${job} RunJOB ${run}")
+                    return true
+                }
+            } else {
+                logger.debug("${job} Not in time rang ")
+                t.state = "Not in run in this time"
+            }
+        }
+
+
+        return true
+    }
+
+    fun runQueue() {
+        var job = queue.peek()
+        var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
+
+        if (groups.canrun(t)) {
+            //กลุ่มว่างไม่มีใครใช้น้ำแล้วไม่ต้อง check เวลาแล้ว
+            var torun = task.checkalreadyrun(t)
+            if (torun != null) {
+                task.run(t)
+                queue.remove(job)
+            }
+
+
+        }
+
+    }
+
+    fun addtoqueue(job: Pijob): Boolean {
+
+        if (queue.size == 0) {
+            queue.add(job)
+            logger.debug("Add to queue")
+            return true
+        }
+
+        //ต้องดูว่า มีในคิวยังถ้ามีแล้วก็ไม่ add ดูด้วยว่ากำลัง run อยู่ก็ไม่ add
+        if (!queue.contains(job) && !task.checkrun(job)) {
+            queue.add(job)
+            logger.debug("Add to queue")
+            return true
+
+        }
+//not add
+        return false
+
+    }
+
+    fun printqueue() {
+        println("Printqueue")
+        logger.debug("queue size : ${queue.size} ${Date()}")
+        queue.map {
+            logger.debug("queue : ${it}")
+            println("queue : ${it}")
+        }
+    }
+
 
     fun loadjob(): List<Pijob>? {
         var job = js.findByName("runhbyd1")
