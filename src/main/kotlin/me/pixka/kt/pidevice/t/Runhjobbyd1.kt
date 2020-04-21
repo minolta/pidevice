@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.t
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.run.D1hjobWorker
@@ -20,10 +21,8 @@ class Runhjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,
                   val dhs: Dhtutil, val httpControl: HttpControl,
-                  val dhtvalueService: DhtvalueService, val groups: GroupRunService) {
+                  val dhtvalueService: DhtvalueService, val groups: GroupRunService, val ntfs: NotifyService) {
     val om = ObjectMapper()
-
-
     //สำหรับจัดคิวให้ทุก job ได้ทำงานไม่ต้องแยงกัน
     var queue = LinkedList<Pijob>()
 
@@ -63,7 +62,7 @@ class Runhjobbyd1(val pjs: PijobService,
 
 
 //        if (groups.c(job)) {
-        var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task)
+        var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task, ntfs)
         if (task.checktime(job)) {
             if (t.checkCanrun()) {
                 if (groups.c(job))
@@ -74,41 +73,12 @@ class Runhjobbyd1(val pjs: PijobService,
                 else {
                     addtoqueue(job)
                 }
-            }else
-            {
+            } else {
                 logger.warn("H not in rang ${job.name}")
             }
-        }
-        else
-        {
+        } else {
             logger.warn("Time not rang ${job.name}")
         }
-
-
-//        if (groups.c(job) && task.checktime(job) && t.checkCanrun()) {
-//            //อยู่ในช่วงเวลาแต่ groups ใช้น้ำอยู่
-//            logger.debug("${job} ********************** Somedeviceusewater ***************")
-//            t.state = " Somedeviceusewate"
-//            addtoqueue(job) //ถ้ามีคนใช้ให้เข้าคิวไว้ก่อน
-//            return false
-//
-//
-//        } else {
-//            if (task.checktime(job)) {
-//                if (!t.checkCanrun()) {
-//                    t.state = "H not in ranger"
-//                } else {
-//                    var run = task.run(t)
-//                    logger.debug("${job} RunJOB ${run}")
-//                    return true
-//                }
-//            } else {
-//                logger.debug("${job} Not in time rang ")
-//                t.state = "Not in run in this time"
-//            }
-//        }
-
-
         return true
     }
 
@@ -121,7 +91,7 @@ class Runhjobbyd1(val pjs: PijobService,
 
             if (task.checkrun(it)) {
 
-                var t = D1hjobWorker(it, dhtvalueService, dhs, httpControl, task)
+                var t = D1hjobWorker(it, dhtvalueService, dhs, httpControl, task,ntfs)
                 if (task.run(t)) {
                     var forremove = queue.poll()
                     logger.debug("Run inqueue ${forremove.name}")

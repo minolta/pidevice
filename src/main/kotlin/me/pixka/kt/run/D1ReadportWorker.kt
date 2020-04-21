@@ -192,6 +192,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
             isRun = false
             state = "End job"
         } catch (e: Exception) {
+            this.state = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
         }
 

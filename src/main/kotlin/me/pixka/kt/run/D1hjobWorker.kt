@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.pibase.s.DhtvalueService
@@ -15,7 +16,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
-                   val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService)
+                   val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService,val ntfs: NotifyService)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
@@ -151,6 +152,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
     fun go() {//Run
         var ee = Executors.newSingleThreadExecutor()
+        var token = pijob.description
         state = "Run set port "
         var ports = pijob.ports
         logger.debug("Ports ${ports}")
@@ -203,6 +205,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                             url = findUrl(portname!!, runtime, waittime, value)
                     } catch (e: Exception) {
                         logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
+                        state = "Find URL ERROR ${e.message} port: ${port} portname ${portname}"
                     }
 //                    logger.debug("URL ${url}")
                     startrun = Date()
@@ -211,7 +214,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     var get = HttpGetTask(url)
                     var f = ee.submit(get)
                     try {
-                        var value = f.get(30, TimeUnit.SECONDS)
+                        var value = f.get(10, TimeUnit.SECONDS)
                         state = "Delay  ${runtime} + ${waittime}"
                         logger.debug("D1h Value ${value}")
                         state = "${value} and run ${runtime}"
@@ -223,7 +226,13 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                         }
                     } catch (e: Exception) {
                         logger.error("Set port error  ${e.message}")
-//                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
+                        state = "set port timeout"
+                        if (token != null)
+                            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name} ", token)
+                        else
+                            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ")
+
+                        TimeUnit.SECONDS.sleep(5)
                     }
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")
