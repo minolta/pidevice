@@ -84,6 +84,7 @@ class Runhjobbyd1(val pjs: PijobService,
 
     fun runQueue() {
 
+
         var it = queue.peek()
         if (groups.c(it)) {
             //กลุ่มว่างไม่มีใครใช้น้ำแล้วไม่ต้อง check เวลาแล้ว และไม่มี job นี้ทำงานนี้อยู่
@@ -92,6 +93,7 @@ class Runhjobbyd1(val pjs: PijobService,
             if (task.checkrun(it)) {
 
                 var t = D1hjobWorker(it, dhtvalueService, dhs, httpControl, task,ntfs)
+                if(t.checkCanrun() && task.checktime(it))
                 if (task.run(t)) {
                     var forremove = queue.poll()
                     logger.debug("Run inqueue ${forremove.name}")
