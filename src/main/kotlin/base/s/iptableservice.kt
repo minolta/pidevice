@@ -8,7 +8,7 @@ import java.util.*
 
 
 @Service
-open class IptableServicekt(val r: IptablesktRepo) : Ds<Iptableskt>() {
+class IptableServicekt(val r: IptablesktRepo) : Ds<Iptableskt>() {
 
     override fun search(search: String, page: Long, limit: Long): List<Iptableskt>? {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -34,8 +34,10 @@ open class IptableServicekt(val r: IptablesktRepo) : Ds<Iptableskt>() {
             logger.error("Update ip tables: ${e.message}")
             e.printStackTrace()
         }
-        return null;
+        return null
     }
+
+    fun resetAll() = r.deleteAll()
 
     companion object {
         internal var logger = LoggerFactory.getLogger(IptableServicekt::class.java)

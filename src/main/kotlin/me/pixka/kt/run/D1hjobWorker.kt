@@ -233,11 +233,23 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                             ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ")
 
                         TimeUnit.SECONDS.sleep(5)
+
+                        isRun = false // ออกเลย
+                        if (token != null)
+                            ntfs.message("End job  ${pijob.name}  Can not connect to target ", token)
+                        else
+                            ntfs.message("End job  ${pijob.name}   Can not connect to target ")
+                        throw Exception("Can not connect")
+
+//                        break // จบการทำงานเลย
                     }
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")
                     state = " Error 2 ${e.message}"
                     ee.shutdownNow()
+                    isRun = false
+                    break //ออกเลย
+
                 }
             }
 

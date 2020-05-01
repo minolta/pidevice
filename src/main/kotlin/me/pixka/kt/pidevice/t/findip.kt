@@ -21,7 +21,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)
     }
-
+    var directcommand:String? = null
     var s: String? = null
     var command: String? = "nmap -n -sP "
 
@@ -54,9 +54,9 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
 
 
     fun setup() {
-        // logger.debug("Set ups")
         command = "nmap -n -sP"
-        //dbcfg.findorcreate("nmap", "nmap -n -sP").value
+     directcommand = System.getProperty("directcommand")
+
     }
 
 
@@ -68,7 +68,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
             for (n in nw) {
                 var ipdata = n.split(",")
                 val n = n.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val nn = n[0] + "." + n[1] + "." + n[2] + ".0/24"
+                val nn = n[0] + "." + n[1] + "." + n[2] + ".0/23"
                 buffer.add(nn)
             }
         } catch (e: Exception) {
@@ -80,7 +80,10 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
     }
 
     fun findIP(network: String, cmd: String): ArrayList<Ip> {
-        val c = cmd + " " + network
+        var c = cmd + " " + network
+
+        if(directcommand!=null)
+            c = directcommand!!
         val proc = Runtime.getRuntime().exec(c)
         logger.debug("Command is ${c}")
         val stdInput = BufferedReader(InputStreamReader(proc.inputStream))
@@ -122,9 +125,6 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
             var network = getNet()
             logger.debug("Network found ${network}")
 
-//            network.map {
-//                findIP(it,command!!)
-//            }
             for (n in network) {
                 var b = findIP(n, command!!)
                 logger.debug("Ip found ${b}")
