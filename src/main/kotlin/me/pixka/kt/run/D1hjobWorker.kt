@@ -214,7 +214,8 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     var get = HttpGetTask(url)
                     var f = ee.submit(get)
                     try {
-                        var value = f.get(10, TimeUnit.SECONDS)
+                        //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
+                        var value = f.get(30, TimeUnit.SECONDS)
                         state = "Delay  ${runtime} + ${waittime}"
                         logger.debug("D1h Value ${value}")
                         state = "${value} and run ${runtime}"

@@ -12,11 +12,16 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.test.context.junit4.SpringRunner
+import java.net.URL
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
+@EnableAsync
 class PideviceApplicationTests {
 
 
@@ -72,7 +77,7 @@ class PideviceApplicationTests {
         j.id = 10
         j.name = "10"
         j.pijobgroup_id = 1
-        var worker = D1hjobWorker(j, ds, dhts, http, task,ntf )
+        var worker = D1hjobWorker(j, ds, dhts, http, task, ntf)
         runs.add(worker)
 
         j = Pijob()
@@ -80,7 +85,7 @@ class PideviceApplicationTests {
         j.name = "20"
         j.pijobgroup_id = 2
 
-        var worker1 = D1hjobWorker(j, ds, dhts, http, task,ntf)
+        var worker1 = D1hjobWorker(j, ds, dhts, http, task, ntf)
         worker1.isRun = true
         worker1.waitstatus = false //false ยังใช้น้ำอยู่ true ไม่ใช้แล้ว
         runs.add(worker1)
@@ -138,6 +143,29 @@ class PideviceApplicationTests {
         println("peek: " + queue.poll())
 
         queue.map { println(it) }
+
+
+    }
+
+
+
+    @Test
+    fun readIps() {
+
+        var ips = setOf("http://192.168.89.35/status",
+                "http://192.168.89.100/status",
+                "http://192.168.89.69/status", "http://192.168.89.200")
+
+        test("http://192.168.89.35/status").thenApply{i->{println("cccccc:"+i)}}
+        test1( "http://192.168.89.69/status").thenApply { i->{
+            println("dddd "+i)
+        } }
+//        for (i in ips) {
+//            test(i).thenApply { i -> println(i) }
+//        }
+        println("End  *************************  ${Date()} ***************")
+
+//        var t = URL(" http://192.168.89.100/status").readText()
 
 
     }
@@ -204,4 +232,21 @@ class PideviceApplicationTests {
         return false
     }
 
+}
+
+
+@Async
+fun test(u: String): CompletableFuture<Boolean> {
+    println(" Thread: ${Thread.currentThread().name}====>" + URL(u).readText())
+    println("XXXXXXXXXXXXXXX ${Date()} XXXXXXXXXXXXXXXXXXXX")
+    Thread.sleep(3000)
+    return CompletableFuture.completedFuture(true)
+}
+
+@Async
+fun test1(u: String): CompletableFuture<Boolean> {
+    println(" Thread: ${Thread.currentThread().name}====>" + URL(u).readText())
+    println("XXXXXXXXXXXXXXX ${Date()} XXXXXXXXXXXXXXXXXXXX")
+    Thread.sleep(5000)
+    return CompletableFuture.completedFuture(true)
 }
