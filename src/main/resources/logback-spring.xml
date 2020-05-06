@@ -15,7 +15,7 @@
             <fileNamePattern>d-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <!-- each file should be at most 100MB, keep 60 days worth of history,
                 but at most 20GB -->
-            <maxFileSize>100MB</maxFileSize>
+            <maxFileSize>400MB</maxFileSize>
             <maxHistory>60</maxHistory>
             <totalSizeCap>2GB</totalSizeCap>
         </rollingPolicy>

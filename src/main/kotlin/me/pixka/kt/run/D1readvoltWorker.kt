@@ -10,6 +10,7 @@ import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
+import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -28,11 +29,11 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
             if (ip != null) {
 
                 var url3 = "http://${ip.ip}"
-                var ee = Executors.newSingleThreadExecutor()
-                var get = HttpGetTask(url3)
-                var f2 = ee.submit(get)
+//                var ee = Executors.newSingleThreadExecutor()
+//                var get = HttpGetTask(url3)
+//                var f2 = ee.submit(get)
                 try {
-                    var re = f2.get(5, TimeUnit.SECONDS)
+                    var re = URL(url3).readText()
                     var espstatus = om.readValue<Espstatus>(re, Espstatus::class.java)
 
                     //TODO ต้องอ่าน status จากปั๊มตรงนี้ แล้วเอาค่า batt_volt มา save เข้าระบบ

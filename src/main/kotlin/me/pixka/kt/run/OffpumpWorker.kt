@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.u.Dhtutil
 import org.slf4j.LoggerFactory
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
@@ -57,9 +58,10 @@ class OffpumpWorker(var pijob: Pijob, val dhts: Dhtutil) : PijobrunInterface, Ru
             var ip = dhts.mactoip(pijob.desdevice?.mac!!)
             var task = HttpGetTask("http://${ip?.ip}/off")
             state = "call url http://${ip?.ip}/off"
-            var f = t.submit(task)
+//            var f = t.submit(task)
             try {
-                var re = f.get(30, TimeUnit.SECONDS)
+//                var re = f.get(30, TimeUnit.SECONDS)
+                var re = URL("http://${ip?.ip}/off").readText()
                 state = "Off pumb is ok ${re}"
                 TimeUnit.SECONDS.sleep(5)
             } catch (e: Exception) {

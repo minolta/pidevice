@@ -10,6 +10,7 @@ import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
+import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -37,9 +38,10 @@ class ReadPressureTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt
                 logger.debug("Read pressure from ${u}")
                 status = "Read pressure from ${u}"
                 var get = HttpGetTask(u)
-                var f = t.submit(get)
+//                var f = t.submit(get)
                 try {
-                    var re = f.get(30, TimeUnit.SECONDS)
+                    var re = URL(u).readText()
+//                            f.get(30, TimeUnit.SECONDS)
                     var o = om.readValue<PressureValue>(re, PressureValue::class.java)
                     logger.debug("${pijob.name} Get pressure ${o}")
                     status = "${pijob.name} Get pressure ${o}"

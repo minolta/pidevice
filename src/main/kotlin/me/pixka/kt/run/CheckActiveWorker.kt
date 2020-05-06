@@ -108,7 +108,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
 
                         //check(ip.ip!!, token, device)
                         CompletableFuture.supplyAsync{check(ip.ip!!, token, device)}.thenApply {
-                            logger.debug("Endcheck checkactive ${ip}")
+                            logger.debug("Endcheck checkactive ${port.device?.name} ${ip}  ${Date()}")
                         }
                     }
                 }
