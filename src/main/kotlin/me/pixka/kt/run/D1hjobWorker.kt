@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
@@ -220,12 +221,12 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
-//                    var get = HttpGetTask(url)
-//                    var f = ee.submit(get)
+                    var get = HttpGetTask(url)
+                    var f = ee.submit(get)
                     try {
                         //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-//                        var value = f.get(10, TimeUnit.SECONDS)
-                        var value = URL(url).readText()
+                        var value = f.get(10, TimeUnit.SECONDS)
+//                        var value = URL(url).readText()
                         state = "Delay  ${runtime} + ${waittime}"
                         logger.debug("D1h Value ${value}")
                         state = "${value} and run ${runtime}"

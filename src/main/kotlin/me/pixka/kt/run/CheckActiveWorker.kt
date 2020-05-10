@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
@@ -14,6 +15,7 @@ import java.math.BigDecimal
 import java.net.URL
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
@@ -62,7 +64,11 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
     fun check(ip: String, token: String? = null, device: PiDevice): Boolean {
         logger.debug("checkactive ${ip}")
         try {
-            val re = URL("http://${ip}").readText()
+            var ee = Executors.newSingleThreadExecutor()
+            var get = HttpGetTask("http://${ip}")
+            var f = ee.submit(get)
+            var re = f.get(10,TimeUnit.SECONDS)
+//            val re = URL("http://${ip}").readText()
             state = "return status ${re} ${pijob.name}"
             var status = om.readValue<Status>(re, Status::class.java)
             if (status.errormessage != null) {

@@ -47,11 +47,11 @@ class ReadTmpTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
                 var u = "http://${ipstring}/ktype"
                 logger.debug("Read tmp from ${u}")
                 status = "Read tmp from ${u}"
-//                var get = HttpGetTask(u)
-//                var f = t.submit(get)
+                var get = HttpGetTask(u)
+                var f = t.submit(get)
                 try {
-//                    var re = f.get(30, TimeUnit.SECONDS)
-                    var re  = URL(u).readText()
+                    var re = f.get(30, TimeUnit.SECONDS)
+//                    var re  = URL(u).readText()
                     var o = om.readValue(re, DS18value::class.java)
                     logger.debug("${pijob.name} Get tmp ${o}")
                     status = "${pijob.name} Get pressure ${o}"

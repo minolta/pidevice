@@ -29,11 +29,12 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
             if (ip != null) {
 
                 var url3 = "http://${ip.ip}"
-//                var ee = Executors.newSingleThreadExecutor()
-//                var get = HttpGetTask(url3)
-//                var f2 = ee.submit(get)
+                var ee = Executors.newSingleThreadExecutor()
+                var get = HttpGetTask(url3)
+                var f2 = ee.submit(get)
                 try {
-                    var re = URL(url3).readText()
+//                    var re = URL(url3).readText()
+                    var re = f2.get(10,TimeUnit.SECONDS)
                     var espstatus = om.readValue<Espstatus>(re, Espstatus::class.java)
 
                     //TODO ต้องอ่าน status จากปั๊มตรงนี้ แล้วเอาค่า batt_volt มา save เข้าระบบ

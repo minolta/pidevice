@@ -133,7 +133,7 @@ class OnpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
 
             }
         } catch (e: Exception) {
-            OffpumpWorker.logger.error("offpump ${e.message} ${pijob.name}")
+            logger.error("offpump ${e.message} ${pijob.name}")
             status = "offpump ${e.message} ${pijob.name}"
             TimeUnit.SECONDS.sleep(10)
 
