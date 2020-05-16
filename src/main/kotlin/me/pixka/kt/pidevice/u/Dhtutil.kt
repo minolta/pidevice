@@ -21,12 +21,12 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt, val ntfs: Notify
         var ee = Executors.newSingleThreadExecutor()
         var get = HttpGetTask(url)
         try {
-//            var f = ee.submit(get)
+            var f = ee.submit(get)
             var rep: String? = null
 
             try {
-//                rep = f.get(15, TimeUnit.SECONDS)
-                rep = URL(url).readText()
+                rep = f.get(15, TimeUnit.SECONDS)
+//                rep = URL(url).readText()
             } catch (e: Exception) {
                 logger.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
                 ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")

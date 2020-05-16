@@ -11,10 +11,11 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
-import java.net.URL
+import java.net.ConnectException
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                    val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService, val ntfs: NotifyService)
@@ -225,8 +226,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     var f = ee.submit(get)
                     try {
                         //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-                        var value = f.get(10, TimeUnit.SECONDS)
-//                        var value = URL(url).readText()
+                        var value = f.get(5, TimeUnit.SECONDS)
                         state = "Delay  ${runtime} + ${waittime}"
                         logger.debug("D1h Value ${value}")
                         state = "${value} and run ${runtime}"
@@ -236,33 +236,10 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                             state = "Wait time of port ${waittime}"
                             TimeUnit.SECONDS.sleep(waittime)
                         }
-                    } catch (e: Exception) {
-                        logger.error("Set port error  ${e.message}")
-                        state = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
-                        if (token != null)
-                            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name} ", token)
-                        else
-                            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ")
-
-                        TimeUnit.SECONDS.sleep(5)
-
-
-                        if (token != null)
-                            ntfs.message("End job  ${pijob.name}  Can not connect to target ", token)
-                        else
-                            ntfs.message("End job  ${pijob.name}   Can not connect to target ")
-
-                        state = "End job  ${pijob.name}  Can not connect to target "
-
-                        TimeUnit.SECONDS.sleep(5)
-                        haveerror = true
-                        errormessage = "End job  ${pijob.name}  Can not connect to target"
-                        continue// setport ต่อ ไป
-
-                        //                        isRun = false // ออกเลย
-//                        waitstatus = true //หยุดใช้น้ำแล้ว
-//                        throw Exception("Can not connect")
-
+                    } catch (e: ConnectException) {
+                        haveError(token,e)
+                    } catch (e: TimeoutException) {
+                        haveError(token,e)
                     }
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")
@@ -279,6 +256,32 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             state = "Set port ok "
         else
             state = "Set port error "
+    }
+
+    fun haveError(token: String?,e:Exception) {
+        logger.error("Set port error  ${e.message}")
+        state = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
+        if (token != null)
+            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name} ", token)
+        else
+            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ")
+
+        TimeUnit.SECONDS.sleep(5)
+
+
+        if (token != null)
+            ntfs.message("End job  ${pijob.name}  Can not connect to target ", token)
+        else
+            ntfs.message("End job  ${pijob.name}   Can not connect to target ")
+
+        state = "End job  ${pijob.name}  Can not connect to target "
+
+        TimeUnit.SECONDS.sleep(5)
+        haveerror = true
+        errormessage = "End job  ${pijob.name}  Can not connect to target"
+        //                        continue// setport ต่อ ไป
+
+        //ไม่ทำอะไรข้ามไปเลยแล้วก็จบ job เลยถ้ามีปัญหารอรอบหน้าเลย
     }
 
     fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
