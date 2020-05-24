@@ -63,10 +63,11 @@ class GroupRunService(val task: TaskService) {
 
 
         var samerun = grouprun.find {
-            it is D1hjobWorker && (it.getPijobid() == j.id && it.runStatus())
+            it is D1hjobWorker && (it.getPijobid().toInt() == j.id.toInt() && it.runStatus())
         }
 
         if (samerun != null) {
+            logger.error("This job already run  from JOB ${j.name}")
             return false //ไม่สามารถ run job นี้ได้
         }
 
@@ -76,9 +77,10 @@ class GroupRunService(val task: TaskService) {
                     it.pijob.pijobgroup_id?.toInt() == groupid?.toInt() && !it.waitstatus
                     && it.runStatus()
         }
-        if(someoneusewater!=null)
+        if(someoneusewater!=null) {
+            logger.error("Some one use water ${j.name}")
             return false //ไม่สามารถ run job นี้ได้
-
+        }
         return true
 
 

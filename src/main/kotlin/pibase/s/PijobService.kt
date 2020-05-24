@@ -20,7 +20,7 @@ class PijobService( var r: PijobRepo, val dss: Ds18sensorRepo) : Ds<Pijob>() {
 
     fun findJob(jobid:Long):List<Pijob>?
     {
-        return r.findByJob_idAndEnable(jobid,true)
+        return r.findByJob_idAndEnableOrderByPriority(jobid,true)
     }
     fun findByTime(currenttime: Date, jobid: Long): List<Pijob>? {
         var c = datetoLong(currenttime)

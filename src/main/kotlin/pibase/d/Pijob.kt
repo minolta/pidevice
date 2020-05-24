@@ -31,7 +31,7 @@ class Pijob(var refid: Long? = null, var sdate: Date? = null, var edate: Date? =
         /* @Temporal(TemporalType.TIME) @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss") */
             var stime: Date? = null,
         /*@Temporal(TemporalType.TIME) @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss") */
-            var etime: Date? = null,
+            var etime: Date? = null, var priority: Int? = null,
             @Column(columnDefinition = "text") var description: String? = null,
             @ManyToOne var desdevice: PiDevice? = null, @Column(insertable = false, updatable = false) var desdevice_id: Long? = null,
             var user_id: Long? = null,
@@ -44,15 +44,16 @@ class Pijob(var refid: Long? = null, var sdate: Date? = null, var edate: Date? =
             , var checkversion: Long? = 0, var usewater: Boolean? = false,
             var refverion: Long? = null, @ManyToOne var pijobgroup: Pijobgroup? = null,
             @Column(insertable = false, updatable = false) var pijobgroup_id: Long? = null,
-            var token:String?=null
+            var token: String? = null
 
-) : En(),Comparable<Pijob> {
+) : En(), Comparable<Pijob> {
 
     override fun compareTo(other: Pijob): Int {
-        return other.id.toInt()- this.id.toInt()
+        return other.id.toInt() - this.id.toInt()
 
 
     }
+
     constructor() : this(user_id = 0)
 
     override fun toString(): String {
@@ -62,10 +63,8 @@ class Pijob(var refid: Long? = null, var sdate: Date? = null, var edate: Date? =
 
     override fun equals(obj: Any?): Boolean {
 
-        if(obj is Pijob)
-        {
-            if(obj.id.equals(this.id))
-            {
+        if (obj is Pijob) {
+            if (obj.id.equals(this.id)) {
                 return true
             }
 
@@ -76,32 +75,32 @@ class Pijob(var refid: Long? = null, var sdate: Date? = null, var edate: Date? =
 
     fun copy(from: Pijob) {
 
-            this.hhigh = from.hhigh
-            this.hlow = from.hlow
-            this.tlow = from.tlow
-            this.thigh = from.thigh
-            this.sdate = from.sdate
-            this.edate = from.edate
-            this.stime = from.stime
-            this.etime = from.etime
-            this.name = from.name
-            this.runtime = from.runtime
-            this.waittime = from.waittime
-            this.enable = from.enable
-            this.etimes = from.etimes
-            this.stimes = from.stimes
-            this.hightime = from.hightime
-            this.lowtime = from.lowtime
-            this.runwithid = from.runwithid
-            this.timetorun = from.timetorun
-            this.desdevice = from.desdevice
-            this.ds18sensor = from.ds18sensor
-            this.verref = from.ver
-            this.pijobgroup = from.pijobgroup
-            this.pijobgroup_id = from.pijobgroup_id
-            this.description = from.description
-            this.token = from.token
-
+        this.hhigh = from.hhigh
+        this.hlow = from.hlow
+        this.tlow = from.tlow
+        this.thigh = from.thigh
+        this.sdate = from.sdate
+        this.edate = from.edate
+        this.stime = from.stime
+        this.etime = from.etime
+        this.name = from.name
+        this.runtime = from.runtime
+        this.waittime = from.waittime
+        this.enable = from.enable
+        this.etimes = from.etimes
+        this.stimes = from.stimes
+        this.hightime = from.hightime
+        this.lowtime = from.lowtime
+        this.runwithid = from.runwithid
+        this.timetorun = from.timetorun
+        this.desdevice = from.desdevice
+        this.ds18sensor = from.ds18sensor
+        this.verref = from.ver
+        this.pijobgroup = from.pijobgroup
+        this.pijobgroup_id = from.pijobgroup_id
+        this.description = from.description
+        this.token = from.token
+        this.priority = from.priority
 
     }
 }

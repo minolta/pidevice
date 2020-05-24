@@ -14,6 +14,7 @@ import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
 import java.util.*
 
 @Component
@@ -21,23 +22,25 @@ class Runhjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,
                   val dhs: Dhtutil, val httpControl: HttpControl,
-                  val dhtvalueService: DhtvalueService, val groups: GroupRunService, val ntfs: NotifyService) {
+                  val dhtvalueService: DhtvalueService, val groups: GroupRunService,
+                  val ntfs: NotifyService, val queue: QueueService) {
     val om = ObjectMapper()
-    //สำหรับจัดคิวให้ทุก job ได้ทำงานไม่ต้องแยงกัน
-    var queue = LinkedList<Pijob>()
+
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
 
         try {
-            printqueue()
+            queue.printqueue()
 
             //ถ้ามี job ใน คิวให้้ run ให้หมดก่อน
 
-            if (queue.size > 0) {
+            if (queue.size() > 0) {
                 runQueue()//พยาม run ที่อยู่ในคิวก่อน
 //                return //ออกจากระบบจนว่า
             }
+
+            //Run ปกติ
             var list = loadjob()
             if (list != null) {
                 logger.debug("Job for Runhjobbyd1 Hjobsize  ${list.size}")
@@ -46,6 +49,7 @@ class Runhjobbyd1(val pjs: PijobService,
                     t(it)
                 }
             }
+
         } catch (e: Exception) {
             logger.error("Read h by d1 ERROR ${e.message}")
         }
@@ -71,7 +75,7 @@ class Runhjobbyd1(val pjs: PijobService,
                     } else
                         logger.warn("Not run h job ${job.name}")
                 else {
-                    addtoqueue(job)
+                    queue.addtoqueue(job)
                 }
             } else {
                 logger.warn("H not in rang ${job.name}")
@@ -82,61 +86,56 @@ class Runhjobbyd1(val pjs: PijobService,
         return true
     }
 
+
+    /**
+     * ต้อง clar คิวให้หมดก่อน
+     */
     fun runQueue() {
 
 
-        var it = queue.peek()
-        if (groups.c(it)) {
-            //กลุ่มว่างไม่มีใครใช้น้ำแล้วไม่ต้อง check เวลาแล้ว และไม่มี job นี้ทำงานนี้อยู่
-
-
-            if (task.checkrun(it)) {
-
-                var t = D1hjobWorker(it, dhtvalueService, dhs, httpControl, task,ntfs)
-                if(t.checkCanrun() && task.checktime(it))
-                if (task.run(t)) {
-                    var forremove = queue.poll()
-                    logger.debug("Run inqueue ${forremove.name}")
+        logger.debug("Run inqueue ${Date()}")
+        try {
+            for (j in queue.queue) {
+                logger.debug("inqueue to run  ${j.name}")
+                if (groups.c(j) && task.checkrun(j)) {
+                    var t = D1hjobWorker(j, dhtvalueService, dhs, httpControl, task, ntfs)
+                    if (t.checkCanrun()) {
+                        if(task.checktime(j)) {
+                            if (task.run(t)) {
+                                logger.debug("Run ${j.name} inqueue ")
+                                if (queue.queue.remove(j))
+                                    logger.debug("Run inqueue and remove ${j.name}")
+                                else
+                                    logger.error("Error  inqueue can not remove ${j.name}")
+                            }
+                        }
+                        else
+                        {
+                            //ไม่อยู่ในช่วงเวลาแล้วออกจากการทำงานเลย
+                            logger.debug("inqueue not in time have to remove")
+                            if (queue.queue.remove(j))
+                                logger.debug("Run inqueue and remove ${j.name}")
+                            else
+                                logger.error("Error  inqueue can not remove ${j.name}")
+                        }
+                    }
+                    else
+                    {
+                        logger.debug("inqueue not in H have to remove")
+                        if (queue.queue.remove(j))
+                            logger.debug("Run inqueue and remove ${j.name}")
+                        else
+                            logger.error("Error  inqueue can not remove ${j.name}")
+                    }
+                } else {
+                    logger.warn("Can not run this job now ${j.name} inqueue ")
                 }
-
-            } else {
-                logger.warn("This job have already run ${it.name} queue")
             }
-        } else {
-            logger.warn("Someone use water in this group ${it.pijobgroup} queue")
+        } catch (e: Exception) {
+            logger.error("inqueue ${e.message}")
         }
 
 
-    }
-
-    /**
-     * เข้าคิวไว้ก่อน
-     */
-    fun addtoqueue(job: Pijob): Boolean {
-
-        if (queue.size == 0) {
-            queue.add(job)
-            logger.debug("Add to queue")
-            return true
-        }
-
-
-        if (queue.find { job.id == it.id } == null) {
-            queue.add(job)
-            logger.debug("Add more queue")
-            return true
-        }
-        return false
-
-    }
-
-    fun printqueue() {
-        println("Printqueue")
-        logger.debug("queue size : ${queue.size} ${Date()}")
-        queue.map {
-            logger.debug("queue : ${it}")
-            println("queue : ${it}")
-        }
     }
 
 
@@ -153,5 +152,55 @@ class Runhjobbyd1(val pjs: PijobService,
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runhjobbyd1::class.java)
+    }
+}
+
+@Service
+class QueueService {
+    //สำหรับจัดคิวให้ทุก job ได้ทำงานไม่ต้องแยงกัน
+
+    var queue = LinkedList<Pijob>()
+
+    fun peek(): Pijob? {
+        return queue.peek()
+    }
+
+    fun remove(p: Pijob): Boolean {
+        return queue.remove(p)
+    }
+
+    fun size(): Int {
+        return queue.size
+    }
+
+    /**
+     * เข้าคิวไว้ก่อน
+     */
+    fun addtoqueue(job: Pijob): Boolean {
+
+        if (queue.size == 0) {
+            queue.add(job)
+            Runhjobbyd1.logger.debug("Add ${job.name} to queue")
+            return true
+        }
+
+
+        if (queue.find { job.id == it.id } == null) {
+            queue.add(job)
+            Runhjobbyd1.logger.debug("Add more ${job.name} to  queue")
+            return true
+        }
+        return false
+
+    }
+
+    fun poll() = queue.poll()
+    fun printqueue() {
+        println("Printqueue")
+        Runhjobbyd1.logger.debug("queue size : ${queue.size} ${Date()}")
+        queue.map {
+            Runhjobbyd1.logger.debug("queue : ${it}")
+            println("queue : ${it}")
+        }
     }
 }

@@ -78,6 +78,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 if (dhtvalue.h != null)
                     h = dhtvalue.h?.toFloat()
                 if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
+                    logger.debug("Can run this job ${pijob.name} ")
                     return true
                 } else {
                     state = "H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}"
@@ -226,7 +227,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                     var f = ee.submit(get)
                     try {
                         //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-                        var value = f.get(5, TimeUnit.SECONDS)
+                        var value = f.get(30, TimeUnit.SECONDS)
                         state = "Delay  ${runtime} + ${waittime}"
                         logger.debug("D1h Value ${value}")
                         state = "${value} and run ${runtime}"

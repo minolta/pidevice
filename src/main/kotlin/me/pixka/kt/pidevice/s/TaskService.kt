@@ -43,14 +43,14 @@ class TaskService(val context: ApplicationContext) {
     /**
      *
      * สำหรับตรวจสอบว่า มี การ run อยู่เปล่า
-     * return false ถ้าไม่ run อยู่
-     * return true ถ้ามีการ run อยู่
+     * return false ถ้า run อยู่
+     * return true ถ้าไม่มีการ run อยู่
      */
 
   fun checkrun(w: Pijob): Boolean {
 
         var run = runinglist.find {
-            it.getPijobid() == w.id && it.runStatus()
+            it.getPijobid().toInt() == w.id.toInt() && it.runStatus()
         }
         if(run!=null)
             return false
@@ -190,6 +190,10 @@ class TaskService(val context: ApplicationContext) {
     }
 
     var df = SimpleDateFormat("HH:mm")
+
+    /**
+     * ตรวจสอบว่าอยู่ในช่วงเวลาหรือเปล่า
+     */
     fun checktime(job: Pijob): Boolean {
         var can = false
         try {

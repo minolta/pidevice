@@ -92,5 +92,5 @@ interface PijobRepo : JpaRepository<Pijob, Long>, search<Pijob>, findByName<Pijo
     fun deletePijobById(id: Long)
 
     fun findByJob_idAndEnable(jobid: Long, b: Boolean): List<Pijob>?
-
+    fun findByJob_idAndEnableOrderByPriority(jobid: Long, b: Boolean): List<Pijob>?
 }
