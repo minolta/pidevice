@@ -63,7 +63,10 @@ class Runhjobbyd1(val pjs: PijobService,
             logger.warn("this job is run now ${job.name}")
             return false // now runninsg
         }
-
+        if(queue.inqueue(job)) {
+            logger.warn("Job alreay in queue ${job.name}")
+            return false
+        }
 
 //        if (groups.c(job)) {
         var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task, ntfs)
@@ -75,6 +78,7 @@ class Runhjobbyd1(val pjs: PijobService,
                     } else
                         logger.warn("Not run h job ${job.name}")
                 else {
+                    logger.debug("This job can run but some job use water have to queue ${job.name}")
                     queue.addtoqueue(job)
                 }
             } else {
@@ -161,6 +165,15 @@ class QueueService {
 
     var queue = LinkedList<Pijob>()
 
+    fun inqueue(j:Pijob): Boolean {
+        var ii = queue.find { it.id.toInt() == j.id.toInt() }
+
+        Runhjobbyd1.logger.debug("inqueue have ${ii} in queue")
+        if(ii!=null)
+            return true
+
+        return false
+    }
     fun peek(): Pijob? {
         return queue.peek()
     }
@@ -185,11 +198,12 @@ class QueueService {
         }
 
 
-        if (queue.find { job.id == it.id } == null) {
+        if (queue.find { job.id.toInt() == it.id.toInt() } == null) {
             queue.add(job)
             Runhjobbyd1.logger.debug("Add more ${job.name} to  queue")
             return true
         }
+        Runhjobbyd1.logger.debug("Not Add ${job.name} to  queue")
         return false
 
     }
