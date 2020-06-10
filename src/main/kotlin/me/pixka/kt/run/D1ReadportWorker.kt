@@ -269,11 +269,20 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                         state = "Delay  ${runtime} + ${waittime}"
                         logger.debug("D1h Value ${value}")
                         state = "${value} and run ${runtime}"
-                        TimeUnit.SECONDS.sleep(runtime)
+                        if(value==null)
+                        {
 
-                        if (waittime != null) {
-                            state = "Wait time of port ${waittime}"
-                            TimeUnit.SECONDS.sleep(waittime)
+                            //ไม่ต้อง run ละออกเลยและไม่ต้อง delay ให้พยามใหม่
+//                            isRun=false
+                            state = "Can not connect to Target ${port.device}"
+                        }
+                        else {
+                            TimeUnit.SECONDS.sleep(runtime)
+
+                            if (waittime != null) {
+                                state = "Wait time of port ${waittime}"
+                                TimeUnit.SECONDS.sleep(waittime)
+                            }
                         }
                     } catch (e: Exception) {
                         logger.error("Set port error  ${e.message}")
