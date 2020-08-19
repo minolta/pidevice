@@ -1,23 +1,28 @@
 package me.pixka.kt.run
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.base.d.Iptableskt
 import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.d.PressurevalueService
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
+import java.math.BigDecimal
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class ReadPressureTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
-                       var rps: PressurevalueService, var pideviceService: PideviceService) :
+                       var rps: PressurevalueService, var pideviceService: PideviceService,var ntf:NotifyService) :
         DefaultWorker(p, null, readvalue, null, logger) {
     val om = ObjectMapper()
+    var token = System.getProperty("errortoekn")
     override fun run() {
         try {
             startRun = Date()
@@ -41,7 +46,7 @@ class ReadPressureTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt
                 try {
 //                    var re = URL(u).readText()
                     var re = f.get(30, TimeUnit.SECONDS)
-                    var o = om.readValue<PressureValue>(re, PressureValue::class.java)
+                    var o = om.readValue<ReadPressure>(re, ReadPressure::class.java)
                     logger.debug("${pijob.name} Get pressure ${o}")
                     status = "${pijob.name} Get pressure ${o}"
                     try {
@@ -49,6 +54,11 @@ class ReadPressureTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt
                     } catch (e: Exception) {
                         logger.error("Other device not found ${e.message}")
                         o.device = pideviceService.create(o.device?.mac!!, o.device_id!!)
+                    }
+
+                    if(!o.errormessage.isNullOrEmpty())
+                    {
+                        ntf.message("Have error ${o.errormessage}",token)
                     }
                     //บอกว่า ให้เก็บค่าเท่าไหร่ ถ้าตำกว่าไม่เก็บ
                     if (pijob.tlow != null) {
@@ -61,7 +71,7 @@ class ReadPressureTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt
                         }
 
                     }
-                    var d = rps.save(o)
+                    var d = rps.save(o.toPressureValue())
                     logger.debug("Save Pressure ${d}")
                     status = "Save Pressure ${d}"
                     if (pijob.waittime != null) {
@@ -95,5 +105,18 @@ class ReadPressureTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt
 
     companion object {
         internal var logger = LoggerFactory.getLogger(ReadPressureTask::class.java)
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+class ReadPressure(var device_id: Long? = null, var errormessage: String? = null,
+                   var device: PiDevice? = null, var pressurevalue: BigDecimal? = null) {
+    fun toPressureValue(): PressureValue {
+        var p = PressureValue()
+        p.device = device
+        if (device != null)
+            p.device_id = device!!.id
+        p.pressurevalue = pressurevalue
+        return p
     }
 }

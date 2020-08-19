@@ -6,18 +6,19 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.d.Vbatt
 import me.pixka.kt.pidevice.d.VbattService
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
-import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: PortstatusinjobService, val pss: VbattService) :
+class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: PortstatusinjobService, val pss: VbattService, var ntf: NotifyService) :
         DefaultWorker(p, null, readvalue, pijs, logger) {
     val om = ObjectMapper()
+    val token = System.getProperty("errortoken")
     override fun run() {
         isRun = true
         startRun = Date()
@@ -34,7 +35,7 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
                 var f2 = ee.submit(get)
                 try {
 //                    var re = URL(url3).readText()
-                    var re = f2.get(10,TimeUnit.SECONDS)
+                    var re = f2.get(10, TimeUnit.SECONDS)
                     var espstatus = om.readValue<Espstatus>(re, Espstatus::class.java)
 
                     //TODO ต้องอ่าน status จากปั๊มตรงนี้ แล้วเอาค่า batt_volt มา save เข้าระบบ
@@ -44,6 +45,9 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
                     psv.valuedate = Date()
                     psv.v = espstatus.batt_volt
                     this.status = "Vbatt :" + psv.v
+                    if (!espstatus.errormessage.isNullOrEmpty()) {
+                        ntf.message("Have error ${espstatus.errormessage}",token)
+                    }
                     pss.save(psv)
                 } catch (e: Exception) {
                     logger.debug("Readvbatt status error ${e.message}")
@@ -74,4 +78,4 @@ class D1readvoltWorker(p: Pijob, val readvalue: ReadUtil, val pijs: Portstatusin
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class Espstatus(var batt_volt: BigDecimal? = null)
+class Espstatus(var batt_volt: BigDecimal? = null, var errormessage: String? = null)

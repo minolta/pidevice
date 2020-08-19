@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.t
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressurevalueService
 import me.pixka.kt.pidevice.d.VbattService
+import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1readvoltWorker
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component
 class ReadVtask(val pjs: PijobService,
                 val js: JobService,
                 val task: TaskService, val readUtil: ReadUtil, val portstatusinjobService: PortstatusinjobService,
-                val pss: VbattService) {
+                val pss: VbattService,val ntf:NotifyService) {
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
@@ -29,7 +30,7 @@ class ReadVtask(val pjs: PijobService,
             if (list != null) {
                 for (job in list) {
 
-                    var job = D1readvoltWorker(job, readUtil, portstatusinjobService, pss)
+                    var job = D1readvoltWorker(job, readUtil, portstatusinjobService, pss,ntf)
                     task.run(job)
                 }
             }
