@@ -6,7 +6,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.MessageService
-import me.pixka.pibase.s.PortstatusinjobService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.TimeUnit
 

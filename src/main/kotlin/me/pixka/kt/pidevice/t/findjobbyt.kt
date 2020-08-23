@@ -4,17 +4,12 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18sensor
 import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.s.MessageService
+import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.o.DS18obj
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Worker
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 /**
@@ -28,7 +23,7 @@ import org.springframework.stereotype.Component
 @Component
 @Profile("pi")
 class FindJobforRunDS18value(val pjs: PijobService, val js: JobService, val gpios: GpioService,
-                             val ts: TaskService,val ps:PortstatusinjobService, var dsobj: DS18obj,
+                             val ts: TaskService, val ps: PortstatusinjobService, var dsobj: DS18obj,
                              val ms: MessageService, val io: Piio) {
 
     //ไม่ใช้แล้วใช้ตัวอื่นแทน

@@ -1,10 +1,8 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Dhtvalue
-import me.pixka.pibase.s.DhtvalueService
+import me.pixka.kt.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -13,13 +11,13 @@ import java.math.BigDecimal
 
 @Component
 @Profile("pi", "lite")
-class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogService, val dbcfg: DbconfigService) {
+class ReadDht(val service: DhtvalueService, val io: Piio) {
     val hlimit = BigDecimal("100")
     var old: Dhtvalue? = null
     @Scheduled(initialDelay = 3000, fixedDelay = 60000)
     fun read() {
 
-        var canread = dbcfg.findorcreate("readdht", "true").value
+        var canread = System.getProperty("readdht", "true")
         if (!canread.equals("true")) {
             logger.info("Not run read dht")
             return
@@ -59,7 +57,6 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
             logger.debug("[savedht] ######## DHT value T: ${o?.t} H:${o?.h}")
         } catch (e: Exception) {
             logger.error("[savedht] Save DHT Error " + e.message)
-            err.n("Read dht", "19-25", "${e.message}")
 
         }
 
@@ -69,7 +66,7 @@ class ReadDht(val service: DhtvalueService, val io: Piio, val err: ErrorlogServi
 
     fun checkvaluetosave(src: BigDecimal, des: BigDecimal): Boolean {
 
-        var rangertosave = BigDecimal(dbcfg.findorcreate("dhtvaluerangtosave", "0.5").value)
+        var rangertosave = BigDecimal(System.getProperty("dhtvaluerangtosave", "0.5"))
         var result = src.subtract(des)
 
         var over05 = result.abs()

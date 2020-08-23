@@ -1,14 +1,7 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.pibase.d.DS18value
-import me.pixka.kt.pibase.t.HttpGetTask
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Component
 class TestRead()

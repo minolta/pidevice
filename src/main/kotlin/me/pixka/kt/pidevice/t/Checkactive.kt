@@ -1,20 +1,16 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.s.IptableServicekt
-import me.pixka.kt.pibase.d.PiDevice
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.d.Portstatusinjob
-import me.pixka.kt.pidevice.s.NotifyService
+import me.pixka.kt.pibase.s.JobService
+import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.CheckActiveWorker
-import me.pixka.kt.run.Status
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.net.URL
 
 @Component
 class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskService, val ps: PortstatusinjobService,

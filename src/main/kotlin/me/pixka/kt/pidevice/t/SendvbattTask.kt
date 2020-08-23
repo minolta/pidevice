@@ -1,7 +1,7 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.kt.pibase.d.VbattService
 import me.pixka.kt.pibase.t.HttpPostTask
-import me.pixka.kt.pidevice.d.VbattService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component

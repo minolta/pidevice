@@ -1,16 +1,15 @@
 package me.pixka.kt.pidevice.t
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.c.HttpControl
+import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressurevalueService
-import me.pixka.kt.pidevice.s.NotifyService
+import me.pixka.kt.pibase.s.JobService
+import me.pixka.kt.pibase.s.PideviceService
+import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.ReadPressureTask
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PideviceService
-import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Component
 //@Profile("pi")
 class Findreadpressure(val pideviceService: PideviceService, val ps: PressurevalueService,
                        val js: JobService, val pjs: PijobService,
-                       val http: HttpControl, val ips: IptableServicekt, val ts: TaskService,val ntf:NotifyService
+                       val http: HttpControl, val ips: IptableServicekt, val ts: TaskService, val ntf: NotifyService
 ) {
 
 

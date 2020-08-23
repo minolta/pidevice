@@ -2,14 +2,9 @@ package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.s.MessageService
-import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.DSOTHERWorker
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
@@ -59,7 +54,7 @@ class Finddsjobbyother(val task: RunotherTask) {
 @Profile("pi")
 class RunotherTask(var pjs: PijobService, var js: JobService,
                    val ts: TaskService,
-                   val gpios: GpioService,val ps:PortstatusinjobService,
+                   val gpios: GpioService, val ps:PortstatusinjobService,
                    val ss: SensorService, val ms: MessageService) {
     @Async("aa")
     fun run(): Future<Boolean>? {

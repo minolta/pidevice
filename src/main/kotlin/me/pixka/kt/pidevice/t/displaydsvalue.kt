@@ -1,10 +1,9 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.pibase.c.Piio
+import me.pixka.kt.pibase.s.DS18sensorService
 import me.pixka.kt.pibase.s.DisplayService
-import me.pixka.pibase.s.DS18sensorService
-import me.pixka.pibase.s.Ds18valueService
+import me.pixka.kt.pibase.s.Ds18valueService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -17,7 +16,6 @@ import java.util.concurrent.TimeUnit
 class Displaydsvalues(val dps: DisplayService,
                       val dss: DS18sensorService,
                       val dsvs: Ds18valueService,
-                      val dbcfg: DbconfigService,
                       val io: Piio) {
 
     var df = DecimalFormat("##.0")
@@ -26,7 +24,7 @@ class Displaydsvalues(val dps: DisplayService,
     @Scheduled(initialDelay = 5000, fixedDelay = 30000)
     fun run() {
         logger.info("Run Display DS 18b20 value")
-        var run = dbcfg.findorcreate("displaydsvalue", "false").value
+        var run = System.getProperty("displaydsvalue", "false")
         logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue

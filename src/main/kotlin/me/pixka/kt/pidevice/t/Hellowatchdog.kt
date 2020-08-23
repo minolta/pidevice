@@ -1,7 +1,6 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.s.GpioService
-import net.sf.ehcache.util.TimeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled

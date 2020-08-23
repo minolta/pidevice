@@ -1,15 +1,15 @@
 package me.pixka.kt.run
 
-import me.pixka.c.HttpControl
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
-import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
 import java.util.*
@@ -87,7 +87,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
             } else {
                 logger.error("DHT Value is null ${pijob.name}")
-                dhts.ntfs.error("DHT Value is null ${pijob.name}")
 
             }
         } catch (e: Exception) {

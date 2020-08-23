@@ -1,8 +1,8 @@
 package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.pibase.s.Ds18valueService
-import me.pixka.pibase.s.PideviceService
+import me.pixka.kt.pibase.s.Ds18valueService
+import me.pixka.kt.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @Profile("pi")
-class Readlocaltemp(val io: Piio, val ds: Ds18valueService ,val pis:PideviceService) {
+class Readlocaltemp(val io: Piio, val ds: Ds18valueService, val pis: PideviceService) {
 
 
     @Scheduled(fixedDelay = 10000)

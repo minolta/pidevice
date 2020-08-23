@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
+import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.pibase.s.*
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -92,12 +92,14 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                 logger.debug("[pijob loadpijob] Found Jobs for me " + list.size)
                 return list
             }
-            throw Exception("Not have pi job")
+           logger.warn("Not have pi job")
         } catch (e: IOException) {
             logger.error("[loadpijob] :error:" + e.message)
             ee.shutdownNow()
             throw e
         }
+
+        return null
     }
 
     fun newjob(job: Job): Job? {

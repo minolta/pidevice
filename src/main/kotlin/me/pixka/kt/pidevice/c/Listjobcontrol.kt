@@ -1,15 +1,15 @@
 package me.pixka.kt.pidevice.c
 
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
+import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.DefaultWorker
 import me.pixka.kt.run.PijobrunInterface
 import me.pixka.kt.run.Worker
-import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.web.bind.annotation.*
@@ -201,4 +201,5 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 }
 
 class tl(var id: Long? = null, var name: String? = null, var startrun: Date? = null,
-         var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null,var jobtype:String?=null)
+         var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null,
+         var jobtype:String?=null)

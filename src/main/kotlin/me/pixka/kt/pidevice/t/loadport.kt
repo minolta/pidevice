@@ -2,13 +2,10 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Portname
-import me.pixka.pibase.s.PortnameService
+import me.pixka.kt.pibase.s.PortnameService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
@@ -52,11 +49,11 @@ class LoadPortnameTask(val task: LoadPortTask) {
 
 @Component
 class LoadPortTask(val service: PortnameService,
-                   val cfg: DbconfigService,
-                   val http: HttpControl,
-                   val err: ErrorlogService) {
+                   val http: HttpControl
+) {
     private var target = "http://192.168.69.50:5002/portname/lists/0/1000"
     private val om = ObjectMapper()
+
     @Async("aa")
     fun run(): Future<Boolean>? {
         setup()
@@ -82,12 +79,12 @@ class LoadPortTask(val service: PortnameService,
 
                 logger.debug("Port: ${j?.name}")
 
-              /*  if (j == null) {
-                    j = service.create(item)
-                    j = service.save(j)
-                    logger.debug("[savetodevice Portname] Save :  " + j!!)
-                }
-                */
+                /*  if (j == null) {
+                      j = service.create(item)
+                      j = service.save(j)
+                      logger.debug("[savetodevice Portname] Save :  " + j!!)
+                  }
+                  */
             }
         } catch (e: Exception) {
             logger.error("savetodevice Portname error : " + e.message)
@@ -104,7 +101,6 @@ class LoadPortTask(val service: PortnameService,
             return list
         } catch (e: IOException) {
             logger.error("loadfromservice Error Portname: " + e.message)
-            err.n("Load port name", "66", e.message!!)
         }
 
         return null
@@ -115,7 +111,7 @@ class LoadPortTask(val service: PortnameService,
 
         var host = System.getProperty("piserver")
         if (host == null)
-            host = cfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+            host = System.getProperty("hosttarget", "http://pi1.pixka.me")
         target = host + "/portname/lists/0/1000"
         logger.debug("Target port ${target}")
     }

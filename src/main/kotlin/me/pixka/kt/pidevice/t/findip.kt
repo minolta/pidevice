@@ -1,9 +1,8 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
-import me.pixka.kt.pidevice.s.NotifyService
-import me.pixka.ktbase.io.Configfilekt
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -17,7 +16,7 @@ import java.util.*
 
 @Component
 //@Profile("pi")
-class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: NotifyService) {
+class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)
     }

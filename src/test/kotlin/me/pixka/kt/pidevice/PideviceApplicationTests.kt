@@ -1,15 +1,14 @@
 package me.pixka.kt.pidevice
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pidevice.s.NotifyService
+import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.run.*
-import me.pixka.pibase.s.DhtvalueService
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.scheduling.annotation.Async
@@ -19,7 +18,6 @@ import java.net.URL
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
-@RunWith(SpringRunner::class)
 @SpringBootTest
 @EnableAsync
 class PideviceApplicationTests {

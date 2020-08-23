@@ -3,12 +3,8 @@ package me.pixka.kt.run
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.s.MessageService
-import me.pixka.kt.pibase.s.SensorService
+import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.pibase.s.DS18sensorService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.joda.time.DateTime
 import org.joda.time.Interval
 import org.joda.time.Period

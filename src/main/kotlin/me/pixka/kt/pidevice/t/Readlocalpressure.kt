@@ -5,8 +5,8 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.d.PressurevalueService
+import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pidevice.s.InfoService
-import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled

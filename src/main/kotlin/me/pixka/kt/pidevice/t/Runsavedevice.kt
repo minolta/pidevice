@@ -2,11 +2,10 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.PiDevice
-import me.pixka.kt.pibase.d.PressureValue
+import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -14,9 +13,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-
 @Component
-class Runsavedevice(val service: PideviceService,val ips:IptableServicekt) {
+class Runsavedevice(val service: PideviceService, val ips: IptableServicekt) {
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runsavedevice::class.java)

@@ -1,22 +1,19 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Devicecheckin
+import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Message
 import me.pixka.kt.pibase.d.PiDevice
+import me.pixka.kt.pibase.s.DevicecheckinService
 import me.pixka.kt.pibase.s.MessagetypeService
-import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.pibase.o.Infoobj
-import me.pixka.pibase.s.DevicecheckinService
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
@@ -69,8 +66,8 @@ class Checkin(val c: CheckinTask,val notifyService: NotifyService) {
 
 @Component
 //@Profile("pi", "lite")
-class CheckinTask(val erl: ErrorlogService, val io: Piio, val http: HttpControl,
-                  val ds: DevicecheckinService, val dbcfg: DbconfigService,
+class CheckinTask(val io: Piio, val http: HttpControl,
+                  val ds: DevicecheckinService,
                   val mtservice: MessagetypeService, val ips: IptableServicekt) {
     var target: String? = null
     var host: String? = null
@@ -148,11 +145,8 @@ class CheckinTask(val erl: ErrorlogService, val io: Piio, val http: HttpControl,
     fun setup() {
 
 
-        host = System.getProperty("piserver")
+        host = System.getProperty("piserver", "http://pi1.pixka.me")
 
-        if (host == null) {
-            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
-        }
 
         target = host + "/checkin"
         logger.debug("checkininfo Check in target ${target}")

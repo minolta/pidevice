@@ -1,7 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.PressureValue
 import me.pixka.kt.pibase.d.PressurevalueService
 import me.pixka.kt.pibase.t.HttpPostTask

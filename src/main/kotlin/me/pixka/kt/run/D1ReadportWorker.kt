@@ -3,16 +3,15 @@ package me.pixka.kt.run
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
-import me.pixka.pibase.s.PijobService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

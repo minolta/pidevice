@@ -2,21 +2,19 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
-import me.pixka.pibase.s.*
+import me.pixka.kt.pibase.s.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
+
 //ไม่ใช้แล้ว
 @Component
 @Profile("pi", "lite")
@@ -51,10 +49,10 @@ class Loadpijob(val task: LoadpijobTask) {
 
 @Component
 @Profile("pi", "lite")
-class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService, val dbcfg: DbconfigService
+class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService
                     , val io: Piio, val http: HttpControl,
                     val psijs: PortstatusinjobService, val ls: LogistateService,
-                    var err: ErrorlogService, val js: JobService,
+                     val js: JobService,
                     val ps: PortnameService, val pds: PideviceService) {
     // load /pijob/list/{mac}
     private var target = ""
@@ -100,7 +98,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return AsyncResult(true)
         } catch (e: Exception) {
             logger.error(" [loadpijob] Error run load pijob : " + e.message)
-            err.n("loadpijob", "40-90", "${e.message}")
         }
         return null
     }
@@ -133,7 +130,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
 
         } catch (e: Exception) {
             logger.error("loadpijob find ds sensor error ${e.message}")
-            err.n("loadpijob", "60-61", "${e.message}")
         }
         return null
     }
@@ -219,7 +215,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             throw e
         }
 
-        return null
     }
 
 
@@ -250,7 +245,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             }
         } catch (e: Exception) {
             logger.error("[loadpijob saveport] saveport error : " + e.message)
-            err.n("loadpijob", "131-151", "${e.message}")
         }
 
     }
@@ -282,7 +276,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return psijs.save(ref)
         } catch (e: Exception) {
             logger.error("loadpijob edit error : " + e.message)
-            err.n("loadpijob", "176-183", "${e.message}")
         }
 
         return null
@@ -300,7 +293,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return list
         } catch (e: IOException) {
             logger.error("[loadpijob] Load port status : " + e.message)
-            err.n("loadpijob", "196-199", "${e.message}")
         }
 
         return null
@@ -317,7 +309,6 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
             return list
         } catch (e: IOException) {
             logger.error("[loadpijob] :error:" + e.message)
-            err.n("loadpijob", "212-215", "${e.message}")
             return null
         }
     }
@@ -327,7 +318,7 @@ class LoadpijobTask(val service: PijobService, val dsservice: DS18sensorService,
         var host = System.getProperty("piserver")
 
         if (host == null)
-            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+            host = System.getProperty("hosttarget", "http://pi1.pixka.me")
 
         target = host + "/pijob/lists"
         targetloadstatus = host + "/portstatusinjob/lists"

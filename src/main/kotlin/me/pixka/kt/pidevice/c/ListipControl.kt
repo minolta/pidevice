@@ -1,7 +1,7 @@
 package me.pixka.kt.pidevice.c
 
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -12,7 +12,7 @@ class ListipControl(val iptableServicekt: IptableServicekt) {
     @Throws(Exception::class)
     fun value(): List<Iptableskt>? {
 
-        return iptableServicekt.all()
+        return iptableServicekt.search("",0,1000)
     }
 
     @CrossOrigin

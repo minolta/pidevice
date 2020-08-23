@@ -2,16 +2,11 @@ package me.pixka.kt.run
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
-import me.pixka.kt.pibase.d.PiDevice
-import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.d.PressureValue
-import me.pixka.kt.pibase.d.PressurevalueService
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.d.*
+import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.s.NotifyService
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.util.*
@@ -19,7 +14,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class ReadPressureTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
-                       var rps: PressurevalueService, var pideviceService: PideviceService,var ntf:NotifyService) :
+                       var rps: PressurevalueService, var pideviceService: PideviceService, var ntf: NotifyService) :
         DefaultWorker(p, null, readvalue, null, logger) {
     val om = ObjectMapper()
     var token = System.getProperty("errortoekn")

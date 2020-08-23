@@ -2,15 +2,10 @@ package me.pixka.kt.pidevice.t
 
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.s.MessageService
+import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.s.Checkwaterservice
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.HWorker
-import me.pixka.pibase.s.DhtvalueService
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -22,7 +17,7 @@ import java.util.*
 class RunjobByHT(val dhts: DhtvalueService, val ts: TaskService
                  , val pjs: PijobService, val js: JobService,
                  val gpios: GpioService, val ms: MessageService, val io: Piio,
-                 val cws: Checkwaterservice,val ps:PortstatusinjobService) {
+                 val cws: Checkwaterservice, val ps:PortstatusinjobService) {
 
     @Scheduled(initialDelay = 5000, fixedDelay = 5000)
     fun run() {

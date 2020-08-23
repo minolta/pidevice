@@ -1,15 +1,12 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
+import me.pixka.kt.pibase.s.Ds18valueService
 import me.pixka.kt.pibase.t.HttpPostTask
-import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.o.Infoobj
-import me.pixka.pibase.s.Ds18valueService
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
@@ -93,8 +90,8 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
 @Component
 //@Profile("pi", "lite")
 class SenddsTask(val io: Piio, val service: Ds18valueService,
-                 val http: HttpControl, val cfg: Configfilekt,
-                 val err: ErrorlogService, val dbcfg: DbconfigService) {
+                 val http: HttpControl
+) {
 
 
     var target = "http://localhost:5555/ds18value/add"
@@ -166,7 +163,7 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
         logger.debug("Setup...")
         var host = System.getProperty("piserver")
         if (host == null)
-            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+            host = System.getProperty("hosttarget", "http://pi1.pixka.me")
 
         target = host + "/ds18value/add"
         logger.debug("Target ${target}")

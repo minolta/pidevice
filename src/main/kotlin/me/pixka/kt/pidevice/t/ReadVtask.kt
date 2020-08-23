@@ -1,15 +1,14 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.d.PressurevalueService
-import me.pixka.kt.pidevice.d.VbattService
-import me.pixka.kt.pidevice.s.NotifyService
+import me.pixka.kt.pibase.d.VbattService
+import me.pixka.kt.pibase.s.JobService
+import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1readvoltWorker
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Component
 class ReadVtask(val pjs: PijobService,
                 val js: JobService,
                 val task: TaskService, val readUtil: ReadUtil, val portstatusinjobService: PortstatusinjobService,
-                val pss: VbattService,val ntf:NotifyService) {
+                val pss: VbattService, val ntf: NotifyService) {
 
     @Scheduled(fixedDelay = 5000)
     fun run() {

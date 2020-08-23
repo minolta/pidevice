@@ -2,8 +2,8 @@ package me.pixka.kt.pidevice
 
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
+import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest

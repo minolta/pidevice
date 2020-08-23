@@ -1,9 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Message
 import me.pixka.kt.pibase.d.PiDevice
@@ -13,7 +11,6 @@ import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
@@ -60,8 +57,7 @@ class Sendmessage(val task: SendmessageTask) {
 @Component
 @Profile("pi", "lite")
 class SendmessageTask(val io: Piio, val service: MessageService,
-                      val http: HttpControl,
-                      val err: ErrorlogService, val dbcfg: DbconfigService) {
+                      val http: HttpControl) {
 
 
     var target = "http://localhost:5555/ds18value/add"
@@ -121,7 +117,6 @@ class SendmessageTask(val io: Piio, val service: MessageService,
                         }
                     } catch (e: Exception) {
                         logger.error("[sendmessage] ERROR " + e.message)
-                        err.n("Send message", "114", "${e.message}")
                     } finally {
                         if (re != null)
                             re.close()
@@ -139,7 +134,7 @@ class SendmessageTask(val io: Piio, val service: MessageService,
         logger.debug("Setup... Message Service")
         var host = System.getProperty("piserver")
         if (host == null)
-            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me:5002").value
+            host = System.getProperty("hosttarget", "http://pi1.pixka.me:5002")
 
         target = host + "/message/add"
         logger.debug("Target ${target}")

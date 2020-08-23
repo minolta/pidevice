@@ -2,12 +2,10 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Job
+import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.pibase.s.JobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
@@ -65,8 +63,7 @@ class LoadMainJobTask(val jobService: JobService) {
 @Component
 @Profile("pi", "lite")
 class LoadjobTask(val service: JobService,
-                  val dbcfg: DbconfigService,
-                  val http: HttpControl, val err: ErrorlogService) {
+                  val http: HttpControl) {
 
 
     // load /pijob/list/{mac}
@@ -103,7 +100,6 @@ class LoadjobTask(val service: JobService,
             return list
         } catch (var4: IOException) {
             logger.error("loadfromservice Error loadmainjob: " + var4.message)
-            err.n("Loadjob", "48", var4.message!!)
             throw var4
         }
 
@@ -116,7 +112,7 @@ class LoadjobTask(val service: JobService,
 
         var host = System.getProperty("piserver")
         if (host == null)
-            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+            host = System.getProperty("hosttarget", "http://pi1.pixka.me")
 
         target = host + "/job/lists/0/1000"
     }

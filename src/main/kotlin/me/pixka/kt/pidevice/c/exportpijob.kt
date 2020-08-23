@@ -5,8 +5,8 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
+import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.core.io.InputStreamResource

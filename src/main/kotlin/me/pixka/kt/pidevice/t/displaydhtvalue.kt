@@ -1,10 +1,9 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.s.DbconfigService
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Dhtvalue
+import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pibase.s.DisplayService
-import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -14,12 +13,12 @@ import java.util.concurrent.TimeUnit
 
 @Component
 @Profile("pi")
-class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService, val dbcfg: DbconfigService, val io: Piio) {
+class Displaydhtvalue(val dps: DisplayService, val dhts: DhtvalueService,  val io: Piio) {
     var df = DecimalFormat("##.#")
     @Scheduled(fixedDelay = 20000)
     fun run() {
 
-        var run = dbcfg.findorcreate("Displaydhtvalue", "false").value
+        var run = System.getProperty("Displaydhtvalue", "false")
         logger.debug(" Can run:${run}")
         if (run?.indexOf("true") == -1) {
             //not rune display dhtvalue

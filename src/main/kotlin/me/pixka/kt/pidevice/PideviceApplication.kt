@@ -22,8 +22,8 @@ import javax.annotation.PostConstruct
 @EnableAsync
 @EnableScheduling
 @ComponentScan(basePackages = arrayOf("me.pixka"))
-@EnableJpaRepositories(basePackages = arrayOf("me.pixka"))
-@EntityScan(basePackages = arrayOf("me.pixka"))
+//@EnableJpaRepositories(basePackages = arrayOf("me.pixka"))
+//@EntityScan(basePackages = arrayOf("me.pixka"))
 class PideviceApplication {
 
     @Bean
