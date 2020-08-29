@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.t
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.s.PortstatusinjobService
@@ -16,20 +17,20 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-//@Profile("pi")
 class Runtjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService,
 //                  val gpios: GpioService,
                   val dhs: Dhtutil, val httpControl: HttpControl, val psij: PortstatusinjobService,
-                  val readUtil: ReadUtil) {
+                  val readUtil: ReadUtil,val findJob: FindJob) {
     val om = ObjectMapper()
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
         try {
             logger.debug("Start run ${Date()}")
-            var list = loadjob()
+//            var list = loadjob()
+            var list = findJob.loadjob("runtbyd1")
             logger.debug("found job ${list?.size}")
             if (list != null) {
                 for (job in list) {
@@ -38,13 +39,6 @@ class Runtjobbyd1(val pjs: PijobService,
                         logger.debug("")
                         var t = D1tjobWorker(job, readUtil, psij, testjob)
                         task.run(t)
-
-//                        if (t.checktmp(job)) {
-//                            var canrun = task.run(t)
-//                            logger.debug("This job run JOB:${job.name} ==> ${canrun}")
-//                        }
-//                        else
-//                            logger.debug("Job out of rang")
                     } catch (e: Exception) {
                         logger.error("${job.name} ${e.message}")
                     }

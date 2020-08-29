@@ -176,7 +176,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
     fun go() {//Run
         var ee = Executors.newSingleThreadExecutor()
-        var token = pijob.description
+        var token = pijob.token
         state = "Run set port "
         var ports = pijob.ports
         logger.debug("Ports ${ports}")

@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressurevalueService
+import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.s.PijobService
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component
 @Component
 //@Profile("pi")
 class Findreadpressure(val pideviceService: PideviceService, val ps: PressurevalueService,
-                       val js: JobService, val pjs: PijobService,
+                       val js: JobService, val pjs: PijobService,val findJob: FindJob,
                        val http: HttpControl, val ips: IptableServicekt, val ts: TaskService, val ntf: NotifyService
 ) {
 

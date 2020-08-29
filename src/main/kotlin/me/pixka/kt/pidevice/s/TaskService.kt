@@ -139,8 +139,8 @@ class TaskService(val context: ApplicationContext) {
         }
     }
 
-    @Scheduled(initialDelay = 2000,
-            fixedDelay = 20000)
+    @Scheduled(initialDelay = 1000,
+            fixedDelay = 1000)
     fun removefinished() {
         logger.debug("Start Remove job finished size: ${runinglist.size}")
         try {

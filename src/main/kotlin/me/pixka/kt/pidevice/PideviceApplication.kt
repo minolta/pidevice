@@ -29,7 +29,7 @@ class PideviceApplication {
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
-        taskScheduler.poolSize = 150
+        taskScheduler.poolSize = 250
         taskScheduler.threadNamePrefix = "SS-"
 
 
