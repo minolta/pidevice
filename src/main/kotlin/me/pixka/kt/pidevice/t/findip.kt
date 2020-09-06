@@ -4,6 +4,7 @@ import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
@@ -15,12 +16,13 @@ import java.util.*
 
 
 @Component
-//@Profile("pi")
+@Profile("!test")
 class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)
     }
-    var directcommand:String? = null
+
+    var directcommand: String? = null
     var s: String? = null
     var command: String? = "nmap -n -sP "
 
@@ -54,7 +56,7 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
 
     fun setup() {
         command = "nmap -n -sP"
-     directcommand = System.getProperty("directcommand")
+        directcommand = System.getProperty("directcommand")
 
     }
 
@@ -81,7 +83,7 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
     fun findIP(network: String, cmd: String): ArrayList<Ip> {
         var c = cmd + " " + network
 
-        if(directcommand!=null)
+        if (directcommand != null)
             c = directcommand!!
         val proc = Runtime.getRuntime().exec(c)
         logger.debug("Command is ${c}")
@@ -140,14 +142,14 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
 
     fun savetoDB(buf: ArrayList<Ip>) {
 
-       buf.map {
+        buf.map {
             var oldip = service.findByMac(it.mac!!)
             if (oldip != null) {
                 //edit
                 oldip.ip = it.ip
                 oldip.lastupdate = Date()
                 oldip = service.save(oldip)
-                logger.debug("Update ${oldip?.devicename}  TO IP ${oldip?.ip} MAC:${oldip?.mac}")
+                logger.debug("Update ${oldip.devicename}  TO IP ${oldip.ip} MAC:${oldip.mac}")
 
             } else {
                 var newip = Iptableskt()
@@ -156,7 +158,7 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
                 newip.lastupdate = Date()
                 newip.adddate = Date()
 
-                var np = service.save(newip)!!
+                var np = service.save(newip)
                 logger.debug("New Ip address MAC:${np.mac} IP:${np.ip}")
             }
         }
@@ -262,7 +264,7 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
             idv.ip = it.ip
             idv.mac = it.mac
             idv.lastcheckin = Date()
-            idv = service.save(idv)!!
+            idv = service.save(idv)
             logger.debug("loadiptable New iptables : ${idv}")
         } catch (e: Exception) {
             e.printStackTrace()

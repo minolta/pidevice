@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pibase.t.HttpGetTask
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.IOException
@@ -14,6 +15,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("!test")
 class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService,
                    val ls: LogistateService, val pijobgroupService: PijobgroupService,
                    val js: JobService, val dsservice: DS18sensorService,

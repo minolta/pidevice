@@ -6,6 +6,7 @@ import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Portname
 import me.pixka.kt.pibase.s.PortnameService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.scheduling.annotation.Scheduled
@@ -15,7 +16,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-//@Profile("pi", "lite")
+@Profile("!test")
 class LoadPortnameTask(val task: LoadPortTask) {
 
 

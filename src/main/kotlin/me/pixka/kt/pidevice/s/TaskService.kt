@@ -19,9 +19,10 @@ import kotlin.collections.ArrayList
 @Service
 class TaskService(val context: ApplicationContext) {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
+    val pool = context.getBean("pool") as ExecutorService
     fun run(work: PijobrunInterface): Boolean {
         try {
-            val pool = context.getBean("pool") as ExecutorService
+
             var forrun = checkalreadyrun(work)
             logger.debug("CheckJOB job can run ? ${forrun}")
             if (forrun != null) {
@@ -54,25 +55,12 @@ class TaskService(val context: ApplicationContext) {
         }
         if(run!=null)
             return false
-
       return true
-
-
   }
     /**
      * สำหรับตรวจว่า job ไหน ยัง run ไม่เสร็จก็ไม่ต้อง run ทับละ
      */
     fun checkalreadyrun(w: PijobrunInterface): PijobrunInterface? {
-//
-//        var run = runinglist.filter {
-//            it.getPijobid() == w.getPijobid() && it.runStatus()
-//        }
-//
-//        if(run.isEmpty())
-//            return null
-
-
-
         try {
             logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")
             if (runinglist.size > 0) {
@@ -104,90 +92,65 @@ class TaskService(val context: ApplicationContext) {
         } catch (e: Exception) {
             logger.error("Error check run ${e.message}")
         }
-
-
-
-
         return null
     }
-
-
-    fun runAsyn(f: Future<Any>, timeout: Int): Any? {
-        try {
-            var count = 0
-            while (true) {
-                if (f.isDone) {
-                    logger.info("Run commplete")
-                    return f.get()
-                    break
-                }
-                TimeUnit.SECONDS.sleep(1)
-                count++
-
-                if (count > timeout) {
-                    f.cancel(true)
-                    logger.error("Timeout")
-                    return null
-
-                }
-
-            }
-
-        } catch (e: Exception) {
-            logger.error(e.message)
-            throw e
-        }
-    }
-
     @Scheduled(initialDelay = 1000,
             fixedDelay = 1000)
-    fun removefinished() {
-        logger.debug("Start Remove job finished size: ${runinglist.size}")
-        try {
-            if (runinglist != null && runinglist.size > 0) {
+    fun removeEndjob(): List<PijobrunInterface> {
 
-                var items = runinglist.iterator()
-                logger.debug("Size Before remove ${runinglist.size}")
-                while (items.hasNext()) {
+        var notrun =  runinglist.filter { it.runStatus()==false }
 
-                    var item = items.next()
-                    logger.debug("Remove Job in list ${item}")
-                    if (item != null)
-                        if (!item.runStatus()) {
-                            items.remove()
-                            logger.debug("Remove finished run ${item} ")
-                        }
-                }
-
-                logger.debug("Size after remove ${runinglist.size}")
-
-                /*
-                for (old in runinglist) {
-                    logger.debug("Remove Job in list ${old}")
-                    if (old != null)
-                        if (!old.runStatus()) {
-                            logger.debug("Remove finished run ${old} ")
-                            runinglist.remove(old)
-                        }
-                }
-                */
-            }
-
-
-        } catch (e: Exception) {
-            logger.error("Remove Error ${e.message}")
-            e.printStackTrace()
-        }
-
-        logger.debug("Remove Already run size: ${runinglist.size}    ")
-
-        logger.debug(" THREADISRUN ======================================RUN===========================================  ")
-        for (run in runinglist) {
-            logger.debug("THREADISRUN ID:${run.getPJ().name} ${run.getPijobid()} Start date ${run.startRun()} Status :${run.state()} " +
-                    "is run ? : ${run.runStatus()}")
-        }
-        logger.debug("THREADISRUN ======================================================================================")
+        runinglist.removeAll(notrun)
+//        this.runinglist = run as ArrayList<PijobrunInterface>
+        return runinglist
     }
+//    fun removefinished() {
+//        logger.debug("Start Remove job finished size: ${runinglist.size}")
+//        try {
+//            if (runinglist != null && runinglist.size > 0) {
+//
+//                var items = runinglist.iterator()
+//                logger.debug("Size Before remove ${runinglist.size}")
+//                while (items.hasNext()) {
+//
+//                    var item = items.next()
+//                    logger.debug("Remove Job in list ${item}")
+//                    if (item != null)
+//                        if (!item.runStatus()) {
+//                            items.remove()
+//                            logger.debug("Remove finished run ${item} ")
+//                        }
+//                }
+//
+//                logger.debug("Size after remove ${runinglist.size}")
+//
+//                /*
+//                for (old in runinglist) {
+//                    logger.debug("Remove Job in list ${old}")
+//                    if (old != null)
+//                        if (!old.runStatus()) {
+//                            logger.debug("Remove finished run ${old} ")
+//                            runinglist.remove(old)
+//                        }
+//                }
+//                */
+//            }
+//
+//
+//        } catch (e: Exception) {
+//            logger.error("Remove Error ${e.message}")
+//            e.printStackTrace()
+//        }
+//
+//        logger.debug("Remove Already run size: ${runinglist.size}    ")
+//
+//        logger.debug(" THREADISRUN ======================================RUN===========================================  ")
+//        for (run in runinglist) {
+//            logger.debug("THREADISRUN ID:${run.getPJ().name} ${run.getPijobid()} Start date ${run.startRun()} Status :${run.state()} " +
+//                    "is run ? : ${run.runStatus()}")
+//        }
+//        logger.debug("THREADISRUN ======================================================================================")
+//    }
 
     var df = SimpleDateFormat("HH:mm")
 
