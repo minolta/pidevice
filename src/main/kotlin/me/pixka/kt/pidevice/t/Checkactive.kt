@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.t
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.s.PortstatusinjobService
@@ -13,7 +14,8 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskService, val ps: PortstatusinjobService,
+class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskService,
+                  val ps: PortstatusinjobService, val httpService: HttpService,
                   val ips: IptableServicekt, val ntfs: NotifyService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Checkactive::class.java)
@@ -28,13 +30,19 @@ class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskServi
                 logger.debug("Found checkactive ${jobs.size} ")
                 for (j in jobs) {
                     logger.debug("Run ${j.name}")
-                    var t = CheckActiveWorker(j, ps, ips, ntfs)
-                    var run = task.run(t)
-                    logger.debug("Run ${run}")
-                    if (run)
-                        logger.debug("Run job checkactive ${j.name}")
-                    else
-                        logger.warn("Can not run job ${j.name}")
+                    if (task.runinglist.find {
+                                it.getPijobid() == j.id && it.runStatus()
+                            } == null) {
+
+                        var t = CheckActiveWorker(j, ps, httpService, ips, ntfs)
+                        var run = task.run(t)
+                        logger.debug("Run ${run}")
+                        if (run)
+                            logger.debug("Run job checkactive ${j.name}")
+                        else
+                            logger.warn("Can not run job ${j.name}")
+                    }
+
                 }
 
             }
@@ -44,14 +52,12 @@ class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskServi
     }
 
 
-
-
     fun loadjob(): List<Pijob>? {
         try {
             var job = js.findByName("checkactive")
             if (job != null) {
 
-                var jobs = pjs.findJob(job.id!!)
+                var jobs = pjs.findJob(job.id)
                 logger.debug("Found Job !! ${jobs}")
                 return jobs
             }

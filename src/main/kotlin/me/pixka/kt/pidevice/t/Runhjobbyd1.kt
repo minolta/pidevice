@@ -1,11 +1,14 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.c.HttpControl
+import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.DhtvalueService
+import me.pixka.kt.pibase.o.HObject
 import me.pixka.kt.pibase.s.FindJob
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
@@ -19,23 +22,21 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Component
-class Runhjobbyd1(val pjs: PijobService,val findJob: FindJob,
+class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                   val js: JobService,
                   val task: TaskService,
                   val dhs: Dhtutil, val httpControl: HttpControl,
-                  val dhtvalueService: DhtvalueService, val groups: GroupRunService,
-                  val ntfs: NotifyService, val queue: QueueService) {
+                  val iptableServicekt: IptableServicekt, val groups: GroupRunService,
+                  val ntfs: NotifyService, val queue: QueueService, val httpService: HttpService) {
     val om = ObjectMapper()
 
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 5000)
     fun run() {
 
         try {
             queue.printqueue()
-
             //ถ้ามี job ใน คิวให้้ run ให้หมดก่อน
-
             if (queue.size() > 0) {
                 runQueue()//พยาม run ที่อยู่ในคิวก่อน
             }
@@ -43,11 +44,34 @@ class Runhjobbyd1(val pjs: PijobService,val findJob: FindJob,
             //Run ปกติ
             var list = findJob.loadjob("runhbyd1")
             if (list != null) {
-                logger.debug("Job for Runhjobbyd1 Hjobsize  ${list.size}")
                 list.forEach {
-                    logger.debug("RunH  ${it.name}")
-                    t(it)
+                    var job = it
+                    if (!task.checkrun(job)) {//ยังไม่มีใน list
+                        if (task.checktime(it)) {//ถ้าอยู่ในเวลา
+                            var h = getHobj(it)
+                            if (h != null) {
+                                if (checkHtorun(it, h)) {
+                                    if (groups.c(job)) {//ไม่มี job run อยู่ และในกลุม run ไม่มีใครใช้น้ำ
+                                        var t = D1hjobWorker(job, dhs, httpService, task, ntfs)
+                                        var run = task.run(t)
+                                        logger.debug("H job is run ${run}")
+                                    } else {//ถ้ามี job run อยู่แล้วก็ไปดูในคิวว่ามีเปล่า
+                                        if (!queue.inqueue(job)) {
+                                            queue.addtoqueue(job)
+                                            logger.debug("Add to queue ${job}")
+                                        } else {
+                                            logger.debug("In queue ${job}")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        logger.warn("Have job run ready ${job.name}")
+                    }
                 }
+
+
             }
 
         } catch (e: Exception) {
@@ -55,93 +79,64 @@ class Runhjobbyd1(val pjs: PijobService,val findJob: FindJob,
         }
     }
 
-    //run Job
-    fun t(job: Pijob): Boolean {
-        if (!task.checkrun(job)) {
-            logger.warn("this job is run now ${job.name}")
-            return false // now runninsg
-        }
-        if (queue.inqueue(job)) {
-            logger.warn("Job alreay in queue ${job.name}")
-            return false
-        }
+    fun checkHtorun(pijob: Pijob, h: HObject): Boolean {
 
-//        if (groups.c(job)) {
-        var t = D1hjobWorker(job, dhtvalueService, dhs, httpControl, task, ntfs)
-        if (task.checktime(job)) {
-            if (t.checkCanrun()) {
-                if (groups.c(job))
-                    if (task.run(t)) {
-                        logger.debug("Run h job ${job.name}")
-                    } else
-                        logger.warn("Not run h job ${job.name}")
-                else {
-                    //รอคิวก่อน
-                    logger.debug("This job can run but some job use water have to queue ${job.name}")
-                    queue.addtoqueue(job)
-                }
-            } else {
-                logger.warn("H not in rang ${job.name}")
-            }
-        } else {
-            logger.warn("Time not rang ${job.name}")
-        }
-        return true
+        var hl = pijob.hlow?.toDouble()
+        var hh = pijob.hhigh?.toDouble()
+        var hvalue = h.h?.toDouble()
+
+        if (hl!! <= hvalue!! && hvalue <= hh!!)
+            return true
+
+        return false
     }
 
+    fun getHobj(job: Pijob): HObject {
+        var ip = iptableServicekt.findByMac(job.desdevice?.mac!!)
+        logger.debug("Call IP : ${ip} RunH")
+        if (ip != null) {
+            var re = httpService.get("http://${ip.ip}", 2000)
+            var h = om.readValue<HObject>(re)
+            return h
+        } else {
+            throw Exception("Ip ERROR")
+        }
+    }
+
+
+    fun runfromQ(job: Pijob) {
+        var t = D1hjobWorker(job, dhs, httpService, task, ntfs)
+        var run = task.run(t)
+        if (run) {
+            removeJobFromQ(job)
+        }
+    }
+
+    fun removeJobFromQ(job: Pijob) {
+        var removed = queue.queue.remove(job)
+        logger.debug("Remove ${job.name} from queue is ${removed}")
+    }
 
     /**
      * ต้อง clar คิวให้หมดก่อน
      */
     fun runQueue() {
         logger.debug("Run inqueue ${Date()}")
-        try {
-            for (j in queue.queue) {
-                logger.debug("inqueue to run  ${j.name}")
-                if (groups.c(j) && task.checkrun(j)) {
-                    var t = D1hjobWorker(j, dhtvalueService, dhs, httpControl, task, ntfs)
-                    if (t.checkCanrun()) {
-                        if (task.checktime(j)) {
-                            if (task.run(t)) {
-                                logger.debug("Run ${j.name} inqueue ")
-                                if (queue.queue.remove(j))
-                                    logger.debug("Run inqueue and remove ${j.name}")
-                                else
-                                    logger.error("Error  inqueue can not remove ${j.name}")
-                            }
-                        } else {
-                            //ไม่อยู่ในช่วงเวลาแล้วออกจากการทำงานเลย
-                            logger.debug("inqueue not in time have to remove")
-                            if (queue.queue.remove(j))
-                                logger.debug("Run inqueue and remove ${j.name}")
-                            else
-                                logger.error("Error  inqueue can not remove ${j.name}")
-                        }
-                    } else {
-                        logger.debug("inqueue not in H have to remove")
-                        if (queue.queue.remove(j))
-                            logger.debug("Run inqueue and remove ${j.name}")
-                        else
-                            logger.error("Error  inqueue can not remove ${j.name}")
-                    }
-                } else {
-                    logger.warn("Can not run this job now ${j.name} inqueue ")
+
+        for (q in queue.queue) {
+            if (task.checktime(q)) {
+                if (groups.c(q))
+                    runfromQ(q)
+                else {
+                    logger.error("Some job use water")
                 }
+            } else {//ถ้า job เกินเวลาแล้วเอาออกเลย
+                removeJobFromQ(q)
             }
-        } catch (e: Exception) {
-            logger.error("inqueue ${e.message}")
+
         }
+
     }
-
-
-//    fun loadjob(): List<Pijob>? {
-//        var job = js.findByName("runhbyd1")
-//        if (job != null) {
-//            var jobs = pjs.findJob(job.id)
-//            return jobs
-//        }
-//        throw Exception("Not have JOB")
-//    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runhjobbyd1::class.java)
@@ -194,7 +189,6 @@ class QueueService {
 
     fun poll() = queue.poll()
     fun printqueue() {
-        println("Printqueue")
         logger.debug("queue size : ${queue.size} ${Date()}")
         queue.map {
             logger.debug("queue : ${it}")

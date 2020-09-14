@@ -19,6 +19,7 @@ class NotifyPressureWorker(var pijob: Pijob, var readStatusService: ReadStatusSe
     var run: Boolean = false
     var runDate: Date? = null
     var psi:Double? =0.0
+    var exitdate:Date?=null
     override fun setP(pijob: Pijob) {
         this.pijob = pijob
     }
@@ -57,7 +58,6 @@ class NotifyPressureWorker(var pijob: Pijob, var readStatusService: ReadStatusSe
             run = true
             status = "Status run"
             psi = readStatusService.readPSI(target, 2)
-            println(psi)
             if (psi != null) {
                 var low = pijob.tlow?.toDouble()
                 var high = pijob.thigh?.toDouble()
@@ -71,17 +71,6 @@ class NotifyPressureWorker(var pijob: Pijob, var readStatusService: ReadStatusSe
                     if(pijob.description!=null)
                         d = pijob.description
                     notify.message("Pressure In Rang ${low}  <= ${psi} => ${high} JOB:${pijob.name} description:${d}", token)
-
-                    if (pijob.runtime != null) {
-                        status = "Run time ${pijob.runtime}"
-                        TimeUnit.SECONDS.sleep(pijob.runtime!!)
-                    }
-
-                    if (pijob.waittime != null) {
-                        status = "Wait time ${pijob.runtime}"
-
-                        TimeUnit.SECONDS.sleep(pijob.waittime!!)
-                    }
                 }
                 else
                 {
@@ -94,8 +83,23 @@ class NotifyPressureWorker(var pijob: Pijob, var readStatusService: ReadStatusSe
             logger.error(e.message)
         }
 
-        run = false
+//        run = false
+        setEnddate()
         status = "End job"
+    }
+    fun setEnddate() {
+        var t = 0L
+
+        if (pijob.waittime != null)
+            t = pijob.waittime!!
+        if (pijob.runtime != null)
+            t += pijob.runtime!!
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+
+        calendar.add(Calendar.SECOND, t.toInt())
+        exitdate = calendar.time
+        if (t == 0L)
+            run = false//ออกเลย
     }
     fun psi(): Double? {
         return psi

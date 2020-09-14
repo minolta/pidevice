@@ -31,9 +31,6 @@ class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmServi
                     var i = iptableServicekt.findByMac(it.desdevice?.mac!!)
                     if (i != null) {
                         var r = ReaddustWorker(it, i.ip!!, pmService, om, pideviceService)
-                        var ee = Executors.newSingleThreadExecutor()
-                        var f = ee.submit(r)
-                        f.get(5,TimeUnit.SECONDS)
 
                         logger.debug("Run read dust (${it.name}): "+ts.run(r))
                     } else {

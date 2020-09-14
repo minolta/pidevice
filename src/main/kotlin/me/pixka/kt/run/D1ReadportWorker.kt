@@ -3,28 +3,29 @@ package me.pixka.kt.run
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.pibase.c.HttpControl
+import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.pidevice.u.Dhtutil
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class D1portjobWorker(var pijob: Pijob, val service: PijobService,
-                      val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService)
+                      val httpService: HttpService,
+                      val task: TaskService, val ips: IptableServicekt)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
     var startrun: Date? = null
     var waitstatus = false
     val mapper = ObjectMapper()
-
+    var exitdate: Date? = null
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -39,17 +40,11 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
     }
 
     override fun getPijobid(): Long {
-        if (pijob != null) {
-            return this.pijob.id
-        }
-        throw Exception("Pijob is null")
+        return this.pijob.id
     }
 
     override fun getPJ(): Pijob {
-        if (pijob != null) {
-            return pijob
-        }
-        throw Exception("Pi job is null from getPJ")
+        return pijob
     }
 
     override fun startRun(): Date? {
@@ -60,120 +55,21 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         return state
     }
 
-    fun getSensorstatus(p: Pijob): DPortstatus? {
-        try {
-            var ip = dhts.mactoip(p.desdevice?.mac!!)
-            var url = "http://${ip?.ip}"
-            logger.debug("Get port status url ${url} Mac : ${p.desdevice?.mac}")
-            var ee = Executors.newSingleThreadExecutor()
-            var get = HttpGetTask(url)
-            var f2 = ee.submit(get)
-//            val re = httpControl.get(url)
-            var re: String? = null
+    fun findExitdate(pijob: Pijob): Date? {
+        var t = 0L
+        if (pijob.waittime != null)
+            t = pijob.waittime!!
+        if (pijob.runtime != null)
+            t += pijob.runtime!!
 
-            try {
-                re = f2.get(5, TimeUnit.SECONDS)
-            } catch (e: Exception) {
-                state = "Time out to get level water status"
-                TimeUnit.SECONDS.sleep(10)
-                throw Exception("Time out to get level water status")
-            }
-            var dp = mapper.readValue(re, DPortstatus::class.java)
-            return dp
+        t += (rt + wt) //เวลานานสุดของ runport
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, t.toInt())
+        var exitdate = calendar.time
+        if (t == 0L)
+            return null
 
-
-        } catch (e: Exception) {
-            logger.error("Get Sensor status JOB NAME ${p.name} ${e.message}")
-        }
-        return null
-    }
-
-    fun getsensorstatusvalue(n: String, c: Int, sensorstatus: DPortstatus?): Boolean {
-        val nn = n.toLowerCase()
-        try {
-            if (nn.equals("d1")) {
-                if (sensorstatus?.d1 == c)
-                    return true
-            } else if (nn.equals("d2")) {
-                if (sensorstatus?.d2 == c)
-                    return true
-            } else if (nn.equals("d3")) {
-                if (sensorstatus?.d3 == c)
-                    return true
-            } else if (nn.equals("d4")) {
-                if (sensorstatus?.d4 == c)
-                    return true
-            } else if (nn.equals("d5")) {
-                if (sensorstatus?.d5 == c)
-                    return true
-            } else if (nn.equals("d6")) {
-                if (sensorstatus?.d6 == c)
-                    return true
-            } else if (nn.equals("d7")) {
-                if (sensorstatus?.d7 == c)
-                    return true
-            } else if (nn.equals("d8")) {
-                if (sensorstatus?.d8 == c)
-                    return true
-            }
-        } catch (e: Exception) {
-            logger.error("ERROR in getsensorstatusvalue message: ${e.message}")
-        }
-
-
-        return false
-    }
-
-
-    fun checkCanrun(): Boolean {
-
-        //เอา port ที่สำหรับไว้ตรวจสอบออกมา
-        var checks = getPorttocheck(pijob)
-        var sensorstatus = getSensorstatus(pijob)
-        logger.debug("Checks ${checks} Status:${sensorstatus}")
-
-        if (checks != null) {
-            var r = false
-            for (c in checks) {
-                r = r || getsensorstatusvalue(c.name!!, c.check!!, sensorstatus!!)
-            }
-            logger.debug("R is ${r}")
-            return r
-        }
-        return false
-    }
-
-    fun getPorttocheck(p: Pijob): ArrayList<PorttoCheck>? {
-        try {
-            var bufs = ArrayList<PorttoCheck>()
-            logger.debug("Description ${p.description}")
-            var c = p.description?.split(",")
-            logger.debug("C: ${c}")
-            if (c.isNullOrEmpty()) {
-                return null
-            }
-
-            var c1 = PorttoCheck()
-            var ii = 1
-
-            c.map {
-                logger.debug("Value : ${it}")
-                if (it.toIntOrNull() == null)
-                    c1.name = it
-                else {
-                    c1.check = it.toInt()
-                    bufs.add(c1)
-                    c1 = PorttoCheck()
-                }
-            }
-
-            return bufs
-
-
-        } catch (e: Exception) {
-            logger.debug("ERROR ${e.message}")
-        }
-        return null
+        return exitdate
     }
 
     override fun run() {
@@ -183,21 +79,63 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         waitstatus = false //เริ่มมาก็ทำงาน
         Thread.currentThread().name = "JOBID:${pijob.id} D1PORT : ${pijob.name} ${startrun}"
         try {
-            if (checkCanrun()) {
-                waitstatus = false
-                go()
-            }
+            waitstatus = false
+            goII()
             waitstatus = true
-            isRun = false
-            state = "End job"
+            exitdate = findExitdate(pijob)
+            state = "End job and wait"
         } catch (e: Exception) {
             this.state = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
         }
 
         waitstatus = true
-        isRun = false
+//        isRun = false
         state = "End job"
+    }
+
+    var rt = 0
+    var wt = 0
+    fun goII() {
+
+
+        var ports = pijob.ports
+        if (ports != null) {
+            ports.filter {
+                it.enable != null && it.enable == true
+            }.forEach {
+                var pw = it.waittime
+                var pr = it.runtime
+                //หาเวลาที่มากสุดไปรวมกับเวลาของ main job เพื่อให้ออกไปหยุดรอ
+                if (pw!! > wt) {
+                    wt = pw
+                }
+                if (pr!! > rt) {
+                    rt = pr
+                }
+                var pn = it.portname!!.name
+                var v = it.status //สำหรับบอก port ว่าจะเป็น logic อะไร
+                var value = getLogic(v?.name!!)
+                var url = findUrl(it.device!!, it.portname!!.name!!, pr.toLong(), pw.toLong(), value)
+                startrun = Date()
+                logger.debug("URL ${url}")
+                state = "Set port ${url}"
+                var setportreturn = httpService.get(url)
+                if (setportreturn != null) {
+                    state = "Set port ok ${setportreturn}"
+                } else
+                    state = "Setport errot ${setportreturn}"
+            }
+        }
+    }
+
+    fun getLogic(v: String): Int {
+        var value = 0
+        if (v.equals("high") || v.indexOf("1") != -1) {
+            value = 1
+        } else
+            value = 0
+        return value
     }
 
 
@@ -208,7 +146,6 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         logger.debug("Ports ${pijob.job?.name} ${ports}")
         if (ports != null)
             for (port in ports) {
-
                 if (port.enable == null || !port.enable!!) {
                     logger.debug("Port disable ${port}")
                     continue //ข้ามไปเลย
@@ -268,14 +205,12 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                         state = "Delay  ${runtime} + ${waittime}"
                         logger.debug("D1h Value ${value}")
                         state = "${value} and run ${runtime}"
-                        if(value==null)
-                        {
+                        if (value == null) {
 
                             //ไม่ต้อง run ละออกเลยและไม่ต้อง delay ให้พยามใหม่
 //                            isRun=false
                             state = "Can not connect to Target ${port.device}"
-                        }
-                        else {
+                        } else {
                             TimeUnit.SECONDS.sleep(runtime)
 
                             if (waittime != null) {
@@ -300,7 +235,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
 
     fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
         if (pijob.desdevice != null) {
-            var ip = dhts.mactoip(pijob.desdevice!!.mac!!)
+            var ip = ips.findByMac(pijob.desdevice!!.mac!!)
             if (ip != null) {
                 var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
                 return url
@@ -312,7 +247,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
 
     fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
         if (pijob.desdevice != null) {
-            var ip = dhts.mactoip(target.mac!!)
+            var ip = ips.findByMac(target.mac!!)
             if (ip != null) {
                 var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
                 return url

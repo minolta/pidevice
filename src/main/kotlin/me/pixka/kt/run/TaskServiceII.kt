@@ -1,6 +1,7 @@
 package me.pixka.kt.run
 
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -11,14 +12,18 @@ import java.util.concurrent.TimeUnit
 @Service
 class TaskServiceII {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
-    val threadpool = ThreadPoolExecutor(10, 500, 1,
-            TimeUnit.SECONDS, LinkedBlockingDeque<Runnable>(1000),
-            ThreadPoolExecutor.CallerRunsPolicy())
+//    val threadpool = ThreadPoolExecutor(10, 500, 1,
+//            TimeUnit.SECONDS, LinkedBlockingDeque<Runnable>(1000),
+//            ThreadPoolExecutor.CallerRunsPolicy())
 
-    fun activeCount(): Int {
-        return threadpool.activeCount
+    var threadpool = Executors.newFixedThreadPool(16)
+//    fun activeCount(): Int {
+//        return threadpool.activeCount
+//    }
+
+    fun activeCount():Int{
+        return 0
     }
-
 
     fun checkrun(work: PijobrunInterface): Boolean {
         var found = runinglist.find { it.getPijobid() == work.getPijobid() }

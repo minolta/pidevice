@@ -1,13 +1,12 @@
 package me.pixka.kt.pidevice.t
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.c.Piio
-import me.pixka.kt.pibase.d.DS18sensor
-import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.d.IptableServicekt
-import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.pidevice.u.ReadUtil
+import me.pixka.kt.pidevice.s.Tmpobj
 import me.pixka.kt.run.ReadTmpTask
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
@@ -23,62 +22,44 @@ import org.springframework.stereotype.Component
 //@Profile("pi", "lite")
 class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, val io: Piio,
               val dvs: Ds18valueService, val ss: SensorService, val dss: DS18sensorService,
-              val pideviceService: PideviceService,
-              val ips: IptableServicekt, val taskService: TaskService, val readUtil: ReadUtil) {
-
+              val pideviceService: PideviceService, val findJob: FindJob, val httpService: HttpService,
+              val ips: IptableServicekt, val taskService: TaskService) {
+    val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
         try {
             logger.debug("Run #readtemp")
-            var jobs = loadjob()
+            var jobs = findJob.loadjob("readtemp")
             logger.debug("Found job ${jobs}")
-
             if (jobs != null)
                 for (i in jobs) {
                     logger.debug("Run job ${i}")
-                    if (i.ds18sensor != null) {
-                        var t = ReadTmpTask(i, readUtil, ips, dvs, pideviceService, dss)
-                        taskService.run(t)
+                    if (i.tlow != null) {
+                        var ip = ips.findByMac(i.desdevice?.mac!!)
+                        var re = httpService.get("http://${ip?.ip}")
+                        var o = om.readValue<Tmpobj>(re)
+                        var t = o.tmp?.toDouble()
+                        if (i.tlow?.toDouble()!! <= t!!
+                                && taskService.runinglist.find {
+                                    it.getPijobid() == i.id
+                                            && it.runStatus()
+                                } == null) {
+                            var t = ReadTmpTask(i, null, ips, o, pideviceService, httpService, dvs)
+                            taskService.run(t)
+                        }
                     } else {
-                        var t = ReadTmpTask(i, readUtil, ips, dvs, pideviceService, dss)
-                        taskService.run(t)
+                        if(taskService.runinglist.find { it.getPijobid()==i.id && it.runStatus() }==null) {
+                            var t = ReadTmpTask(i, null, ips, null, pideviceService, httpService, dvs)
+                            var r = taskService.run(t)
+                            logger.debug("Run ${r}")
+                        }
                     }
-
                 }
         } catch (e: Exception) {
             logger.error("Read OTher ds ERROR ${e.message}")
         }
         logger.debug("End #readtemp")
-    }
-
-    fun readOther(desid: Long, sensor: Long?): DS18value? {
-        var r = ss.readDsOther(desid, sensor)
-        return r
-    }
-
-    fun checkLocal(ds: DS18sensor): DS18value? {
-        try {
-            var value = io.readDs18value(ds.name!!)
-            return value
-        } catch (e: Exception) {
-            logger.error("Read local ==> Error ${e.message}")
-        }
-        return null
-    }
-
-
-    fun loadjob(): List<Pijob>? {
-        var job = js.findByName("readtemp")
-
-        if (job != null) {
-
-            var jobs = pjs.findJob(job.id)
-            return jobs
-        }
-
-
-        throw Exception("Not have JOB")
     }
 
 

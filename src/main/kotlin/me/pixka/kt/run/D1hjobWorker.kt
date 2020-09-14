@@ -1,5 +1,7 @@
 package me.pixka.kt.run
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Logistate
@@ -7,6 +9,7 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
@@ -17,8 +20,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
-                   val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService, val ntfs: NotifyService)
+class D1hjobWorker(var pijob: Pijob,
+                   val dhts: Dhtutil, val httpService: HttpService,
+                   val task: TaskService, val ntfs: NotifyService)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
@@ -26,8 +30,8 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     var waitstatus = false
     var haveerror = false
     var errormessage = ""
-//    @Autowired
-//    lateinit var errorlog: ErrorlogServiceII
+    var exitdate: Date? = null
+    var om=ObjectMapper()
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -63,75 +67,44 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         return state
     }
 
-    /**
-     * สพหรับตรวจสอบ h ว่าอยู่ในช่วงแล้วหรือยัง
-     */
-    fun checkCanrun(): Boolean {
 
 
-        var h: Float? = 0.0F
-        try {
-            var dhtvalue = dhts.readByPijob(pijob)
-            logger.debug("DHTVALUE ${dhtvalue}")
-            state = "Get value from traget [${dhtvalue}]"
-            if (dhtvalue != null) {
-                if (dhtvalue.h != null)
-                    h = dhtvalue.h?.toFloat()
-                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
-                    logger.debug("Can run this job ${pijob.name} ")
-                    return true
-                } else {
-                    state = "H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}"
-                    logger.error("H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}")
-                }
+    /*
+    * เป็นการ จบ Thread แต่ยังไม่เอาออกจาก list เพราะต้องคืน Core ให้กับระบบ แต่ run อยู่
+    * */
+    fun setEnddate() {
+        var t = 0L
 
-            } else {
-                logger.error("DHT Value is null ${pijob.name}")
+        if (pijob.waittime != null)
+            t = pijob.waittime!!
+        if (pijob.runtime != null)
+            t += pijob.runtime!!
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
 
-            }
-        } catch (e: Exception) {
-            logger.error("Check Can run ERROR ${e.message}")
-            state = "Check Can run ERROR ${e.message} H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${h}"
-        }
-        return false
+        calendar.add(Calendar.SECOND, t.toInt())
+        exitdate = calendar.time
+        if (t == 0L)
+            isRun = false//ออกเลย
     }
 
     override fun run() {
-
         startrun = Date()
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
         Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} ${startrun}"
-
         try {
-            if (pijob.tlow != null) {
+            if (pijob.tlow != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
                 logger.debug("Slow start ${pijob.tlow}")
-                //prility
             }
-
-            if (checkCanrun()) {
-                waitstatus = false //ใช้น้ำ
-                go()
-                waitstatus = true //หยุดใช้น้ำแล้ว
-                var waittime = pijob.waittime
-                if (waittime != null && !haveerror) {
-                    state = "Wait time of job ${waittime}"
-                    TimeUnit.SECONDS.sleep(waittime)
-                } else {
-                    isRun = false
-                    waitstatus = true
-                    state = "Exit with error status $errormessage"
-
-                }
-            } else {
-                logger.warn("Dht not found")
-                waitstatus = true
+            waitstatus = false //ใช้น้ำ
+            go()
+            waitstatus = true //หยุดใช้น้ำแล้ว
+            exitdate = task.findExitdate(pijob)
+            if (exitdate == null)
                 isRun = false
-                state = "End job"
-            }
-
-
+            state = "End normal"
+            return
         } catch (e: Exception) {
             isRun = false
             logger.error("ERROR 1 ${e.message}")
@@ -140,21 +113,11 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             throw e
         }
 
-        waitstatus = true
-        isRun = false
-        state = "End job"
+//        waitstatus = true
+//        isRun = false
+//        state = "End job"
     }
 
-    fun checkH(l: Float, h: Float, v: Float): Boolean {
-        state = "Check value ${l} < ${v} > ${h}"
-        if (v >= l && v <= h) {
-            logger.debug("Run this job ${pijob.name}")
-            return true
-        }
-        logger.debug("Check value ${l} < ${v} > ${h} Not run this job ${pijob.name}")
-        TimeUnit.SECONDS.sleep(2)
-        return false
-    }
 
     fun getLogic(v: Logistate?): Int {
         var value = 0
@@ -175,7 +138,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
     }
 
     fun go() {//Run
-        var ee = Executors.newSingleThreadExecutor()
+//        var ee = Executors.newSingleThreadExecutor()
         var token = pijob.token
         state = "Run set port "
         var ports = pijob.ports
@@ -218,18 +181,16 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                         logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
                         state = "Find URL ERROR ${e.message} port: ${port} portname ${portname}"
                     }
-//                    logger.debug("URL ${url}")
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
-                    var get = HttpGetTask(url)
-                    var f = ee.submit(get)
                     try {
                         //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-                        var value = f.get(30, TimeUnit.SECONDS)
+                        var v = httpService.get(url)
                         state = "Delay  ${runtime} + ${waittime}"
-                        logger.debug("D1h Value ${value}")
-                        state = "${value} and run ${runtime}"
+                        var status = om.readValue<Status>(v)
+                        logger.debug("D1h Value ${status}")
+                        state = "Set ${portname} to ${value}  ${status.status} and run ${runtime}"
                         TimeUnit.SECONDS.sleep(runtime)
 
                         if (waittime != null) {
@@ -237,14 +198,13 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                             TimeUnit.SECONDS.sleep(waittime)
                         }
                     } catch (e: ConnectException) {
-                        haveError(token,e)
+                        haveError(token, e)
                     } catch (e: TimeoutException) {
-                        haveError(token,e)
+                        haveError(token, e)
                     }
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")
                     state = " Error 2 ${e.message}"
-                    ee.shutdownNow()
                     isRun = false
                     waitstatus = true //หยุดใช้น้ำแล้ว
                     break //ออกเลย
@@ -258,7 +218,7 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
             state = "Set port error "
     }
 
-    fun haveError(token: String?,e:Exception) {
+    fun haveError(token: String?, e: Exception) {
         logger.error("Set port error  ${e.message}")
         state = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
         if (token != null)

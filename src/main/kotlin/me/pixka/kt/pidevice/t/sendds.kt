@@ -18,28 +18,12 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-//@Profile("pi", "lite")
 class Sendds(val service: Ds18valueService, val io: Piio) {
 
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 30000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun sendtask() {
-//        try {
-//
-//            var f = task.run()
-//            if (f != null) {
-//                var sendok = f.get(5, TimeUnit.SECONDS)
-//
-//                if (sendok) {
-//                    logger.debug("End Send ds")
-//                } else {
-//                    logger.error("Send ds 18 error")
-//                }
-//            }
-//        } catch (e: Exception) {
-//            logger.error("Error send Sendds ${e.message}")
-//        }
-//
+
 
         var target = System.getProperty("piserver") + "/ds18value/add"
         val list = service.notInserver()
@@ -50,7 +34,6 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
                 try {
                     val info = Infoobj()
                     info.token = System.getProperty("token")
-                    // info.ip = io.wifiIpAddress()
                     info.mac = io.wifiMacAddress()
                     info.ds18value = item
                     var task = HttpPostTask(target, info)

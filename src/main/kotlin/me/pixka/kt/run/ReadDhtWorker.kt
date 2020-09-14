@@ -5,10 +5,10 @@ import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pidevice.u.Dhtutil
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 class ReadDhtWorker(pijob: Pijob, val dhts: Dhtutil, val dhtvalueService: DhtvalueService)
     : DefaultWorker(pijob, null, null, null, logger) {
+    var exitdate: Date? = null
     override fun run() {
         try {
             isRun = true
@@ -24,6 +24,7 @@ class ReadDhtWorker(pijob: Pijob, val dhts: Dhtutil, val dhtvalueService: Dhtval
                 status = "Save ${r}"
             }
 
+            /*
             if (pijob.runtime != null) {
                 logger.debug("RUN next run ${pijob.runtime}")
                 status = "RUN next run ${pijob.runtime}"
@@ -33,17 +34,36 @@ class ReadDhtWorker(pijob: Pijob, val dhts: Dhtutil, val dhtvalueService: Dhtval
                 logger.debug("Wait next run ${pijob.waittime}")
                 status = "Wait next run ${pijob.waittime}"
                 TimeUnit.SECONDS.sleep(pijob.waittime!!.toLong())
-            }
+            }*/
+
         } catch (e: Exception) {
             logger.error("Read DHT task Error ${e.message}")
             status = "ERROR ${e.message}"
         }
 
-        isRun = false
+        exitdate = findExitdate(pijob)
+        if (exitdate == null)
+            isRun = false
         status = "End Read DHT task"
         logger.debug("End Read DHT task")
     }
 
+    fun findExitdate(pijob: Pijob): Date? {
+        var t = 0L
+
+        if (pijob.waittime != null)
+            t = pijob.waittime!!
+        if (pijob.runtime != null)
+            t += pijob.runtime!!
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+
+        calendar.add(Calendar.SECOND, t.toInt())
+        var exitdate = calendar.time
+        if (t == 0L)
+            return null
+
+        return exitdate
+    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(ReadDhtWorker::class.java)

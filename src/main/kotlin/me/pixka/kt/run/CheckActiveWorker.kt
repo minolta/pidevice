@@ -8,22 +8,21 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
-import me.pixka.kt.pibase.t.HttpGetTask
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
-class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
+class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val httpService: HttpService,
                         val ips: IptableServicekt, val ntfs: NotifyService)
     : PijobrunInterface, Runnable {
     companion object {
         internal var logger = LoggerFactory.getLogger(CheckActiveWorker::class.java)
     }
 
+    var exitdate: Date? = null
     val om = ObjectMapper()
     var isRun = false
     var state = "Init"
@@ -63,13 +62,11 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
     fun check(ip: String, token: String? = null, device: PiDevice): Boolean {
         logger.debug("checkactive ${ip}")
         try {
-            var ee = Executors.newSingleThreadExecutor()
-            var get = HttpGetTask("http://${ip}")
-            var f = ee.submit(get)
-            var re = f.get(10, TimeUnit.SECONDS)
-//            val re = URL("http://${ip}").readText()
-            state = "return status ${re} ${pijob.name}"
+
+
+            var re = httpService.get("http://${ip}")
             var status = om.readValue<Status>(re, Status::class.java)
+            state = "Device:${device.name} uptime :${status.uptime} ative ok."
             if (status.errormessage != null) {
                 //ถ้า มี ERROR MESSAGE ให้ ส่งเข้า line เลย
                 if (status.errormessage?.isNotEmpty()!!) {
@@ -91,6 +88,19 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
         return true
     }
 
+    fun setEnddate() {
+        var t = 0L
+        if (pijob.waittime != null)
+            t = pijob.waittime!!
+        if (pijob.runtime != null)
+            t += pijob.runtime!!
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, t.toInt())
+        exitdate = calendar.time
+        if (t == 0L)
+            isRun = false//ออกเลย
+    }
+
     override fun run() {
         isRun = true
         startrun = Date()
@@ -110,7 +120,6 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
                     var ip = ips.findByMac(device.mac!!)
 
                     if (ip != null) {
-
                         //check(ip.ip!!, token, device)
                         CompletableFuture.supplyAsync { check(ip.ip!!, token, device) }.thenApply {
                             logger.debug("Endcheck checkactive ${port.device?.name} ${ip}  ${Date()}")
@@ -119,24 +128,26 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
                 }
             }
 
-            var p = pijob.runtime
-            if (p != null) {
-                state = "Runtime ${p.toLong()}"
-                TimeUnit.SECONDS.sleep(p.toLong())
-            }
-
-            var w = pijob.waittime
-            if (w != null) {
-                state = "Wait ${w.toLong()}"
-                TimeUnit.SECONDS.sleep(w.toLong())
-            }
+//            var p = pijob.runtime
+//            if (p != null) {
+//                state = "Runtime ${p.toLong()}"
+//                TimeUnit.SECONDS.sleep(p.toLong())
+//            }
+//
+//            var w = pijob.waittime
+//            if (w != null) {
+//                state = "Wait ${w.toLong()}"
+//                TimeUnit.SECONDS.sleep(w.toLong())
+//            }
 
         } catch (e: Exception) {
             logger.error(e.message)
             state = "Error ${e.message} ${pijob.name}"
         }
 
-        isRun = false
+//        isRun = false
+        setEnddate()
+        state = "End run wait exit date"
     }
 
     override fun toString(): String {
@@ -148,7 +159,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService,
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Status(var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
              var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
-             var version: String? = null, var errormessage: String? = null) {
+             var version: String? = null, var errormessage: String? = null,var status:String?=null) {
     override fun toString(): String {
         return "${name} ${message} ${ssid} ${version} ${t} ${h} ${ip}"
     }

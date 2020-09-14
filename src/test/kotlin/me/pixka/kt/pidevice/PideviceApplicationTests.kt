@@ -69,39 +69,39 @@ class PideviceApplicationTests {
 
     @Test
     fun group() {
-        var groupid = 2
-        var runs = ArrayList<PijobrunInterface>()
-        var j = Pijob()
-        j.id = 10
-        j.name = "10"
-        j.pijobgroup_id = 1
-        var worker = D1hjobWorker(j, ds, dhts, http, task, ntf)
-        runs.add(worker)
-
-        j = Pijob()
-        j.id = 20
-        j.name = "20"
-        j.pijobgroup_id = 2
-
-        var worker1 = D1hjobWorker(j, ds, dhts, http, task, ntf)
-        worker1.isRun = true
-        worker1.waitstatus = false //false ยังใช้น้ำอยู่ true ไม่ใช้แล้ว
-        runs.add(worker1)
-
-        println(runs)
-
-        println("find run:" + runs.find {
-            it is D1hjobWorker && (it.getPijobid() == j.id && it.runStatus())
-        })
-
-
-        //หาว่าobject ตัวไหนจะยัง run อยู่แต่อยู่ใน status run
-        println("Find use water:" + runs.find {
-            it is D1hjobWorker &&
-                    (it.pijob.pijobgroup_id?.toInt() == groupid.toInt() && !it.waitstatus)
-                    && it.runStatus()
-        })
-
+//        var groupid = 2
+//        var runs = ArrayList<PijobrunInterface>()
+//        var j = Pijob()
+//        j.id = 10
+//        j.name = "10"
+//        j.pijobgroup_id = 1
+//        var worker = D1hjobWorker(j, ds, dhts, http, task, ntf)
+//        runs.add(worker)
+//
+//        j = Pijob()
+//        j.id = 20
+//        j.name = "20"
+//        j.pijobgroup_id = 2
+//
+//        var worker1 = D1hjobWorker(j, ds, dhts, http, task, ntf)
+//        worker1.isRun = true
+//        worker1.waitstatus = false //false ยังใช้น้ำอยู่ true ไม่ใช้แล้ว
+//        runs.add(worker1)
+//
+//        println(runs)
+//
+//        println("find run:" + runs.find {
+//            it is D1hjobWorker && (it.getPijobid() == j.id && it.runStatus())
+//        })
+//
+//
+//        //หาว่าobject ตัวไหนจะยัง run อยู่แต่อยู่ใน status run
+//        println("Find use water:" + runs.find {
+//            it is D1hjobWorker &&
+//                    (it.pijob.pijobgroup_id?.toInt() == groupid.toInt() && !it.waitstatus)
+//                    && it.runStatus()
+//        })
+//
 
     }
 

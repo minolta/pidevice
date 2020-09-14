@@ -9,24 +9,39 @@ import me.pixka.kt.pibase.d.PmService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.t.ReadDust
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.util.*
-import java.util.concurrent.Executor
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 
 class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,
-                     var om: ObjectMapper, var pideviceService: PideviceService) : Runnable, PijobrunInterface {
+                     var om: ObjectMapper, var pideviceService: PideviceService)
+    : Runnable, PijobrunInterface {
     var isRun = true
     var startrundate = Date()
     var statusmessage = "Create"
+    var exitdate: Date? = null
+    var state:String? = ""
+    fun setEnddate() {
+        var t = 0L
+
+        if (pijob.waittime != null)
+            t = pijob.waittime!!
+        if (pijob.runtime != null)
+            t += pijob.runtime!!
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+
+        calendar.add(Calendar.SECOND, t.toInt())
+        exitdate = calendar.time
+        if (t == 0L)
+            isRun = false//ออกเลย
+    }
+
     override fun run() {
         try {
-            isRun=true
-            startrundate  = Date()
+            isRun = true
+            startrundate = Date()
             logger.debug("read Start ${startrundate} ${isRun}")
             var ee = Executors.newSingleThreadExecutor()
             var http = HttpGetTask("http://${ip}")
@@ -44,19 +59,13 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,
             pm.valuedate = Date()
             pm = service.save(pm)
             logger.debug("Save ${pm}")
-            if (pijob.runtime != null) {
-                TimeUnit.SECONDS.sleep(pijob.runtime!!)
-            }
-            if (pijob.waittime != null) {
-                TimeUnit.SECONDS.sleep(pijob.waittime!!)
-            }
-
         } catch (e: Exception) {
             logger.error(e.message)
+            state = e.message
         }
-
+        setEnddate()
         logger.debug("End job ${pijob.name}")
-        isRun = false
+        state = "End job"
     }
 
     override fun setP(pijob: Pijob) {
@@ -77,7 +86,8 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,
     }
 
     override fun getPJ(): Pijob {
-        TODO("Not yet implemented")
+
+        return pijob
     }
 
     override fun startRun(): Date? {
@@ -85,12 +95,13 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,
     }
 
     override fun state(): String? {
-        return statusmessage
+        return state
     }
 
     override fun setrun(p: Boolean) {
         this.isRun = p
     }
+
     companion object {
         internal var logger = LoggerFactory.getLogger(ReaddustWorker::class.java)
     }

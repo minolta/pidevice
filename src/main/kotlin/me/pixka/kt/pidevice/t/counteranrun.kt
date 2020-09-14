@@ -36,9 +36,9 @@ class CounterandRun(var gi: GpioService, val m: MessageService,
                     if (task != null) {
                         var t = ts.checkalreadyrun(task)
                         logger.debug("Check job  ${task}  can ${t}")
-                        if (t != null) {
+                        if (t) {
                             logger.debug("Run this job ${t} #Runcouterjob")
-                            ts.run(t)
+                            ts.run(task)
                         }
                     }
                 }

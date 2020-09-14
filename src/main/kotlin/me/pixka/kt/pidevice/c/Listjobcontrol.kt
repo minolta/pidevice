@@ -6,19 +6,22 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.pidevice.t.OnpumbWorker
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.kt.run.DefaultWorker
-import me.pixka.kt.run.PijobrunInterface
-import me.pixka.kt.run.Worker
+import me.pixka.kt.pidevice.worker.NotifyPressureWorker
+import me.pixka.kt.run.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.web.bind.annotation.*
 import java.util.*
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.ThreadPoolExecutor
 
 @RestController
 class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
                val ips: IptableServicekt, val context: ApplicationContext) {
+
+
 
     @CrossOrigin
     @RequestMapping(value = ["/tx"], method = arrayOf(RequestMethod.GET))
@@ -44,6 +47,27 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             return null
         }
     }
+
+
+
+    @CrossOrigin
+    @RequestMapping(value = ["/threadinfo"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun threadinfo(): ThreadinfoCount {
+
+      var p =   taskService.pool as ThreadPoolExecutor
+
+        var t = ThreadinfoCount()
+        t.activecount = p.activeCount
+        t.coresize = p.corePoolSize
+        t.queuesize = p.queue.size
+
+        return t
+
+
+    }
+
+
 
     fun short(b: ArrayList<tl>) {
         var bb = ArrayList<tl>()
@@ -80,7 +104,36 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             try {
                 var pj = run.getPJ()
                 var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
-                        run.runStatus(), pj.ports,run.getPJ().job?.name)
+                        run.runStatus(), pj.ports, run.getPJ().job?.name,run.startRun(),run.getPJ().refid)
+
+                if (run is D1tjobWorker)
+                    t.exitdate = run.exitdate
+                if (run is D1hjobWorker)
+                    t.exitdate = run.exitdate
+                if (run is D1portjobWorker)
+                    t.exitdate = run.exitdate
+                if (run is D1readvoltWorker)
+                    t.exitdate = run.exitdate
+                if (run is ReadDhtWorker)
+                    t.exitdate = run.exitdate
+                if (run is CheckActiveWorker)
+                    t.exitdate = run.exitdate
+                if (run is OffpumpWorker)
+                    t.exitdate = run.exitdate
+                if (run is ReadPressureTask)
+                    t.exitdate = run.exitdate
+                if (run is ReadTmpTask)
+                    t.exitdate = run.exitdate
+                if (run is NotifyPressureWorker)
+                    t.exitdate = run.exitdate
+                if (run is OnpumbWorker)
+                    t.exitdate = run.exitdate
+                if (run is ReaddustWorker)
+                    t.exitdate = run.exitdate
+                if (run is DustWorker)
+                    t.exitdate = run.exitdate
+                if (run is D1TimerWorker)
+                    t.exitdate = run.exitdate
                 list.add(t)
             } catch (e: Exception) {
                 logger.error("List task error ${e.message}")
@@ -90,6 +143,106 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 
         return list
 
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = ["/active"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun threadactive(): Int {
+        var runs = taskService.pool as ThreadPoolExecutor
+        return runs.activeCount
+
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = ["/core"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun threadcore(): Int {
+        var runs = taskService.pool as ThreadPoolExecutor
+        return runs.corePoolSize
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = ["/queuesize"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun queuesize(): Int {
+        var runs = taskService.pool as ThreadPoolExecutor
+        return runs.queue.size
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = ["/runs"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun runs(): Int {
+
+        return taskService.runinglist.size
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = ["/runsactive"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun runslist(): List<tl> {
+        var re = taskService.runinglist.filter { it.runStatus() }.map {
+
+            var tl = tl()
+            if (it is D1hjobWorker) {
+                tl.exitdate = it.exitdate
+                tl.jobtype = it.pijob.job?.name
+                tl.name = it.pijob.name
+                tl.runstatus = it.isRun
+                tl.state = it.state
+            }
+            if (it is D1tjobWorker) {
+                tl.exitdate = it.exitdate
+                tl.jobtype = it.pijob.job?.name
+                tl.name = it.pijob.name
+                tl.runstatus = it.isRun
+                tl.state = it.status
+            }
+            if (it is D1readvoltWorker) {
+                tl.exitdate = it.exitdate
+                tl.jobtype = it.pijob.job?.name
+                tl.name = it.pijob.name
+                tl.runstatus = it.isRun
+                tl.state = it.status
+            }
+            if (it is D1portjobWorker) {
+                tl.exitdate = it.exitdate
+                tl.jobtype = it.pijob.job?.name
+                tl.name = it.pijob.name
+                tl.runstatus = it.isRun
+                tl.state = it.state
+            }
+            if(it is D1portjobWorker)
+            {
+                tl.exitdate = it.exitdate
+                tl.jobtype = it.pijob.job?.name
+                tl.name = it.pijob.name
+                tl.runstatus = it.isRun
+                tl.state = it.state
+            }
+            if(it is OnpumbWorker)
+            {
+                tl.exitdate = it.exitdate
+                tl.jobtype = it.pijob.job?.name
+                tl.name = it.pijob.name
+                tl.runstatus = it.isRun
+                tl.state = it.status
+            }
+            if(it is ReaddustWorker)
+            {
+                tl.exitdate = it.exitdate
+                tl.jobtype = it.pijob.job?.name
+                tl.name = it.pijob.name
+                tl.runstatus = it.isRun
+                tl.state = it.state
+            }
+
+            tl.name = it.getPJ().name
+            tl
+        }
+
+        return re
     }
 
     @CrossOrigin
@@ -104,8 +257,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             try {
                 var pj = run.getPJ()
                 if (run.getPJ() != null && run.getPJ().name?.toLowerCase()?.indexOf(n) != -1) {
-                    var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state()
-                            , run.runStatus(), pj.ports,run.getPJ().job?.name)
+                    var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(), run.runStatus(), pj.ports, run.getPJ().job?.name)
                     list.add(t)
                 }
             } catch (e: Exception) {
@@ -202,4 +354,8 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 
 class tl(var id: Long? = null, var name: String? = null, var startrun: Date? = null,
          var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null,
-         var jobtype:String?=null)
+         var jobtype: String? = null, var exitdate: Date? = null,var refid:Long?=0)
+
+
+class ThreadinfoCount(var activecount:Int?=null,var coresize:Int?=null,var queuesize:Int?=null)
+

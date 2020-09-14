@@ -27,6 +27,10 @@ import java.util.concurrent.TimeUnit
 //@Profile("pi", "lite")
 class Checkin(val c: CheckinTask,val notifyService: NotifyService) {
 
+    fun checkinii()
+    {
+
+    }
 
     @Scheduled(initialDelay = 15000, fixedDelay = 60000)
     fun checkin() {
@@ -107,17 +111,14 @@ class CheckinTask(val io: Piio, val http: HttpControl,
             /**
              * Test Add message
              */
-            //  testmessage()
 
             val mapper = ObjectMapper()
 
             val entity = re.entity
             val responseString = EntityUtils.toString(entity, "UTF-8")
             logger.debug("checkin response:  ${responseString}")
-
             var ci = mapper.readValue(responseString, Devicecheckin::class.java)
             ci.pidevice = null
-           // var v = ds.save(ci)
             logger.debug("[checkin] update password checkin ok..")
             return ci
         } catch (e: Exception) {
@@ -144,10 +145,7 @@ class CheckinTask(val io: Piio, val http: HttpControl,
 
     fun setup() {
 
-
         host = System.getProperty("piserver", "http://pi1.pixka.me")
-
-
         target = host + "/checkin"
         logger.debug("checkininfo Check in target ${target}")
 

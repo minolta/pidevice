@@ -25,7 +25,6 @@ class NotifyPressureByLine(val readStatusService: ReadStatusService, val notifyS
                 jobs.map {
                     if (it.desdevice != null) {
                         var ip = iptableService.findByMac(it.desdevice?.mac!!)
-
                         if (ip != null) {
                             var t = "http://${ip.ip}"
                             var n = NotifyPressureWorker(it, readStatusService, t,notifyService)
