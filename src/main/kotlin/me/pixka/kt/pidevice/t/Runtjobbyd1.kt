@@ -1,7 +1,7 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.pibase.c.HttpControl
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.*
@@ -21,7 +21,7 @@ import java.util.function.Supplier
 @Component
 class Runtjobbyd1(val pjs: PijobService,
                   val js: JobService,
-                  val task: TaskService,val ips:IptableServicekt,
+                  val task: TaskService, val ips: IptableServicekt,
                   val dhs: Dhtutil, val httpService: HttpService, val psij: PortstatusinjobService,
                   val readUtil: ReadUtil, val findJob: FindJob, val readtmp: ReadTmpService) {
     val om = ObjectMapper()
@@ -35,16 +35,19 @@ class Runtjobbyd1(val pjs: PijobService,
             if (list != null) {
                 for (job in list) {
                     try {
-                        var ip = ips.findByMac(job.desdevice?.mac!!)
-                        if(ip!=null) {
-                            var t = readtmp.readTmp(ip.ip!!)
-                            if (checktmp(t, job)) {
-                                var testjob = pjs.findByRefid(job.runwithid)
-                                var t = D1tjobWorker(job, readUtil, psij, testjob,ips,httpService)
-                                var run = task.run(t)
+                        if (!task.checkrun(job)) {
+                            var ip = ips.findByMac(job.desdevice?.mac!!)
+                            if (ip != null) {
+
+                                var re = httpService.get("http://${ip.ip}")
+                                var t = om.readValue<Tmpobj>(re)
+                                if (checktmp(t, job)) {
+                                    var testjob = pjs.findByRefid(job.runwithid)
+                                    var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService)
+                                    var run = task.run(t)
+                                }
                             }
                         }
-//                        readtmp(job)
                     } catch (e: Exception) {
                         logger.error("${job.name} ${e.message}")
                     }
@@ -82,7 +85,7 @@ class Runtjobbyd1(val pjs: PijobService,
             var run = false
             if (it) {
                 var testjob = pjs.findByRefid(job.runwithid)
-                var t = D1tjobWorker(job, readUtil, psij, testjob,ips,httpService)
+                var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService)
                 run = task.run(t)
             }
 
@@ -90,19 +93,9 @@ class Runtjobbyd1(val pjs: PijobService,
                 println("Run JOB:${job.name}")
             else
                 println("Not run ${job.name}")
-        }.exceptionally { t -> println("Run error :"+t.message) }
+        }.exceptionally { t -> println("Run error :" + t.message) }
     }
 
-    fun loadjob(): List<Pijob>? {
-        var job = js.findByName("runtbyd1")
-
-        if (job != null) {
-
-            var jobs = pjs.findJob(job.id)
-            return jobs
-        }
-        throw Exception("Not have JOB")
-    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runtjobbyd1::class.java)

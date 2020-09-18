@@ -26,7 +26,6 @@ class NotifytmpByLine(val readStatusService: ReadStatusService, val notifyServic
                 jobs.map {
                     if (it.desdevice != null) {
                         var ip = iptableService.findByMac(it.desdevice?.mac!!)
-
                         if (ip != null) {
                             var t = "http://${ip.ip}"
                             var n = NotifytmpWorker(it, readStatusService, t, notifyService)

@@ -28,9 +28,8 @@ class D1tjobWorker(p: Pijob,
         if (pijob.runtime != null)
             t += pijob.runtime!!
 
-        t = t + totalwait +totalrun -5 //ต้อง ลบ 5 มันทำงานเร็วขึ้น
+        t = t + totalwait +totalrun  //ต้อง ลบ 5 มันทำงานเร็วขึ้น
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-
         calendar.add(Calendar.SECOND, t.toInt())
         var exitdate = calendar.time
         if (t == 0L)
@@ -50,9 +49,9 @@ class D1tjobWorker(p: Pijob,
                 logger.debug("D1tjobWorker ${pijob.name} Now jobrun D1tjob")
                 var ports = pijs.findByPijobid(pijob.id)
                 logger.debug("D1tjobWorker set port ${ports} ${pijob}")
+
                 if (ports != null) {
                     setPort(ports as List<Portstatusinjob>)
-//                    setRemoteport(ports as List<Portstatusinjob>)
                 } else {
                     logger.debug("D1tjobWorker ${pijob.name} No port to set")
                 }
@@ -69,8 +68,7 @@ class D1tjobWorker(p: Pijob,
         if (exitdate == null)
             isRun = false
         logger.debug("D1tjobWorker ${pijob.name} Run d1 T job  ")
-
-
+//        status = "D1tjobWorker ${pijob.name} Run d1 T job "
     }
 
     fun setPort(ports: List<Portstatusinjob>) {
@@ -94,7 +92,7 @@ class D1tjobWorker(p: Pijob,
                 var re =  httpService.get(url)
                 var s = om.readValue<Status>(re)
 
-                status = "Set port ${portname} to ${value?.toInt()} run ${runtime} wait${waittime}"
+                status = "Set port ${portname} to ${value?.toInt()} run ${runtime} wait${waittime} Status :${s.status}"
             } catch (e: Exception) {
                 status = "ERROR ${pijob.name} ${e.message}"
             }

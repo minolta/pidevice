@@ -2,6 +2,7 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
@@ -12,16 +13,15 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-//@Profile("pi")
 class Runpjobbyd1(val pjs: PijobService,
-                  val js: JobService,
+                  val js: JobService,val findJob: FindJob,
                   val task: TaskService, val readUtil: ReadUtil
 ) {
     val om = ObjectMapper()
     @Scheduled(fixedDelay = 1000)
     fun run() {
         try {
-            var list = loadjob()
+            var list = findJob.loadjob("runpbyd1")
             if (list != null)
                 logger.debug("Job for Runhjobbyd1 ${list.size}")
             if (list != null) {
@@ -71,16 +71,7 @@ class Runpjobbyd1(val pjs: PijobService,
         return false
     }
 
-    fun loadjob(): List<Pijob>? {
-        var job = js.findByName("runpbyd1")
 
-        if (job != null) {
-
-            var jobs = pjs.findJob(job.id)
-            return jobs
-        }
-        throw Exception("Not have JOB")
-    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runpjobbyd1::class.java)

@@ -32,11 +32,13 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, t.toInt())
         exitdate = calendar.time
-        if (t == 0L)
+        if (t == 0L || !isRun)
             isRun = false//ออกเลย
     }
     override fun run() {
+        var p = 0.0
         try {
+
             startRun = Date()
             status = "Start run : ${Date()}"
             isRun = true
@@ -49,41 +51,34 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
             }
             if (ip != null) {
                 var ipstring = ip.ip
-//                var t = Executors.newSingleThreadExecutor()
-//                var u = "http://${ipstring}/pressure"
-//                logger.debug("Read pressure from ${u}")
-//                status = "Read pressure from ${u}"
-//                var get = HttpGetTask(u)
-//                var f = t.submit(get)
                 try {
-//                    var re = URL(u).readText()
                     var re = httpService.get("http://${ipstring}")
-//                    var re = f.get(30, TimeUnit.SECONDS)
                     var o = om.readValue<PSIObject>(re)
                     logger.debug("${pijob.name} Get pressure ${o}")
                     status = "${pijob.name} Get pressure ${o}"
                     var pv = PressureValue()
                     try {
-                        pv.device = pideviceService.findByMac(o.mac!!)
+                        pv.device = pideviceService.findByMac(pijob.desdevice?.mac!!)
                     } catch (e: Exception) {
                         logger.error("Other device not found ${e.message}")
-                        pv.device = pideviceService.create(ip.mac!!,ip.mac!!)
+//                        pv.device = pideviceService.create(ip.mac!!,ip.mac!!)
                     }
                     pv.valuedate = Date()
                     pv.pressurevalue = o.psi
+                    if(o.psi!=null)
+                    p = o.psi?.toDouble()!!
 
-//                    if(!o.errormessage.isNullOrEmpty())
-//                    {
-//                        ntf.message("Have error ${o.errormessage}",token)
-//                    }
                     //บอกว่า ให้เก็บค่าเท่าไหร่ ถ้าตำกว่าไม่เก็บ
                     if (pijob.tlow != null) {
                         var tl = pijob.tlow!!.toFloat()
                         var v = o.psi!!.toFloat()
                         if (v < tl) {
-//                            isRun = false
-                            status = "too low to save value ${v}"
-
+                            status = "too low to save value PSI:${v} < ${tl}"
+                            isRun=false
+                        }
+                        else
+                        {
+                            var p = rps.save(pv)
                         }
 
                     }
@@ -93,31 +88,22 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
                     }
 
 
-//                    logger.debug("Save Pressure ${d}")
-//                    status = "Save Pressure ${d}"
-//                    if (pijob.waittime != null) {
-//                        status = "Wait time ${pijob.waittime}"
-//                        TimeUnit.SECONDS.sleep(pijob.waittime!!)
-//                    }
-//                    isRun = false
                     status = "End ${Date()}"
                 } catch (e: Exception) {
                     status = "Error ${e.message}"
                     isRun = false
-//                    throw e
                 }
             }
         } catch (e: Exception) {
             logger.error(e.message)
             isRun = false
             status = "${pijob.name} error ${e.message}"
-//            throw  e
         }
 
-//        isRun = false
+
 
         setEnddate()
-        status = "${pijob.name} Run Readpressure job  end "
+        status = "${pijob.name} Run Readpressure job  end  PSI:${p}"
         logger.debug("${pijob.name} Run Readpressure job  end ")
 
 

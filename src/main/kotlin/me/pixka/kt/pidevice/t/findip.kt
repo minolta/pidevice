@@ -27,7 +27,7 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
     var command: String? = "nmap -n -sP "
 
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 600000)
     fun loadip() {
         logger.info("Scan ip ${Date()}")
         setup()
@@ -162,49 +162,6 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
                 logger.debug("New Ip address MAC:${np.mac} IP:${np.ip}")
             }
         }
-//        try {
-//            for (i in buf) {
-//                //  logger.debug("find iptables : ${i}")
-//                if (i.mac != null) {
-//
-//                    //      logger.debug("I for find ADDRESS: ${i.mac} Service is ${service}")
-//
-//                    var mac = i.mac
-//                    //      logger.debug("mac value : ${mac}")
-//                    var ii: Iptableskt? = service.findByMac(mac!!)
-//                    //      logger.debug("Address  Found: ${ii}")
-//                    if (ii == null) {
-//                        ii = Iptableskt()
-//                        ii.ip = i.ip
-//                        ii.mac = i.mac
-//                        newIptable(ii)
-//                    } else {
-//                        service.updateiptable(ii, i.ip!!)
-//                    }
-//                } else {
-//                    logger.info("Saveme: ${i}")
-//                    //me device
-//                    var ii: Iptableskt? = service.findByMac("")
-//                    //      logger.debug("Address  Found: ${ii}")
-//                    if (ii == null) {
-//                        ii = Iptableskt()
-//                        ii.ip = i.ip
-//                        ii.mac = i.mac
-//                        newIptable(ii)
-//                    } else {
-//                        service.updateiptable(ii, i.ip!!)
-//                    }
-//
-//                }
-//            }
-//
-//
-//            buf.clear()
-//            logger.debug("Clear buffer : ${buf} buf size: ${buf.size}")
-//        } catch (e: Exception) {
-//            logger.debug("Error in for : ${e}")
-//            e.printStackTrace()
-//        }
     }
 
     @Throws(SocketException::class)
@@ -224,7 +181,6 @@ class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
                         var mac = getMacAddress(i)
                         if (mac != null)
                             buffer.add("${i.hostAddress},${mac}")
-                        //return "${i.hostAddress},${mac}"
                     }
                 }
 

@@ -27,7 +27,6 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
 
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun find() {
-
         // testread()
         logger.info("Start read Pressure")
         var jobtorun = findJob.loadjob("readpressure")
@@ -38,7 +37,7 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
                     if (!ts.checkrun(j)) {
                         var t = ReadPressureTask(j, ips, httpService, ps, pideviceService, ntf)
                         var run = ts.run(t)
-
+                        logger.debug("Run ${j.name} == ${run}")
                     }
                 }
             }
@@ -49,27 +48,9 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
         logger.debug(" 5 End Task read pressure")
     }
 
-    fun readPressure(job: Pijob): PSIObject {
-        var ip = ips.findByMac(job.desdevice?.mac!!)
-        var re = httpService.get("http://${ip?.ip}")
-        var psi = om.readValue<PSIObject>(re)
-        return psi
-    }
 
-    fun checkRang(job: Pijob, psi: PSIObject) {
-        var psivalue = psi.psi?.toDouble()
 
-    }
 
-    fun checkPressure(job: Pijob) {
-        CompletableFuture.supplyAsync {
-            readPressure(job)
-        }.thenApply {
-
-        }.exceptionally {
-            logger.error(it.message)
-        }
-    }
 
 
     companion object {

@@ -87,18 +87,18 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         } catch (e: Exception) {
             this.state = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
+            waitstatus = true
+            isRun=false
         }
 
         waitstatus = true
 //        isRun = false
-        state = "End job"
+//        state = "End job"
     }
 
     var rt = 0
     var wt = 0
     fun goII() {
-
-
         var ports = pijob.ports
         if (ports != null) {
             ports.filter {
@@ -124,7 +124,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                 if (setportreturn != null) {
                     state = "Set port ok ${setportreturn}"
                 } else
-                    state = "Setport errot ${setportreturn}"
+                    state = "Setport error ${setportreturn}"
             }
         }
     }

@@ -4,8 +4,6 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DisplayService
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.pidevice.t.ThreadInfo
-import me.pixka.kt.run.PijobrunInterface
 import me.pixka.pi.io.Dotmatrix
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
@@ -97,53 +95,54 @@ class NameControl(val dps: DisplayService, val io: Piio, val tsk: TaskService, v
     @CrossOrigin
     @RequestMapping(value = ["/thread"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
-    fun showthread(): ShowThread {
-        var b = HashMap<String, String>()
-        var buf = ArrayList<Runobj>()
-        var t = context.getBean("taskScheduler") as ThreadPoolTaskScheduler
-        var tp = context.getBean("pool") as ExecutorService
-        var aa = context.getBean("aa") as ThreadPoolExecutor
-        val queue = t.scheduledThreadPoolExecutor
-        val s = queue.queue
+    fun showthread(): ShowThread? {
+//        var b = HashMap<String, String>()
+//        var buf = ArrayList<Runobj>()
+//        var t = context.getBean("taskScheduler") as ThreadPoolTaskScheduler
+//        var tp = context.getBean("pool") as ExecutorService
+//        var aa = context.getBean("aa") as ThreadPoolExecutor
+//        val queue = t.scheduledThreadPoolExecutor
+//        val s = queue.queue
 
-        ThreadInfo.logger.info("Scheduler active count: ${t.activeCount} pool size: ${t.poolSize}  Queue size:${s.size} ")
-        b.put("activecount", "${t.activeCount}")
-        b.put("poolsize", "${t.poolSize}")
-        b.put("queuesize", "${s.size}")
+//        ThreadInfo.logger.info("Scheduler active count: ${t.activeCount} pool size: ${t.poolSize}  Queue size:${s.size} ")
+//        b.put("activecount", "${t.activeCount}")
+//        b.put("poolsize", "${t.poolSize}")
+//        b.put("queuesize", "${s.size}")
+//
+//        var tt = tp as ThreadPoolExecutor
 
-        var tt = tp as ThreadPoolExecutor
+//        ThreadInfo.logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
+//        b.put("ttpooltask", "${tt.activeCount}")
+//        b.put("ttqueuesize", "${tt.queue.size}")
+//        b.put("ttpoolsize", "${tt.poolSize}")
+//        if (tt.activeCount > 0) {
+//
+//            for (run in tsk.runinglist) {
+//                ThreadInfo.logger.debug("Runs id : " + run.getPijobid().toString() + " " + run.runStatus())
+//
+//                var info = "Runs id : " + run.getPijobid().toString() + " " + run.runStatus()
+//                var r = Runobj(info, run.getPJ(), run.startRun(),run.state())
+//                buf.add(r)
+//            }
+//        }
 
-        ThreadInfo.logger.info("Pool TaskService run: ${tt.activeCount}  Queue size: ${tt.queue.size} Pool size: ${tt.poolSize} Pool max size : ${tt.corePoolSize} / ${tt.maximumPoolSize} Complete ${tt.completedTaskCount}")
-        b.put("ttpooltask", "${tt.activeCount}")
-        b.put("ttqueuesize", "${tt.queue.size}")
-        b.put("ttpoolsize", "${tt.poolSize}")
-        if (tt.activeCount > 0) {
+//        ThreadInfo.logger.info("Asyn AT: ${aa.activeCount} pool size: ${aa.poolSize}  Queue size:${aa.queue}  c:${aa.completedTaskCount}")
+//        b.put("aapooltask", "${aa.activeCount}")
+//        b.put("aaqueuesize", "${aa.queue.size}")
+//        b.put("aapoolsize", "${aa.poolSize}")
+//        b.put("aapoolsize", "${aa.completedTaskCount}")
 
-            for (run in tsk.runinglist) {
-                ThreadInfo.logger.debug("Runs id : " + run.getPijobid().toString() + " " + run.runStatus())
-
-                var info = "Runs id : " + run.getPijobid().toString() + " " + run.runStatus()
-                var r = Runobj(info, run.getPJ(), run.startRun(),run.state())
-                buf.add(r)
-            }
-        }
-
-        ThreadInfo.logger.info("Asyn AT: ${aa.activeCount} pool size: ${aa.poolSize}  Queue size:${aa.queue}  c:${aa.completedTaskCount}")
-        b.put("aapooltask", "${aa.activeCount}")
-        b.put("aaqueuesize", "${aa.queue.size}")
-        b.put("aapoolsize", "${aa.poolSize}")
-        b.put("aapoolsize", "${aa.completedTaskCount}")
-
-        var re = ShowThread()
-        re.info = b
-        re.runs = buf
-        return re
+//        var re = ShowThread()
+//        re.info = b
+//        re.runs = buf
+//        return re
         /*
          var o = s.iterator()
          for(run in o)
          {
              logger.info("run : ${run}")
          }*/
+        return null
     }
 
     companion object {

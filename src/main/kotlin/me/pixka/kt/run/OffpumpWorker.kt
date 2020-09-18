@@ -80,15 +80,13 @@ class OffpumpWorker(var pijob: Pijob,
             } catch (e: Exception) {
                 logger.error("Off pumb error  offpump ${e.message} ${pijob.name}")
                 state = "Off pumb error  offpump ${e.message} ${pijob.name}"
+                isRun = false
             }
         } catch (e: Exception) {
             logger.error("offpump ${e.message} ${pijob.name}")
             state = "offpump ${e.message} ${pijob.name}"
-            TimeUnit.SECONDS.sleep(10)
-
+            isRun = false
         }
-//        isRun = false
-//        state = "End job wait exit date"
         setEnddate()
     }
 

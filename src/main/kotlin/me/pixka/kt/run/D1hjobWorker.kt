@@ -80,7 +80,6 @@ class D1hjobWorker(var pijob: Pijob,
         if (pijob.runtime != null)
             t += pijob.runtime!!
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-
         calendar.add(Calendar.SECOND, t.toInt())
         exitdate = calendar.time
         if (t == 0L)

@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Pm
 import me.pixka.kt.pibase.d.PmService
 import me.pixka.kt.pibase.s.GpioService
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.t.HttpGetTask
 import org.slf4j.LoggerFactory
@@ -15,7 +16,7 @@ import java.util.*
 import java.util.concurrent.Executors
 
 
-class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,
+class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,val httpService: HttpService,
                      var om: ObjectMapper, var pideviceService: PideviceService)
     : Runnable, PijobrunInterface {
     var isRun = true
@@ -34,24 +35,21 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,
 
         calendar.add(Calendar.SECOND, t.toInt())
         exitdate = calendar.time
-        if (t == 0L)
+        if (t == 0L || !isRun)
             isRun = false//ออกเลย
     }
 
     override fun run() {
+        var pm = Pm()
         try {
             isRun = true
             startrundate = Date()
             logger.debug("read Start ${startrundate} ${isRun}")
-            var ee = Executors.newSingleThreadExecutor()
-            var http = HttpGetTask("http://${ip}")
-            var call = ee.submit(http)
-            var re = call.get()
-            logger.debug("Call result : ${re}")
+            var re = httpService.get("http://${ip}")
             var pd = om.readValue<Pmdata>(re!!)
             var pid = pideviceService.findByMac(pd.mac!!)
             logger.debug("Pi device is ${pid}")
-            var pm = Pm()
+
             pm.pidevice = pid
             pm.pm1 = pd.pm1
             pm.pm10 = pd.pm10
@@ -62,10 +60,11 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,
         } catch (e: Exception) {
             logger.error(e.message)
             state = e.message
+            isRun=false
         }
         setEnddate()
         logger.debug("End job ${pijob.name}")
-        state = "End job"
+        state = "End job PM1:${pm.pm1} PM2.5:${pm.pm25} PM10 ${pm.pm10}"
     }
 
     override fun setP(pijob: Pijob) {

@@ -6,10 +6,7 @@ import me.pixka.kt.pibase.d.Dhtvalue
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.DhtvalueService
-import me.pixka.kt.pibase.s.JobService
-import me.pixka.kt.pibase.s.PideviceService
-import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
@@ -21,13 +18,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-//@Profile("pi", "lite")
 class ReadDhtfromother(val http: HttpControl,
                        val pjs: PijobService,
                        val js: JobService, val task: TaskService,
                        val dhts: DhtvalueService,
                        val pds: PideviceService, val dhtutil: Dhtutil,
-                       val taskservice: TaskService,
+                       val taskservice: TaskService,val httpService: HttpService,
                        val ips: IptableServicekt) {
 
     val om = ObjectMapper()
@@ -48,7 +44,7 @@ class ReadDhtfromother(val http: HttpControl,
 
                 try {
 
-                    var rt = ReadDhtWorker(i, dhtutil, dhts)
+                    var rt = ReadDhtWorker(i,dhts,pds,httpService,ips)
                     task.run(rt)
                 } catch (e: Exception) {
                     logger.error("Run " + e.message)

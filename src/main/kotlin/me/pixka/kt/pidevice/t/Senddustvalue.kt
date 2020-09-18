@@ -1,15 +1,17 @@
 package me.pixka.kt.pidevice.t
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.PmService
-import me.pixka.kt.pibase.t.HttpPostTask
+import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.run.Status
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Component
-class Senddustvalue(val server: PmService) {
+class Senddustvalue(val server: PmService, val httpService: HttpService) {
 
+    val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
@@ -20,9 +22,8 @@ class Senddustvalue(val server: PmService) {
             datas.forEach {
 
                 try {
-                    var h = HttpPostTask(host + "/pm/add", it)
-                    var f = Executors.newSingleThreadExecutor().submit(h)
-                    var r = f.get(2,TimeUnit.SECONDS)
+                    var h = httpService.post(host + "/pm/add", it)
+                    var r = om.readValue<Status>(h)
                     it.toserver = true
                     server.save(it)
                 } catch (e: Exception) {

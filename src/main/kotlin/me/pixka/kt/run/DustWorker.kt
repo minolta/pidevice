@@ -80,15 +80,16 @@ class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
                         totalwait = it.waittime!!.toInt()
 
 
-                    var url = "http://${ip.ip}/run?port=${it.portname}&delay=${it.runtime}&value=${it.status}&wait=${it.waittime}"
+                    var url = "http://${ip.ip}/run?port=${it.portname?.name}&delay=${it.runtime}&value=${it.status?.toInt()}&wait=${it.waittime}"
                     var re = httpService.get(url)
                     var s = om.readValue<Status>(re)
-                    state = "Set ${it.portname?.name} to ${it.status?.name} uptime:${s.uptime} ok"
+                    state = "Set ${it.portname?.name} to ${it.status?.name} uptime:${s.uptime}  status:${s.status}"
 
                 }
             }
         } catch (e: Exception) {
             logger.error("ERROR ${e.message}")
+            isRun=false
         }
 
         setEnddate()

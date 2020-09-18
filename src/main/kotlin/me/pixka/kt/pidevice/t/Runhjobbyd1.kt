@@ -30,24 +30,21 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                   val ntfs: NotifyService, val queue: QueueService, val httpService: HttpService) {
     val om = ObjectMapper()
 
-
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 2000)
     fun run() {
-
         try {
             queue.printqueue()
             //ถ้ามี job ใน คิวให้้ run ให้หมดก่อน
             if (queue.size() > 0) {
                 runQueue()//พยาม run ที่อยู่ในคิวก่อน
             }
-
             //Run ปกติ
             var list = findJob.loadjob("runhbyd1")
-            if (list != null) {
-                list.forEach {
-                    var job = it
-                    if (!task.checkrun(job)) {//ยังไม่มีใน list
-                        if (task.checktime(it)) {//ถ้าอยู่ในเวลา
+            list?.forEach {
+                var job = it
+                if (!task.checkrun(job)) {//ยังไม่มีใน list
+                    if (task.checktime(it)) {//ถ้าอยู่ในเวลา
+                        try {
                             var h = getHobj(it)
                             if (h != null) {
                                 if (checkHtorun(it, h)) {
@@ -64,18 +61,21 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                                         }
                                     }
                                 }
+
                             }
+                        } catch (e: Exception) {
+                            logger.error("ERROR ${e.message}")
                         }
-                    } else {
-                        logger.warn("Have job run ready ${job.name}")
+
                     }
+                } else {
+                    logger.warn("Have job run ready ${job.name}")
                 }
-
-
             }
 
         } catch (e: Exception) {
             logger.error("Read h by d1 ERROR ${e.message}")
+
         }
     }
 
@@ -104,16 +104,19 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
     }
 
 
-    fun runfromQ(job: Pijob) {
-        var t = D1hjobWorker(job, dhs, httpService, task, ntfs)
+    fun runfromQ(q:Qobject) {
+        var t = D1hjobWorker(q.pijob!!, dhs, httpService, task, ntfs)
         var run = task.run(t)
         if (run) {
-            removeJobFromQ(job)
+
+            q.message = "Run !! remove from Queue"
+            q.addDate = Date()
+            removeJobFromQ(q.pijob!!)
         }
     }
 
     fun removeJobFromQ(job: Pijob) {
-        var removed = queue.queue.remove(job)
+        var removed = queue.remove(job)
         logger.debug("Remove ${job.name} from queue is ${removed}")
     }
 
@@ -124,14 +127,16 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
         logger.debug("Run inqueue ${Date()}")
 
         for (q in queue.queue) {
-            if (task.checktime(q)) {
-                if (groups.c(q))
+            if (task.checktime(q.pijob!!)) {
+                if (groups.c(q.pijob!!))
                     runfromQ(q)
                 else {
+                    q.message = "Wait for other use water ${Date()}"
                     logger.error("Some job use water")
                 }
             } else {//ถ้า job เกินเวลาแล้วเอาออกเลย
-                removeJobFromQ(q)
+                removeJobFromQ(q.pijob!!)
+                q.message ="Out of date !! ${q.pijob?.stimes} - ${q.pijob?.etimes}"
             }
 
         }
@@ -146,10 +151,9 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
 @Service
 class QueueService {
     //สำหรับจัดคิวให้ทุก job ได้ทำงานไม่ต้องแยงกัน
-    var queue = LinkedList<Pijob>()
+    var queue = LinkedList<Qobject>()
     fun inqueue(j: Pijob): Boolean {
-        var ii = queue.find { it.id.toInt() == j.id.toInt() }
-
+        var ii = queue.find { it.pijob?.id?.toInt() == j.id.toInt() }
         logger.debug("inqueue have ${ii} in queue")
         if (ii != null)
             return true
@@ -157,12 +161,15 @@ class QueueService {
         return false
     }
 
-    fun peek(): Pijob? {
+    fun peek(): Qobject? {
         return queue.peek()
     }
 
     fun remove(p: Pijob): Boolean {
-        return queue.remove(p)
+        var toremove = queue.find { it.pijob?.id == p.id }
+        if (toremove != null)
+            return queue.remove(toremove)
+        return false
     }
 
     fun size(): Int {
@@ -174,12 +181,12 @@ class QueueService {
      */
     fun addtoqueue(job: Pijob): Boolean {
         if (queue.size == 0) {
-            queue.add(job)
+            queue.add(Qobject(job,Date()))
             logger.debug("Add ${job.name} to queue")
             return true
         }
-        if (queue.find { job.id.toInt() == it.id.toInt() } == null) {
-            queue.add(job)
+        if (queue.find { job.id.toInt() == it.pijob?.id?.toInt() } == null) {
+            queue.add(Qobject(job,Date()))
             logger.debug("Add more ${job.name} to  queue")
             return true
         }
@@ -200,3 +207,7 @@ class QueueService {
         internal var logger = LoggerFactory.getLogger(QueueService::class.java)
     }
 }
+
+class Qobject(var pijob: Pijob? = null, var addDate: Date? = null, var message: String? = null)
+
+

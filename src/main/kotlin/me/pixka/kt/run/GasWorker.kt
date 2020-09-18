@@ -5,7 +5,6 @@ import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.s.PortstatusinjobService
-import me.pixka.kt.pidevice.t.RungasJob
 import me.pixka.kt.pidevice.u.ReadUtil
 import org.slf4j.LoggerFactory
 import java.util.*

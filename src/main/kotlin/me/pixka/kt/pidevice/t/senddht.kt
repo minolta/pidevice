@@ -12,20 +12,12 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-//@Profile("pi", "lite")
 class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
-
-
     @Scheduled(fixedDelay = 1000)
     fun run() {
-
-
-//        println("Date : ${Date()}")
         var target = System.getProperty("savedht")
-
         if (target == null)
             target = System.getProperty("piserver")+"/dht/add"
-
         val list = dhts.notInserver() as List<Dhtvalue>
 
         if (list != null) {
@@ -42,7 +34,6 @@ class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
                         var f = t.submit(task)
 
                         var value = f.get(5, TimeUnit.SECONDS)
-//                    var value = http.postJson(target, obj)
                         logger.debug("Return Save DHT ${value.statusLine}")
 
                         if (value != null) {

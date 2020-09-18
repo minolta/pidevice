@@ -39,17 +39,6 @@ class RunonPump(val pjs: PijobService,val checkTimeService: CheckTimeService,
                           logger.error("Can not Run ${job.name}")
                       }
                   }
-//                    try {
-//                        if (intime && task.runinglist.find { it.getPijobid()==job.id && it.runStatus()==true }==null) {
-//                            var run = task.run(OnpumbWorker(job, httpService, dhts))
-//                            logger.debug("Can run ${run}")
-//                        } else {
-//                            logger.debug("Not in time ${job.name}")
-//                        }
-//                    } catch (e: Exception) {
-//                        logger.error("Onpump ${job.name} : ${e.message}")
-//                    }
-
                 }
             }
         } catch (e: Exception) {
@@ -141,10 +130,9 @@ class OnpumbWorker(var pijob: Pijob, val httpService: HttpService,
         } catch (e: Exception) {
             logger.error("offpump ${e.message} ${pijob.name}")
             status = "offpump ${e.message} ${pijob.name}"
+            isRun = false //ออกเลยที่มีปัญฆา
         }
-//        isRun = false
         setEnddate()
-//        status = "End job "
     }
 
 

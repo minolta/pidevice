@@ -3,10 +3,7 @@ package me.pixka.kt.pidevice
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.*
-import me.pixka.kt.pibase.s.FindJob
-import me.pixka.kt.pibase.s.JobService
-import me.pixka.kt.pibase.s.PideviceService
-import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Pmdata
@@ -42,6 +39,8 @@ class TestReaddustWorker {
 
     @Autowired
     lateinit var jobService: JobService
+    @Autowired
+    lateinit var httpService: HttpService
 
     @Test
     fun testReaddustWorker() {
@@ -89,7 +88,7 @@ class TestReaddustWorker {
         if (jobs != null) {
             jobs.forEach {
 
-                var t = ReaddustWorker(it, "192.168.89.243", service, om, pideviceService)
+                var t = ReaddustWorker(it, "192.168.89.243", service,httpService, om, pideviceService)
                 Assertions.assertEquals(true, ts.run(t))
 
             }
@@ -109,7 +108,7 @@ class TestReaddustWorker {
         if (jobs != null) {
             jobs.forEach {
 
-                var t = ReaddustWorker(it, "192.168.89.243", service, om, pideviceService)
+                var t = ReaddustWorker(it, "192.168.89.243", service, httpService,om, pideviceService)
                 var ee = Executors.newSingleThreadExecutor()
                 var f = ee.submit(t)
                 var rr = f.get()

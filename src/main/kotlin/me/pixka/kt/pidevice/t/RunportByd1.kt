@@ -4,6 +4,7 @@ package me.pixka.kt.pidevice.t
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.s.TaskService
@@ -35,7 +36,26 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                 logger.debug("Job for Runportbyd1 Port jobsize  ${list.size}")
             if (list != null) {
                 list.forEach {
-                    Checkrun(it)
+//                    Checkrun(it)
+                    try {
+                        var checks = getPorttocheck(it)
+                        var sensorstatus = getSensorstatus(it)
+                        var r = false
+                        if (checks != null) {
+                            for (c in checks) {
+                                r = r || getsensorstatusvalue(c.name!!, c.check!!, sensorstatus!!)
+                            }
+                            logger.debug("R is ${r}")
+                        }
+                        if (r) {
+                            var t = D1portjobWorker(it, pjs, httpService, task, ips)
+                            var run = task.run(t)
+                            logger.debug("Can run ${run}")
+                        }
+                    }catch (e:Exception)
+                    {
+                        logger.error("ERROR Set port ${it.name}  ERROR ${e.message}")
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -76,16 +96,18 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
     }
 
     fun getSensorstatus(p: Pijob): DPortstatus? {
+        var url = ""
+        var ip:Iptableskt?=null
         try {
             logger.debug("Check Port start")
             var ip = ips.findByMac(p.desdevice?.mac!!)
-            var url = "http://${ip?.ip}"
+            url = "http://${ip?.ip}"
             var re: String? = httpService.get(url)
             var dp = om.readValue(re, DPortstatus::class.java)
             return dp
 
         } catch (e: Exception) {
-            logger.error("Get Sensor status JOB NAME ${p.name} ${e.message}")
+            logger.error("Get Sensor status JOB NAME IP:${ip} URL:${url} ${p.name} ${e.message} Des name:${p.desdevice}  ")
             throw e
         }
         return null

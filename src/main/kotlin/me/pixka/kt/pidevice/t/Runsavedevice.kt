@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.PiDevice
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.t.HttpGetTask
 import org.slf4j.LoggerFactory
@@ -13,26 +14,30 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 
-@Component
-class Runsavedevice(val service: PideviceService, val ips: IptableServicekt) {
+/**
+ * ใช้สำหรับ update ip และ device
+ */
+//@Component
+class Runsavedevice(val service: PideviceService, val ips: IptableServicekt ,val httpService: HttpService) {
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runsavedevice::class.java)
     }
 
     val mapper = ObjectMapper()
-    @Scheduled(fixedDelay = 5000)
+//    @Scheduled(fixedDelay = 5000)
     fun run() {
         var target = System.getProperty("piserver") + "/rest/pidevice/lists/20000/10000"
         logger.debug("URL ${target}")
-        var http = HttpGetTask(target)
-        val ee = Executors.newSingleThreadExecutor()
-        var f = ee.submit(http)
+//        var http = HttpGetTask(target)
+//        val ee = Executors.newSingleThreadExecutor()
+//        var f = ee.submit(http)
         try {
-            var re = f.get(5, TimeUnit.SECONDS)
-            logger.debug("RE ${re}")
-            val list = mapper.readValue<List<PiDevice>>(re!!)
 
+//            var re = f.get(5, TimeUnit.SECONDS)
+            var re = httpService.get(target)
+            logger.debug("RE ${re}")
+            val list = mapper.readValue<List<PiDevice>>(re)
             if(list != null)
             {
                 for(d in list)
@@ -41,8 +46,8 @@ class Runsavedevice(val service: PideviceService, val ips: IptableServicekt) {
                     logger.debug("Local Device ${localdevice}")
                     if(localdevice!=null) {
                         localdevice.name = d.name
-
                         localdevice.description = d.description
+                        localdevice.ip = d.ip
                         service.save(localdevice)
 
                         var ip = ips.findByMac(localdevice.mac!!)

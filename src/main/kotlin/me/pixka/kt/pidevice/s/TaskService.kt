@@ -97,94 +97,99 @@ class TaskService(val context: ApplicationContext) {
 
     @Scheduled(fixedDelay = 1000)
     fun checkExitdate() {
-        var now = Date().time
+        try {
+            var now = Date().time
 
-        runinglist.filter {
-            it is D1hjobWorker || it is D1tjobWorker
-                    || it is OffpumpWorker || it is ReadDhtWorker
-                    || it is D1portjobWorker || it is CheckActiveWorker || it is OffpumpWorker
-                    || it is ReadPressureTask || it is ReadTmpTask ||
-                    it is NotifyPressureWorker || it is OnpumbWorker || it is ReaddustWorker
-                    || it is DustWorker || it is D1TimerWorker
-        }.forEach {
+            runinglist.filter {
+                it is D1hjobWorker || it is D1tjobWorker
+                        || it is OffpumpWorker || it is ReadDhtWorker
+                        || it is D1portjobWorker || it is CheckActiveWorker || it is OffpumpWorker
+                        || it is ReadPressureTask || it is ReadTmpTask ||
+                        it is NotifyPressureWorker || it is OnpumbWorker || it is ReaddustWorker
+                        || it is DustWorker || it is D1TimerWorker
+            }.forEach {
 
-            if (it is D1hjobWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.state = "End job"
-                }
-            } else if (it is D1tjobWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit  job by exitdate"
-                }
-            } else if (it is ReadDhtWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit  job by exitdate"
-                }
-            } else if (it is D1readvoltWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit  job by exitdate"
-                }
-            } else if (it is D1portjobWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.state = "Exit  job by exitdate"
+                if (it is D1hjobWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.state = "End job"
+                    }
+                } else if (it is D1tjobWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit  job by exitdate"
+                    }
+                } else if (it is ReadDhtWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit  job by exitdate"
+                    }
+                } else if (it is D1readvoltWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit  job by exitdate"
+                    }
+                } else if (it is D1portjobWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.state = "Exit  job by exitdate"
+                    }
+
+                } else if (it is CheckActiveWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.state = "Exit  job by exitdate"
+                    }
+
+                } else if (it is OffpumpWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.state = "Exit  job by exitdate"
+                    }
+
+                } else if (it is ReadPressureTask) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit  job by exitdate"
+                    }
+                } else if (it is ReadTmpTask) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit  job by exitdate"
+                    }
+                } else if (it is NotifyPressureWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit  job by exitdate"
+                    }
+                } else if (it is OnpumbWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit  job by exitdate"
+                    }
+                } else if (it is ReaddustWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.state = "Exit  job by exitdate"
+                    }
+                } else if (it is DustWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.state = "Exit  job by exitdate"
+                    }
+                } else if (it is D1TimerWorker) {
+                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+                        it.setrun(false) //end this job have to remove
+                        it.status = "Exit job by exitdate"
+                    }
                 }
 
-            } else if (it is CheckActiveWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.state = "Exit  job by exitdate"
-                }
-
-            } else if (it is OffpumpWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.state = "Exit  job by exitdate"
-                }
-
-            } else if (it is ReadPressureTask) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit  job by exitdate"
-                }
-            } else if (it is ReadTmpTask) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit  job by exitdate"
-                }
-            } else if (it is NotifyPressureWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit  job by exitdate"
-                }
-            } else if (it is OnpumbWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit  job by exitdate"
-                }
-            } else if (it is ReaddustWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.state = "Exit  job by exitdate"
-                }
-            }else if (it is DustWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.state = "Exit  job by exitdate"
-                }
-            }else if (it is D1TimerWorker) {
-                if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                    it.setrun(false) //end this job have to remove
-                    it.status = "Exit job by exitdate"
-                }
             }
 
+        }catch (e:Exception)
+        {
+            logger.error("ERROR set exit time ${e.message}")
         }
-
 
     }
 

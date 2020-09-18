@@ -14,18 +14,19 @@ import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-@Component
-@Profile("!test")
+//ไม่ใช้แล้ว
+//@Component
+//@Profile("!test")
 class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService,
                    val ls: LogistateService, val pijobgroupService: PijobgroupService,
-                   val js: JobService, val dsservice: DS18sensorService,
+                   val js: JobService, val dsservice: DS18sensorService,val httpService: HttpService,
                    val ps: PortnameService, val pds: PideviceService) {
     val mapper = ObjectMapper()
     var ex = Executors.newSingleThreadExecutor()
     var host = System.getProperty("piserver")
     var target = host + "/pijob/lists"
     var targetloadstatus = host + "/portstatusinjob/lists"
-    @Scheduled(fixedDelay = 3000)
+//    @Scheduled(fixedDelay = 3000)
     fun run() {
         try {
             var mac = System.getProperty("mac")
@@ -45,15 +46,20 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
     fun save(list: List<Pijob>) {
 
         for (item in list) {
+            //เอาออกเลยไม่ใช้แล้ว
+            item.ds18sensor = null
+            item.ds18sensor_id = null
 
             var ref: Pijob? = null
             try {
                 logger.debug("[loadpijob] Find Job Refs " + item)
+
                 ref = service.findByRefid(item.id) // หาว่ามีในเครื่องเรายัง
                 if (ref == null) {
                     // Save เข้าถ้าหาไม่เจอเป็น job ใหม่
                     logger.debug("[loadpijob] new Pi job on device ${item}")
                     try {
+
                         ref = newpijobinlocaldevice(item)
                     } catch (e: Exception) {
                         logger.error("new job in local error ${e.message}")
@@ -81,13 +87,8 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
     }
 
     fun loadPijob(mac: String): List<Pijob>? {
-        val ee = Executors.newSingleThreadExecutor()
         try {
-            var http = HttpGetTask(target + "/${mac}")
-            logger.debug("${target}/${mac}")
-            var f = ee.submit(http)
-            var re: String? = null
-            re = f.get(3, TimeUnit.SECONDS)
+            var re: String? = httpService.get(target+"/${mac}")
             logger.debug("Return ${re}")
             if (re != null) {
                 val list = mapper.readValue<List<Pijob>>(re)
@@ -97,10 +98,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
            logger.warn("Not have pi job")
         } catch (e: IOException) {
             logger.error("[loadpijob] :error:" + e.message)
-            ee.shutdownNow()
-            throw e
         }
-
         return null
     }
 
@@ -127,23 +125,11 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
     fun newotherdevice(pd: PiDevice): PiDevice? {
 
         try {
-
-            var other = pds.findByMac(pd.mac!!)
-            logger.debug("New Other device ${pd} Have already in device")
-            if (other == null) {
-
-                var p = pds.create(pd.mac!!, pd.id)
-                logger.debug("not found in this device create new ${pd} new obj ${p}")
-                return p
-            }
-
-            return other
-
+               return pds.findOrCreate(pd.mac!!)
         } catch (e: Exception) {
             logger.error("loadpijob find ds sensor error ${e.message}")
             throw e
         }
-        return null
     }
 
     fun newdssensor(dssensor: DS18sensor): DS18sensor? {
@@ -173,15 +159,8 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             }
 
             try {
-                if (item.ds18sensor != null)
-                    item.ds18sensor = newdssensor(item.ds18sensor!!)
-            } catch (e: Exception) {
-                logger.error("Can not create Sensor ${e.message}")
-            }
-            try {
                 if(item.desdevice!=null) {
                     logger.debug(" ${item.name}  newotherdevice ${item.desdevice}")
-
                    var ot = newotherdevice(item.desdevice!!)
                     item.desdevice = ot
                     item.desdevice_id = ot?.id
@@ -199,7 +178,6 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                     p.runwithid = rw.id
             }
             logger.debug("Item for new pijob ${item}")
-
             logger.debug("P after newpijob ${p}")
             // ตัวของเราเอง
 
@@ -216,7 +194,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             p.desdevice = item.desdevice
 
             logger.debug("[loadpijob newforsave] new Pi job for save :" + p)
-            p = service.save(p)!!
+            p = service.save(p)
             logger.debug("[loadpijob pijobsaved] Save pi job to device : " + p)
             return p
         } catch (e: Exception) {
@@ -252,8 +230,8 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
                         rw.pijobgroup_id = pijobgroup?.id
                     }
                     try {
-                        if (runwithjob.ds18sensor != null)
-                            rw.ds18sensor = newdssensor(runwithjob.ds18sensor!!)
+//                        if (runwithjob.ds18sensor != null)
+//                            rw.ds18sensor = newdssensor(runwithjob.ds18sensor!!)
                     } catch (e: Exception) {
                         logger.error("Can not create Sensor ${e.message}")
                     }
@@ -349,10 +327,10 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
             logger.debug("editpijob")
             ref.copy(item)
 
-            logger.debug("Ds18sensor ${item.ds18sensor}")
-            val ic = item.ds18sensor
-            if (ic != null)
-                ref.ds18sensor = dsservice.findorcreate(ic)
+//            logger.debug("Ds18sensor ${item.ds18sensor}")
+//            val ic = item.ds18sensor
+//            if (ic != null)
+//                ref.ds18sensor = dsservice.findorcreate(ic)
             var dd = item.desdevice
             if (dd != null) {
                 ref.desdevice = newotherdevice(dd)

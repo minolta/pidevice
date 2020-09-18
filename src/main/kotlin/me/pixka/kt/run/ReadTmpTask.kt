@@ -25,6 +25,7 @@ class ReadTmpTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
 
 
     override fun run() {
+        var tmp = 0.0
         try {
             startRun = Date()
             status = "Start run : ${Date()}"
@@ -42,23 +43,24 @@ class ReadTmpTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
             d.t = tmpobj?.tmp
             d.pidevice = pideviceService.findByMac(tmpobj?.mac!!)
             d.valuedate = Date()
+            if(d.t!=null)
+            tmp = d.t?.toDouble()!!
             ds18valueService.save(d)
         } catch (e: Exception) {
             logger.error(e.message)
             isRun = false
             status = "${pijob.name} error ${e.message}"
-            throw  e
         }
 
 //        isRun = false
         setEnddate()
-        logger.debug("${pijob.name} Run Tmp job  end ")
+        logger.debug("${pijob.name} Run Tmp job  end TMP:${tmp} ")
 
 
     }
     fun setEnddate() {
-        var t = 0L
 
+        var t = 0L
         if (pijob.waittime != null)
             t = pijob.waittime!!
         if (pijob.runtime != null)
@@ -67,7 +69,7 @@ class ReadTmpTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
 
         calendar.add(Calendar.SECOND, t.toInt())
         exitdate = calendar.time
-        if (t == 0L)
+        if (t == 0L || !isRun)
             isRun = false//ออกเลย
     }
     override fun toString(): String {
