@@ -223,13 +223,6 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             tl.runstatus = it.isRun
             tl.state = it.state
         }
-        if (it is D1portjobWorker) {
-            tl.exitdate = it.exitdate
-            tl.jobtype = it.pijob.job?.name
-            tl.name = it.pijob.name
-            tl.runstatus = it.isRun
-            tl.state = it.state
-        }
         if (it is OnpumbWorker) {
             tl.exitdate = it.exitdate
             tl.jobtype = it.pijob.job?.name
@@ -259,7 +252,6 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             try {
                 var pj = run.getPJ()
                 var t = getTl(run)
-// tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(), run.runStatus(), pj.ports, run.getPJ().job?.name)
                 list.add(t)
             } catch (e: Exception) {
                 logger.error("List task error ${e.message}")

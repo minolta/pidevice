@@ -3,6 +3,7 @@ package me.pixka.kt.run
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
@@ -26,9 +27,9 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
     var waitstatus = false
     val mapper = ObjectMapper()
     var exitdate: Date? = null
+    val om = ObjectMapper()
 
     override fun setG(gpios: GpioService) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun setrun(p: Boolean) {
@@ -65,7 +66,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         t += (rt + wt) //เวลานานสุดของ runport
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, t.toInt())
-        var exitdate = calendar.time
+        exitdate = calendar.time
         if (t == 0L)
             return null
 
@@ -82,16 +83,17 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
             waitstatus = false
             goII()
             waitstatus = true
-            exitdate = findExitdate(pijob)
-            state = "End job and wait"
+//            exitdate = findExitdate(pijob)
+//            state = "End job and wait"
         } catch (e: Exception) {
             this.state = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
             waitstatus = true
-            isRun=false
+            isRun = false
         }
 
         waitstatus = true
+        findExitdate(pijob)
 //        isRun = false
 //        state = "End job"
     }
@@ -116,15 +118,13 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                 var pn = it.portname!!.name
                 var v = it.status //สำหรับบอก port ว่าจะเป็น logic อะไร
                 var value = getLogic(v?.name!!)
-                var url = findUrl(it.device!!, it.portname!!.name!!, pr.toLong(), pw.toLong(), value)
+                var url = findUrl(it.device!!, pn!!, pr.toLong(), pw.toLong(), value)
                 startrun = Date()
                 logger.debug("URL ${url}")
                 state = "Set port ${url}"
                 var setportreturn = httpService.get(url)
-                if (setportreturn != null) {
-                    state = "Set port ok ${setportreturn}"
-                } else
-                    state = "Setport error ${setportreturn}"
+                var status = om.readValue<Status>(setportreturn)
+                state = "Set port:${pn}  to ${pr}  value : ${value} ok "
             }
         }
     }
@@ -139,111 +139,8 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
     }
 
 
-    fun go() {//Run
-        var ee = Executors.newSingleThreadExecutor()
-        state = "Run set port "
-        var ports = pijob.ports
-        logger.debug("Ports ${pijob.job?.name} ${ports}")
-        if (ports != null)
-            for (port in ports) {
-                if (port.enable == null || !port.enable!!) {
-                    logger.debug("Port disable ${port}")
-                    continue //ข้ามไปเลย
-                }
-                var pw = port.waittime
-                var pr = port.runtime
-                var pn = port.portname!!.name
-                var v = port.status
 
-                var portname = pn
-                var runtime = 0L
-                if (pr != null) {
-                    runtime = pr.toLong()
-                } else if (pijob.runtime != null) {
-                    runtime = pijob.runtime!!
-                }
-                var waittime = 0L
-                if (pw != null) {
-                    waittime = pw.toLong()
-                } else if (pijob.waittime != null) {
-                    waittime = pijob.waittime!!
-                }
-                var value = 0
-                if (v != null && v.name != null) {
-                    if (v.name.equals("high") || v.name?.indexOf("1") != -1) {
-                        value = 1
-                    } else value = 0
-                } else {
-                    if (v != null)
-                        state = "Value to set ERROR ${v.name}"
-                    else
-                        state = "Port state Error is Null"
 
-                    TimeUnit.SECONDS.sleep(5)
-                }
-
-                try {
-                    var url = ""
-
-                    try {
-                        if (port.device != null)
-                            url = findUrl(port.device!!, portname!!, runtime, waittime, value)
-                        else
-                            url = findUrl(portname!!, runtime, waittime, value)
-                    } catch (e: Exception) {
-                        logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
-                        TimeUnit.SECONDS.sleep(10)
-                    }
-//                    logger.debug("URL ${url}")
-                    startrun = Date()
-                    logger.debug("URL ${url}")
-                    state = "Set port ${url}"
-                    var get = HttpGetTask(url)
-                    var f = ee.submit(get)
-                    try {
-                        var value = f.get(30, TimeUnit.SECONDS)
-                        state = "Delay  ${runtime} + ${waittime}"
-                        logger.debug("D1h Value ${value}")
-                        state = "${value} and run ${runtime}"
-                        if (value == null) {
-
-                            //ไม่ต้อง run ละออกเลยและไม่ต้อง delay ให้พยามใหม่
-//                            isRun=false
-                            state = "Can not connect to Target ${port.device}"
-                        } else {
-                            TimeUnit.SECONDS.sleep(runtime)
-
-                            if (waittime != null) {
-                                state = "Wait time of port ${waittime}"
-                                TimeUnit.SECONDS.sleep(waittime)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        logger.error("Set port error  ${e.message}")
-//                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
-                    }
-                } catch (e: Exception) {
-                    logger.error("Error 2 ${e.message}")
-                    state = " Error 2 ${e.message}"
-                    ee.shutdownNow()
-                    TimeUnit.SECONDS.sleep(10)
-                }
-            }
-
-        state = "Set port ok "
-    }
-
-    fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
-        if (pijob.desdevice != null) {
-            var ip = ips.findByMac(pijob.desdevice!!.mac!!)
-            if (ip != null) {
-                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
-                return url
-            }
-        }
-
-        throw Exception("Error Can not find url")
-    }
 
     fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
         if (pijob.desdevice != null) {
@@ -267,36 +164,6 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         return "name ${pijob.name}"
     }
 
-    fun checkgroup(job: Pijob): Pijob? {
-        var runs = task.runinglist
-        for (run in runs) {
-            if (run is D1hjobWorker) {
-                //ถ้า job รอแล้ว
-                logger.debug("Wait status is ${run.waitstatus} RunGROUPID ${run.pijob.pijobgroup_id} " +
-                        "JOBGROUPID ${job.pijobgroup_id} ")
-
-                if (/*ทำงานอยู่*/run.isRun && /*อยู่ในการพักอยู่*/ !run.waitstatus &&
-                        /*ไม่ใช่ตัวเอง*/run.getPijobid().toInt() != job.id.toInt()) {
-                    if (run.pijob.pijobgroup_id?.toInt() == job.pijobgroup_id?.toInt()) {
-                        return null //อยู่ในกลุ่มเดียวกัน
-                    }
-                }
-            } else if (run is D1portjobWorker) {
-                //ถ้า job รอแล้ว
-                logger.debug("Wait status is ${run.waitstatus} RunGROUPID ${run.pijob.pijobgroup_id} " +
-                        "JOBGROUPID ${job.pijobgroup_id} ")
-
-                if (/*ทำงานอยู่*/run.isRun && /*อยู่ในการพักอยู่*/ !run.waitstatus &&
-                        /*ไม่ใช่ตัวเอง*/run.getPijobid().toInt() != job.id.toInt()) {
-                    if (run.pijob.pijobgroup_id?.toInt() == job.pijobgroup_id?.toInt()) {
-                        return null //อยู่ในกลุ่มเดียวกัน
-                    }
-                }
-            }
-        }
-        logger.debug("No Job in this group run ${job}")
-        return job
-    }
 
 
     companion object {

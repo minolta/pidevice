@@ -38,7 +38,6 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
     override fun run() {
         var p = 0.0
         try {
-
             startRun = Date()
             status = "Start run : ${Date()}"
             isRun = true

@@ -47,7 +47,8 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                             }
                             logger.debug("R is ${r}")
                         }
-                        if (r) {
+                        if (r && !task.checkrun(it)) {
+
                             var t = D1portjobWorker(it, pjs, httpService, task, ips)
                             var run = task.run(t)
                             logger.debug("Can run ${run}")
@@ -67,7 +68,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
         try {
             var bufs = ArrayList<PorttoCheck>()
             var c = p.description?.split(",")
-            D1portjobWorker.logger.debug("C: ${c}")
+            logger.debug("C: ${c}")
             if (c.isNullOrEmpty()) {
                 return null
             }
@@ -76,7 +77,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
             var ii = 1
 
             c.map {
-                D1portjobWorker.logger.debug("Value : ${it}")
+                logger.debug("Value : ${it}")
                 if (it.toIntOrNull() == null)
                     c1.name = it
                 else {
@@ -90,7 +91,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
 
         } catch (e: Exception) {
-            D1portjobWorker.logger.debug("ERROR ${e.message}")
+            logger.debug("ERROR ${e.message}")
         }
         return null
     }
