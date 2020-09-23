@@ -234,11 +234,12 @@ class CDWorker(var pj: Pijob, val ss: SensorService, var gi: GpioService,
             var desid = pijob.desdevice_id
             var sensorid = pijob.ds18sensor_id
 
-            var value = i.readDs18(pijob.ds18sensor?.name!!)
+//            var value = i.readDs18(pijob.ds18sensor?.name!!)
+            var value = i.readDs18()
             if (value == null) {
                 var dsvalue = ss.readDsOther(desid!!, sensorid!!)
                 if (dsvalue != null) {
-                    value = dsvalue.t
+                    value = dsvalue.t!!
                 }
             }
 

@@ -11,19 +11,18 @@ import me.pixka.kt.pidevice.s.Tmpobj
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1tjobWorker
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
-import java.util.concurrent.CompletableFuture
-import java.util.function.Supplier
 
 @Component
 class Runtjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService, val ips: IptableServicekt,
                   val dhs: Dhtutil, val httpService: HttpService, val psij: PortstatusinjobService,
-                  val readUtil: ReadUtil, val findJob: FindJob, val readtmp: ReadTmpService) {
+                  val readUtil: ReadUtil, val findJob: FindJob, val readtmp: ReadTmpService, val lgs: LogService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 1000)
@@ -43,17 +42,21 @@ class Runtjobbyd1(val pjs: PijobService,
                                 var t = om.readValue<Tmpobj>(re)
                                 if (checktmp(t, job)) {
                                     var testjob = pjs.findByRefid(job.runwithid)
-                                    var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService)
+                                    var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService,lgs)
                                     var run = task.run(t)
                                 }
                             }
                         }
                     } catch (e: Exception) {
+                        lgs.createERROR("${job.name} ${e.message}",Date())
                         logger.error("${job.name} ${e.message}")
                     }
                 }
             }
         } catch (e: Exception) {
+            lgs.createERROR("${e.message}" ,Date(),"Runtjobbyd1",""
+                    ,""
+                    ,"run")
             logger.error(e.message)
         }
     }
@@ -75,25 +78,19 @@ class Runtjobbyd1(val pjs: PijobService,
     }
 
     fun readtmp(job: Pijob) {
-        CompletableFuture.supplyAsync(Supplier {
+        try {
             var tmp = readtmp.readTmp(job.desdevice?.ip!!)
-            tmp
-        }).thenApply {
-            var run = checktmp(it, job)
-            run
-        }.thenApply {
-            var run = false
-            if (it) {
-                var testjob = pjs.findByRefid(job.runwithid)
-                var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService)
-                run = task.run(t)
-            }
-
+            var run = checktmp(tmp, job)
+            var testjob = pjs.findByRefid(job.runwithid)
+            var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService,lgs)
+            run = task.run(t)
             if (run)
                 println("Run JOB:${job.name}")
             else
                 println("Not run ${job.name}")
-        }.exceptionally { t -> println("Run error :" + t.message) }
+        } catch (e: Exception) {
+            lgs.createERROR("ERROR Cehck tmp ${e.message}",Date())
+        }
     }
 
 

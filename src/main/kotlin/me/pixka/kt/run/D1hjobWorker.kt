@@ -3,26 +3,24 @@ package me.pixka.kt.run
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
-import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.HttpService
-import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.log.d.LogService
+import me.pixka.log.d.Logsevent
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
 import java.util.*
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class D1hjobWorker(var pijob: Pijob,
                    val dhts: Dhtutil, val httpService: HttpService,
-                   val task: TaskService, val ntfs: NotifyService)
+                   val task: TaskService, val ntfs: NotifyService, val lgs: LogService)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
@@ -106,8 +104,10 @@ class D1hjobWorker(var pijob: Pijob,
             return
         } catch (e: Exception) {
             isRun = false
+            exitdate = task.findExitdate(pijob)
             logger.error("ERROR 1 ${e.message}")
             state = "ERROR 1 ${e.message}"
+            lgs.createERROR("ERROR 1 ${e.message}",Date())
             waitstatus = true
             throw e
         }
@@ -144,7 +144,6 @@ class D1hjobWorker(var pijob: Pijob,
         logger.debug("Ports ${ports}")
         if (ports != null)
             for (port in ports) {
-
                 if (port.enable == null || !port.enable!!) {
                     logger.debug("Port disable ${port}")
                     continue //ข้ามไปเลย
@@ -170,7 +169,6 @@ class D1hjobWorker(var pijob: Pijob,
                 var value = getLogic(v)
                 try {
                     var url = ""
-
                     try {
                         if (port.device != null)
                             url = findUrl(port.device!!, portname!!, runtime, waittime, value)
@@ -178,6 +176,7 @@ class D1hjobWorker(var pijob: Pijob,
                             url = findUrl(portname!!, runtime, waittime, value)
                     } catch (e: Exception) {
                         logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
+                        lgs.createERROR("Find URL ERROR ${e.message} port: ${port} portname ${portname}",Date())
                         state = "Find URL ERROR ${e.message} port: ${port} portname ${portname}"
                     }
                     startrun = Date()
@@ -204,6 +203,7 @@ class D1hjobWorker(var pijob: Pijob,
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")
                     state = " Error 2 ${e.message}"
+                    lgs.createERROR(" Error 2 ${e.message}",Date())
                     isRun = false
                     waitstatus = true //หยุดใช้น้ำแล้ว
                     break //ออกเลย
@@ -220,6 +220,7 @@ class D1hjobWorker(var pijob: Pijob,
     fun haveError(token: String?, e: Exception) {
         logger.error("Set port error  ${e.message}")
         state = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
+        lgs.createERROR("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}",Date())
         if (token != null)
             ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name} ", token)
         else
@@ -281,24 +282,5 @@ class D1hjobWorker(var pijob: Pijob,
         return "name ${pijob.name}"
     }
 
-    fun checkgroup(job: Pijob): Pijob? {
-        var runs = task.runinglist
 
-        for (run in runs) {
-            if (run is D1hjobWorker) {
-                //ถ้า job รอแล้ว
-                logger.debug("Wait status is ${run.waitstatus} RunGROUPID ${run.pijob.pijobgroup_id} " +
-                        "JOBGROUPID ${job.pijobgroup_id} ")
-
-                if (/*ทำงานอยู่*/run.isRun && /*อยู่ในการพักอยู่*/ !run.waitstatus &&
-                        /*ไม่ใช่ตัวเอง*/run.getPijobid().toInt() != job.id.toInt()) {
-                    if (run.pijob.pijobgroup_id?.toInt() == job.pijobgroup_id?.toInt()) {
-                        return null //อยู่ในกลุ่มเดียวกัน
-                    }
-                }
-            }
-        }
-        logger.debug("No Job in this group run ${job}")
-        return job
-    }
 }

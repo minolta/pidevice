@@ -13,6 +13,7 @@ import me.pixka.kt.run.D1portjobWorker
 import me.pixka.kt.run.DPortstatus
 import me.pixka.kt.run.GroupRunService
 import me.pixka.kt.run.PorttoCheck
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -23,8 +24,8 @@ import java.util.concurrent.CompletableFuture
 class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                   val js: JobService,
                   val task: TaskService, val ips: IptableServicekt,
-                  val dhs: Dhtutil, val httpControl: HttpControl, val httpService: HttpService,
-                  val dhtvalueService: DhtvalueService, val groups: GroupRunService) {
+                  val dhs: Dhtutil, val httpControl: HttpControl,
+                  val httpService: HttpService, val lgs:LogService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 1000)
@@ -56,11 +57,15 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                     }catch (e:Exception)
                     {
                         logger.error("ERROR Set port ${it.name}  ERROR ${e.message}")
+                        lgs.createERROR("ERROR Set port ${it.name}  ERROR ${e.message}",Date(),
+                        "RunportByd1","","","run")
                     }
                 }
             }
         } catch (e: Exception) {
             logger.error("Read h by d1 ERROR ${e.message}")
+            lgs.createERROR("Read h by d1 ERROR ${e.message}",Date(),
+            "RunportByd1","","","run")
         }
     }
 
@@ -91,6 +96,8 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
 
         } catch (e: Exception) {
+            lgs.createERROR("ERROR ${e.message}",Date(),"RunportByd1",
+            "","","getPorttocheck")
             logger.debug("ERROR ${e.message}")
         }
         return null
@@ -109,33 +116,13 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
         } catch (e: Exception) {
             logger.error("Get Sensor status JOB NAME IP:${ip} URL:${url} ${p.name} ${e.message} Des name:${p.desdevice}  ")
+            lgs.createERROR("Get Sensor status JOB NAME IP:${ip} URL:${url} ${p.name} ${e.message} Des name:${p.desdevice}  ",
+                    Date(),"RunportByd1","","","getSensorstatus")
             throw e
         }
         return null
     }
 
-    fun Checkrun(job: Pijob) {
-        CompletableFuture.supplyAsync { // ตรวจสอบก่อนว่า Run ได้เปล่า
-            var checks = getPorttocheck(job)
-            var sensorstatus = getSensorstatus(job)
-            var r = false
-            if (checks != null) {
-                for (c in checks) {
-                    r = r || getsensorstatusvalue(c.name!!, c.check!!, sensorstatus!!)
-                }
-                logger.debug("R is ${r}")
-            }
-            r
-        }.thenApply {
-            if (it) {
-                var t = D1portjobWorker(job, pjs, httpService, task, ips)
-                var run = task.run(t)
-                logger.debug("Can run ${run}")
-            }
-        }.exceptionally {
-            logger.error(it.message)
-        }
-    }
 
     fun getsensorstatusvalue(n: String, c: Int, sensorstatus: DPortstatus?): Boolean {
         val nn = n.toLowerCase()
@@ -166,48 +153,13 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                     return true
             }
         } catch (e: Exception) {
+            lgs.createERROR("ERROR in getsensorstatusvalue message: ${e.message}",Date())
             logger.error("ERROR in getsensorstatusvalue message: ${e.message}")
         }
 
 
         return false
     }
-//    var df = SimpleDateFormat("HH:mm")
-//    fun checktime(job: Pijob): Boolean {
-//        try {
-////            df.timeZone = TimeZone.getTimeZone("+0700")
-//            var n = df.format(Date())
-//
-//            var now = df.parse(n)
-//            logger.debug("checktime N:${n} now ${now} now time ${now.time}")
-//            logger.debug("checktime s: ${job.stimes} ${now} e:${job.etimes}")
-//            if (job.stimes != null && job.etimes != null) {
-//                var st = df.parse(job.stimes).time
-//                var et = df.parse(job.etimes).time
-//                logger.debug("checktime ${st} <= ${now} <= ${et}")
-//                if (st <= now.time && now.time <= et)
-//                    return true
-//            } else if (job.stimes != null && job.etimes == null) {
-//                var st = df.parse(job.stimes).time
-//                logger.debug("checktime ${st} <= ${now} ")
-//                if (st <= now.time)
-//                    return true
-//            } else if (job.stimes == null && job.etimes != null) {
-//                var st = df.parse(job.etimes).time
-//                logger.debug("checktime ${st} >= ${now}")
-//                if (st <= now.time)
-//                    return true
-//            } else {
-//                logger.debug("${job.name} checktime not set ")
-//                return true
-//            }
-//        } catch (e: Exception) {
-//            logger.error("checktime ${e.message}")
-//        }
-//
-//        return false
-//    }
-
     fun loadjob(): List<Pijob>? {
         var job = js.findByName("runportbyd1")
 

@@ -9,10 +9,10 @@ import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.CheckTimeService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.OffpumpWorker
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture
 @Component
 class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: HttpService,
                  val js: JobService,val checkTimeService: CheckTimeService,
-                 val task: TaskService, val ips: IptableServicekt
+                 val task: TaskService, val ips: IptableServicekt,val lgs:LogService
 ) {
 
 
@@ -34,7 +34,7 @@ class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: H
             if (jobs != null) {
                 for (job in jobs) {
                     if(checkTimeService.checkTime(job, Date()) && !task.checkrun(job)) {
-                        var offpumpWorker = OffpumpWorker(job, httpService, ips)
+                        var offpumpWorker = OffpumpWorker(job, httpService, ips,lgs)
                         if(!task.run(offpumpWorker))
                         {
                             logger.error("Can not Run ${job.name}")
@@ -62,7 +62,7 @@ class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: H
                     it.getPijobid() == job.id && it.runStatus()
                 }
                 if (haverun == null) {
-                    var offpumpWorker = OffpumpWorker(job, httpService, ips)
+                    var offpumpWorker = OffpumpWorker(job, httpService, ips, lgs)
                     task.run(offpumpWorker)
                 }
             }

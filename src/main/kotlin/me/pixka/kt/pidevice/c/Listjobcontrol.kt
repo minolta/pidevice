@@ -264,6 +264,14 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     @CrossOrigin
+    @RequestMapping(value = ["/liststask"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun listSC()
+    {
+
+    }
+
+    @CrossOrigin
     @RequestMapping(value = ["/listpool"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun listpool(): ArrayList<tl> {

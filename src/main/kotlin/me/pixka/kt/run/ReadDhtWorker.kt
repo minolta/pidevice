@@ -10,11 +10,12 @@ import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.util.*
 
 class ReadDhtWorker(pijob: Pijob, val dhtvalueService: DhtvalueService,val pds:PideviceService,
-                    val httpService: HttpService,val ips:IptableServicekt)
+                    val httpService: HttpService,val ips:IptableServicekt,val lgs:LogService)
     : DefaultWorker(pijob, null, null, null, logger) {
     var exitdate: Date? = null
     val om = ObjectMapper()
@@ -52,6 +53,7 @@ class ReadDhtWorker(pijob: Pijob, val dhtvalueService: DhtvalueService,val pds:P
             }
         } catch (e: Exception) {
             logger.error("Read DHT task Error ${e.message}")
+            lgs.createERROR("Read DHT task Error ${e.message}",Date(),"ReadDhtWorker",Thread.currentThread().name,"run")
             status = "ERROR ${e.message}"
             isRun = false
         }

@@ -32,7 +32,6 @@ class PideviceApplication {
         taskScheduler.poolSize = 250
         taskScheduler.threadNamePrefix = "SS-"
 
-
         return taskScheduler
     }
 

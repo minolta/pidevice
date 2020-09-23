@@ -11,6 +11,7 @@ import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.DustWorker
+import me.pixka.log.d.LogService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
@@ -18,7 +19,7 @@ import java.util.concurrent.CompletableFuture
 
 @Component
 class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: IptableServicekt,
-                 val task: TaskService,val ps:PortstatusinjobService) {
+                 val task: TaskService,val ps:PortstatusinjobService,val lgs:LogService) {
 
     val om = ObjectMapper()
 

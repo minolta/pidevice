@@ -223,7 +223,7 @@ class Workercounter(var pijob: Pijob, var ps: PortstatusinjobService,
             var s = dss.find(job.ds18sensor_id!!)
             logger.debug("Found Sensor !! ${s}")
             if (s != null) {
-                var tmp = io.readDs18(s.name!!)
+                var tmp = io.readDs18()
                 logger.debug("Read loacal value ${tmp}")
                 // var tmp = rs.readTmpByjob(job)
                 if (tmp != null) {

@@ -8,6 +8,7 @@ import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Pmdata
 import me.pixka.kt.run.ReaddustWorker
+import me.pixka.log.d.LogService
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,6 +27,9 @@ class TestReaddustWorker {
     val om = ObjectMapper()
 
     @Autowired
+    lateinit var lgs: LogService
+
+    @Autowired
     lateinit var ts: TaskService
 
     @Autowired
@@ -39,6 +43,7 @@ class TestReaddustWorker {
 
     @Autowired
     lateinit var jobService: JobService
+
     @Autowired
     lateinit var httpService: HttpService
 
@@ -88,7 +93,7 @@ class TestReaddustWorker {
         if (jobs != null) {
             jobs.forEach {
 
-                var t = ReaddustWorker(it, "192.168.89.243", service,httpService, om, pideviceService)
+                var t = ReaddustWorker(it, "192.168.89.243", service, httpService, om, pideviceService, lgs)
                 Assertions.assertEquals(true, ts.run(t))
 
             }
@@ -108,13 +113,13 @@ class TestReaddustWorker {
         if (jobs != null) {
             jobs.forEach {
 
-                var t = ReaddustWorker(it, "192.168.89.243", service, httpService,om, pideviceService)
+                var t = ReaddustWorker(it, "192.168.89.243", service, httpService, om, pideviceService,lgs)
                 var ee = Executors.newSingleThreadExecutor()
                 var f = ee.submit(t)
                 var rr = f.get()
-                if(it.runtime!=null)
+                if (it.runtime != null)
                     TimeUnit.SECONDS.sleep(it.runtime!!)
-                if(it.waittime!=null)
+                if (it.waittime != null)
                     TimeUnit.SECONDS.sleep(it.waittime!!)
 
                 println("RRRRRRRRRRRRRR${rr}")

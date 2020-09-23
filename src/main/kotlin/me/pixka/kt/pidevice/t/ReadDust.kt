@@ -8,12 +8,15 @@ import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.ReaddustWorker
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.*
+
 @Component
-class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmService,val httpService: HttpService,
-               val iptableServicekt: IptableServicekt, val pideviceService: PideviceService) {
+class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmService, val httpService: HttpService,
+               val iptableServicekt: IptableServicekt, val pideviceService: PideviceService, val lgs: LogService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 1000)
@@ -27,24 +30,24 @@ class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmServi
                 try {
                     var i = iptableServicekt.findByMac(it.desdevice?.mac!!)
                     if (i != null) {
-                        if(!ts.checkrun(it)) {
-                            var r = ReaddustWorker(it, i.ip!!, pmService, httpService ,om, pideviceService)
+                        if (!ts.checkrun(it)) {
+                            var r = ReaddustWorker(it, i.ip!!, pmService, httpService, om, pideviceService,lgs)
                             ts.run(r)
                             logger.debug("Run read dust (${it.name}): " + ts.run(r))
                         }
                     } else {
+                        lgs.createERROR("No Ip  ${it.name}", Date(), "ReadDust", "", "39", "run")
                         logger.error("Not have ip")
                     }
                 } catch (e: Exception) {
-                    logger.error("ERROR:"+e.message)
+                    logger.error("ERROR:" + e.message)
+                    lgs.createERROR("ERROR  ${e.message}", Date(), "ReadDust", "", "39", "run")
+
                 }
-//                if(it.runtime!=null)
-//                    TimeUnit.SECONDS.sleep(it.runtime!!)
-//                if(it.waittime!=null)
-//                    TimeUnit.SECONDS.sleep(it.waittime!!)
             }
         } else {
-            logger.error("read dust job not found")
+            logger.debug("read dust job not found")
+
         }
 
     }

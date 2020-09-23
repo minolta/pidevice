@@ -259,7 +259,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             logger.debug("5 Read Temp from ${localsensor} ")
             var v = null
             try {
-                var v = io.readDs18(localsensor.name!!)
+                var v = io.readDs18()
             } catch (e: Exception) {
                 logger.error("6 ${e.message}")
                 throw e

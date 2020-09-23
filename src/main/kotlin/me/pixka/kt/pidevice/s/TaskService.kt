@@ -35,7 +35,7 @@ class TaskService(val context: ApplicationContext) {
                 return true
             } else {
                 //มี job นี้ run อยู่แล้ว
-                logger.error("Have This job run already ${forrun}")
+                logger.warn("Have This job run already ${forrun}")
                 return false
             }
         } catch (e: Exception) {

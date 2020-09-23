@@ -8,17 +8,18 @@ import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.u.ReadUtil
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.util.*
 
 
 class D1tjobWorker(p: Pijob,
                    val readvalue: ReadUtil, val pijs: PortstatusinjobService, var test: Pijob? = null,
-                   var ips: IptableServicekt,var httpService: HttpService)
+                   var ips: IptableServicekt, var httpService: HttpService, val lgs: LogService)
     : DefaultWorker(p, null, readvalue, pijs, logger) {
     var exitdate: Date? = null
     var totalrun = 0
-    var totalwait  = 0
+    var totalwait = 0
     var om = ObjectMapper()
     fun findExitdate(pijob: Pijob): Date? {
         var t = 0L
@@ -28,7 +29,7 @@ class D1tjobWorker(p: Pijob,
         if (pijob.runtime != null)
             t += pijob.runtime!!
 
-        t = t + totalwait +totalrun  //ต้อง ลบ 5 มันทำงานเร็วขึ้น
+        t = t + totalwait + totalrun  //ต้อง ลบ 5 มันทำงานเร็วขึ้น
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, t.toInt())
         var exitdate = calendar.time
@@ -58,6 +59,7 @@ class D1tjobWorker(p: Pijob,
             }
         } catch (e: Exception) {
             logger.error(e.message)
+            lgs.createERROR("${e.message}", Date(), "D1tjobWorker", "", "","run")
             isRun = false
             status = "D1tjobWorker ${pijob.name} error ${e.message}"
             throw e
@@ -81,19 +83,20 @@ class D1tjobWorker(p: Pijob,
                 var runtime = it.runtime
                 var waittime = it.waittime
 
-                if(runtime!=null && runtime!!>totalrun)
+                if (runtime != null && runtime > totalrun)
                     totalrun = runtime
-                if(waittime!=null && waittime >totalwait)
-                    totalwait  = waittime
+                if (waittime != null && waittime > totalwait)
+                    totalwait = waittime
 
                 var portname = it.portname?.name
                 var value = it.status
                 var url = "http://${ip?.ip}/run?port=${portname}&value=${value?.toInt()}&delay=${runtime}&waittime=${waittime}"
-                var re =  httpService.get(url)
+                var re = httpService.get(url)
                 var s = om.readValue<Status>(re)
 
                 status = "Set port ${portname} to ${value?.toInt()} run ${runtime} wait${waittime} Status :${s.status}"
             } catch (e: Exception) {
+                lgs.createERROR("ERROR ${pijob.name} ${e.message}", Date(), "D1tjobWorker", "", "", "setPort")
                 status = "ERROR ${pijob.name} ${e.message}"
             }
         }
@@ -111,41 +114,16 @@ class D1tjobWorker(p: Pijob,
                 return re
             }
             return true // ถ้าไม่กำหนด run with ก็ run เลย
-
         } catch (e: Exception) {
+            lgs.createERROR("D1tjobWorker ${pijob.name} Error runwith() ${e.message}", Date(),"D1tjobWorker"
+                    ,pijob.name,"runwith")
             logger.error("D1tjobWorker ${pijob.name} Error runwith() ${e.message}")
             throw  e
         }
         return false
     }
 
-    fun checktmp(p: Pijob): Boolean {
-        logger.debug("D1tjobWorker checktmp ${pijob.name} Check temp ${p}")
-        status = "${pijob.name} checktmp Check temp ${p}"
-        try {
-            var v = readUtil?.readTfromD1Byjob(p)
-            logger.debug("${pijob.name} value from Readtmp ${v} checktmp")
-            status = "${pijob.name} value from Readtmp ${v} "
-            var l = p.tlow?.toDouble()
-            var h = p.thigh?.toDouble()
-            var now = v?.t?.toDouble()
-            logger.debug("${pijob.name} temp check ${l} < ${v} < ${h} checktmp")
-            status = "${pijob.name} temp check ${l} < ${v} < ${h}"
-            if (l != null && h != null && now != null) {
-                if (l <= now && now <= h) {
-                    logger.debug("${pijob.name} In rang can run")
-                    return true //in rang
-                }
 
-            }
-            logger.debug("${pijob.name}  Out of rang checktmp")
-            return false
-        } catch (e: Exception) {
-            logger.error("${pijob.name} Check temp ${e.message} checktmp")
-            status = "${pijob.name} Check temp ${e.message} checktmp"
-            throw e
-        }
-    }
 
     var startrun: Date? = null
 

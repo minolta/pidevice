@@ -10,13 +10,14 @@ import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
 class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val httpService: HttpService,
-                        val ips: IptableServicekt, val ntfs: NotifyService)
+                        val ips: IptableServicekt, val ntfs: NotifyService, var lgs: LogService)
     : PijobrunInterface, Runnable {
     companion object {
         internal var logger = LoggerFactory.getLogger(CheckActiveWorker::class.java)
@@ -62,14 +63,14 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
     fun check(ip: String, token: String? = null, device: PiDevice): Boolean {
         logger.debug("checkactive ${ip}")
         try {
-
-
             var re = httpService.get("http://${ip}")
             var status = om.readValue<Status>(re, Status::class.java)
             state = "Device:${device.name} uptime :${status.uptime} ative ok."
             if (status.errormessage != null) {
                 //ถ้า มี ERROR MESSAGE ให้ ส่งเข้า line เลย
                 if (status.errormessage?.isNotEmpty()!!) {
+                    lgs.createERROR("Have ERROR  ${device.name} ${pijob.name} ${status.errormessage}", Date(),
+                            "CheckActiveWoterk",pijob.name,"72")
                     if (token != null)
                         ntfs.message("Have ERROR  ${device.name} ${pijob.name} ${status.errormessage}", token)
                     else
@@ -78,7 +79,8 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
                 }
             }
         } catch (e: Exception) {
-            logger.error("Error  ${e.message}")
+            logger.error("Error  ${pijob.name}  ${device.name} ${e.message}")
+            lgs.createERROR("Error  ${pijob.name}  ${device.name} ${e.message}",Date(),"Checkactive","83")
             if (token != null)
                 ntfs.message("device not respone ${device.name} ${pijob.name} ${e.message}", token)
             else
@@ -128,20 +130,9 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
                 }
             }
 
-//            var p = pijob.runtime
-//            if (p != null) {
-//                state = "Runtime ${p.toLong()}"
-//                TimeUnit.SECONDS.sleep(p.toLong())
-//            }
-//
-//            var w = pijob.waittime
-//            if (w != null) {
-//                state = "Wait ${w.toLong()}"
-//                TimeUnit.SECONDS.sleep(w.toLong())
-//            }
-
         } catch (e: Exception) {
             logger.error(e.message)
+            lgs.createERROR("Error ${e.message} ${pijob.name}",Date())
             state = "Error ${e.message} ${pijob.name}"
         }
 
@@ -159,7 +150,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Status(var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
              var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
-             var version: String? = null, var errormessage: String? = null,var status:String?=null) {
+             var version: String? = null, var errormessage: String? = null, var status: String? = null) {
     override fun toString(): String {
         return "${name} ${message} ${ssid} ${version} ${t} ${h} ${ip}"
     }

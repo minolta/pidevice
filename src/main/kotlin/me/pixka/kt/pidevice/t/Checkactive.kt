@@ -9,6 +9,7 @@ import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.CheckActiveWorker
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Component
 @Component
 class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskService,
                   val ps: PortstatusinjobService, val httpService: HttpService,
-                  val ips: IptableServicekt, val ntfs: NotifyService) {
+                  val ips: IptableServicekt, val ntfs: NotifyService,val lgs:LogService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Checkactive::class.java)
     }
@@ -34,13 +35,14 @@ class Checkactive(val js: JobService, val pjs: PijobService, val task: TaskServi
                                 it.getPijobid() == j.id && it.runStatus()
                             } == null) {
 
-                        var t = CheckActiveWorker(j, ps, httpService, ips, ntfs)
+                        var t = CheckActiveWorker(j, ps, httpService, ips, ntfs,lgs)
                         var run = task.run(t)
                         logger.debug("Run ${run}")
                         if (run)
                             logger.debug("Run job checkactive ${j.name}")
                         else
                             logger.warn("Can not run job ${j.name}")
+
                     }
 
                 }

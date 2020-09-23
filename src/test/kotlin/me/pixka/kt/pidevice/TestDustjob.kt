@@ -7,7 +7,6 @@ import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
-import me.pixka.kt.pidevice.worker.Dustworker
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

@@ -15,6 +15,8 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.run.D1hjobWorker
 import me.pixka.kt.run.GroupRunService
+import me.pixka.log.d.LogService
+import me.pixka.log.d.Logsevent
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -26,18 +28,29 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                   val js: JobService,
                   val task: TaskService,
                   val dhs: Dhtutil, val httpControl: HttpControl,
-                  val iptableServicekt: IptableServicekt, val groups: GroupRunService,
+                  val iptableServicekt: IptableServicekt, val groups: GroupRunService,val lgs:LogService,
                   val ntfs: NotifyService, val queue: QueueService, val httpService: HttpService) {
     val om = ObjectMapper()
 
-    @Scheduled(fixedDelay = 2000)
-    fun run() {
+    fun rQ()
+    {
         try {
             queue.printqueue()
             //ถ้ามี job ใน คิวให้้ run ให้หมดก่อน
             if (queue.size() > 0) {
                 runQueue()//พยาม run ที่อยู่ในคิวก่อน
             }
+        }catch (e:Exception)
+        {
+            logger.error("ERROR ${e.message}")
+        }
+    }
+    @Scheduled(fixedDelay = 2000)
+    fun run() {
+
+        rQ()
+        try {
+
             //Run ปกติ
             var list = findJob.loadjob("runhbyd1")
             list?.forEach {
@@ -49,9 +62,18 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                             if (h != null) {
                                 if (checkHtorun(it, h)) {
                                     if (groups.c(job)) {//ไม่มี job run อยู่ และในกลุม run ไม่มีใครใช้น้ำ
-                                        var t = D1hjobWorker(job, dhs, httpService, task, ntfs)
+                                        var t = D1hjobWorker(job, dhs, httpService, task, ntfs,lgs)
                                         var run = task.run(t)
                                         logger.debug("H job is run ${run}")
+
+                                        //ถ้าการ run อยู่จะเอาเข้าคิว
+                                        if(!run && !queue.inqueue(job))
+                                        {
+                                            queue.addtoqueue(job)
+                                            logger.debug("Add to queue ${job}")
+                                        }
+
+
                                     } else {//ถ้ามี job run อยู่แล้วก็ไปดูในคิวว่ามีเปล่า
                                         if (!queue.inqueue(job)) {
                                             queue.addtoqueue(job)
@@ -104,11 +126,10 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
     }
 
 
-    fun runfromQ(q:Qobject) {
-        var t = D1hjobWorker(q.pijob!!, dhs, httpService, task, ntfs)
+    fun runfromQ(q: Qobject) {
+        var t = D1hjobWorker(q.pijob!!, dhs, httpService, task, ntfs, lgs)
         var run = task.run(t)
         if (run) {
-
             q.message = "Run !! remove from Queue"
             q.addDate = Date()
             removeJobFromQ(q.pijob!!)
@@ -116,8 +137,12 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
     }
 
     fun removeJobFromQ(job: Pijob) {
-        var removed = queue.remove(job)
-        logger.debug("Remove ${job.name} from queue is ${removed}")
+        try {
+            var removed = queue.remove(job)
+            logger.debug("Remove ${job.name} from queue is ${removed}")
+        } catch (e: Exception) {
+            logger.error("Remove Q ${job.name} ERROR ${e.message}")
+        }
     }
 
     /**
@@ -135,8 +160,9 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                     logger.error("Some job use water")
                 }
             } else {//ถ้า job เกินเวลาแล้วเอาออกเลย
+                q.message = "Out of date !! ${q.pijob?.stimes} - ${q.pijob?.etimes}"
                 removeJobFromQ(q.pijob!!)
-                q.message ="Out of date !! ${q.pijob?.stimes} - ${q.pijob?.etimes}"
+
             }
 
         }
@@ -166,10 +192,20 @@ class QueueService {
     }
 
     fun remove(p: Pijob): Boolean {
-        var toremove = queue.find { it.pijob?.id == p.id }
-        if (toremove != null)
-            return queue.remove(toremove)
-        return false
+        var toremove: Qobject? = null
+        try {
+            toremove = queue.find { it.pijob?.id == p.id }
+            if (toremove != null)
+                return queue.remove(toremove)
+            return false
+        } catch (e: Exception) {
+            logger.error("ERROR remove h job ${p.name} ${e.message}")
+            if(toremove!=null)
+            {
+                toremove.message = e.message
+            }
+            throw e
+        }
     }
 
     fun size(): Int {
@@ -181,12 +217,12 @@ class QueueService {
      */
     fun addtoqueue(job: Pijob): Boolean {
         if (queue.size == 0) {
-            queue.add(Qobject(job,Date()))
+            queue.add(Qobject(job, Date()))
             logger.debug("Add ${job.name} to queue")
             return true
         }
         if (queue.find { job.id.toInt() == it.pijob?.id?.toInt() } == null) {
-            queue.add(Qobject(job,Date()))
+            queue.add(Qobject(job, Date()))
             logger.debug("Add more ${job.name} to  queue")
             return true
         }

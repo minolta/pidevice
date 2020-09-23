@@ -6,18 +6,15 @@ import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.HttpService
-import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
-import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class OffpumpWorker(var pijob: Pijob,
                     val httpService: HttpService,
-                    val ips:IptableServicekt) : PijobrunInterface, Runnable {
+                    val ips: IptableServicekt,
+                    val lgs: LogService) : PijobrunInterface, Runnable {
     var state: String = "init"
     var isRun = false
     var startrun: Date? = null
@@ -79,11 +76,15 @@ class OffpumpWorker(var pijob: Pijob,
                 state = "Off pumb is ok ${status.uptime} Power is off ok."
             } catch (e: Exception) {
                 logger.error("Off pumb error  offpump ${e.message} ${pijob.name}")
+                lgs.createERROR("Off pumb error  offpump ${e.message} ${pijob.name}",Date(),
+                "OffpumpWorker","","","run")
                 state = "Off pumb error  offpump ${e.message} ${pijob.name}"
                 isRun = false
             }
         } catch (e: Exception) {
             logger.error("offpump ${e.message} ${pijob.name}")
+            lgs.createERROR("offpump ${e.message} ${pijob.name}",Date(),"OffpumpWorker",
+                    "","","run")
             state = "offpump ${e.message} ${pijob.name}"
             isRun = false
         }

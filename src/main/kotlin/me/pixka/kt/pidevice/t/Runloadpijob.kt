@@ -6,6 +6,7 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit
 class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService,
                    val ls: LogistateService, val pijobgroupService: PijobgroupService,
                    val js: JobService, val dsservice: DS18sensorService,val httpService: HttpService,
-                   val ps: PortnameService, val pds: PideviceService) {
+                   val ps: PortnameService, val pds: PideviceService,val lgs:LogService) {
     val mapper = ObjectMapper()
     var ex = Executors.newSingleThreadExecutor()
     var host = System.getProperty("piserver")
@@ -125,7 +126,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
     fun newotherdevice(pd: PiDevice): PiDevice? {
 
         try {
-               return pds.findOrCreate(pd.mac!!)
+               return pds.findOrCreate(pd)
         } catch (e: Exception) {
             logger.error("loadpijob find ds sensor error ${e.message}")
             throw e

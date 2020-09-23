@@ -10,6 +10,7 @@ import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.util.*
@@ -17,7 +18,7 @@ import java.util.concurrent.Executors
 
 
 class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,val httpService: HttpService,
-                     var om: ObjectMapper, var pideviceService: PideviceService)
+                     var om: ObjectMapper, var pideviceService: PideviceService,val lgs:LogService)
     : Runnable, PijobrunInterface {
     var isRun = true
     var startrundate = Date()
@@ -59,6 +60,8 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,va
             logger.debug("Save ${pm}")
         } catch (e: Exception) {
             logger.error(e.message)
+            lgs.createERROR("ERROR READ DUST ${e.message}",Date(),"ReaddustWorker","",
+            "","run")
             state = e.message
             isRun=false
         }
