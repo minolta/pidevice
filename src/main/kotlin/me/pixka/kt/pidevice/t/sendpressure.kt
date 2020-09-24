@@ -26,8 +26,8 @@ class Sendpressure(val service: PressurevalueService, val httpService: HttpServi
                 try {
                     var re = httpService.post(target,p)
                     var result = om.readValue<PressureValue>(re)
-                    p.toserver = true
-                    service.save(p)
+//                    p.toserver = true
+                    service.delete(p)
                 } catch (e: Exception) {
                     logger.error("Send pressure error ${e.message} ${target} ${p}")
                 }

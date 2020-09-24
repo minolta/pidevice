@@ -70,7 +70,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
                 //ถ้า มี ERROR MESSAGE ให้ ส่งเข้า line เลย
                 if (status.errormessage?.isNotEmpty()!!) {
                     lgs.createERROR("Have ERROR  ${device.name} ${pijob.name} ${status.errormessage}", Date(),
-                            "CheckActiveWoterk",pijob.name,"72")
+                            "CheckActiveWoterk",pijob.name,"72","","${device.mac}")
                     if (token != null)
                         ntfs.message("Have ERROR  ${device.name} ${pijob.name} ${status.errormessage}", token)
                     else
@@ -80,7 +80,8 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
             }
         } catch (e: Exception) {
             logger.error("Error  ${pijob.name}  ${device.name} ${e.message}")
-            lgs.createERROR("Error  ${pijob.name}  ${device.name} ${e.message}",Date(),"Checkactive","83")
+            lgs.createERROR("Error  ${pijob.name}  ${device.name} ${e.message}",Date(),
+                    "Checkactive","83","","","${device.mac}")
             if (token != null)
                 ntfs.message("device not respone ${device.name} ${pijob.name} ${e.message}", token)
             else
@@ -108,16 +109,18 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
         startrun = Date()
         logger.debug(" checkactive Start run ${startrun} ${pijob.name}")
         var token = pijob.token
+        var mac:String?=null
+
         try {
             var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
             logger.debug("Found port ${ports.size} ${pijob.name}")
-
 
 
             for (port in ports) {
 
                 if (port.enable != null && port.enable!!) {
                     val device = port.device
+                    mac = device?.mac
                     logger.debug("Find device ip ${device} mac ${device!!.mac} ${pijob.name}")
                     var ip = ips.findByMac(device.mac!!)
 
@@ -132,7 +135,8 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
 
         } catch (e: Exception) {
             logger.error(e.message)
-            lgs.createERROR("Error ${e.message} ${pijob.name}",Date())
+            lgs.createERROR("Error ${e.message} ${pijob.name}",Date(),"" ,
+            "","","","${mac}")
             state = "Error ${e.message} ${pijob.name}"
         }
 

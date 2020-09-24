@@ -36,12 +36,14 @@ class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmServi
                             logger.debug("Run read dust (${it.name}): " + ts.run(r))
                         }
                     } else {
-                        lgs.createERROR("No Ip  ${it.name}", Date(), "ReadDust", "", "39", "run")
+                        lgs.createERROR("No Ip  ${it.name}", Date(),
+                                "ReadDust", "", "39", "run")
                         logger.error("Not have ip")
                     }
                 } catch (e: Exception) {
                     logger.error("ERROR:" + e.message)
-                    lgs.createERROR("ERROR  ${e.message}", Date(), "ReadDust", "", "39", "run")
+                    lgs.createERROR("ERROR  ${e.message}", Date(), "ReadDust",
+                            "", "39", "run")
 
                 }
             }

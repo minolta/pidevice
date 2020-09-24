@@ -42,8 +42,8 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
                     try {
                         var re = f.get(5, TimeUnit.SECONDS)
                         if(re.statusLine.statusCode == 200) {
-                            item.toserver = true
-                            service.save(item)
+//                            item.toserver = true
+                            service.delete(item)
                         }
                         else
                         {

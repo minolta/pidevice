@@ -60,7 +60,8 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,va
             logger.debug("Save ${pm}")
         } catch (e: Exception) {
             logger.error(e.message)
-            lgs.createERROR("ERROR READ DUST ${e.message}",Date(),"ReaddustWorker","",
+            lgs.createERROR("ERROR READ DUST ${e.message}",Date(),
+                    "ReaddustWorker","",
             "","run")
             state = e.message
             isRun=false

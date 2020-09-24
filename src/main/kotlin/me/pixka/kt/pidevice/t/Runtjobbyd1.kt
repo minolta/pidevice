@@ -31,24 +31,30 @@ class Runtjobbyd1(val pjs: PijobService,
             logger.debug("Start run ${Date()}")
             var list = findJob.loadjob("runtbyd1")
             logger.debug("found job ${list?.size}")
+            var mac:String ? = null
             if (list != null) {
                 for (job in list) {
                     try {
                         if (!task.checkrun(job)) {
-                            var ip = ips.findByMac(job.desdevice?.mac!!)
-                            if (ip != null) {
+                            if(job.desdevice?.mac!=null) {
+                                mac = job.desdevice?.mac
+                                var ip = ips.findByMac(job.desdevice?.mac!!)
+                                if (ip != null) {
 
-                                var re = httpService.get("http://${ip.ip}")
-                                var t = om.readValue<Tmpobj>(re)
-                                if (checktmp(t, job)) {
-                                    var testjob = pjs.findByRefid(job.runwithid)
-                                    var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService,lgs)
-                                    var run = task.run(t)
+                                    var re = httpService.get("http://${ip.ip}")
+                                    var t = om.readValue<Tmpobj>(re)
+                                    if (checktmp(t, job)) {
+                                        var testjob = pjs.findByRefid(job.runwithid)
+                                        var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService, lgs)
+                                        var run = task.run(t)
+                                    }
                                 }
                             }
                         }
                     } catch (e: Exception) {
-                        lgs.createERROR("${job.name} ${e.message}",Date())
+                        lgs.createERROR("${job.name} ${e.message}",Date(),"Runtjobbyd1",
+                                "","","",mac
+                        )
                         logger.error("${job.name} ${e.message}")
                     }
                 }
@@ -56,7 +62,7 @@ class Runtjobbyd1(val pjs: PijobService,
         } catch (e: Exception) {
             lgs.createERROR("${e.message}" ,Date(),"Runtjobbyd1",""
                     ,""
-                    ,"run")
+                    ,"run",System.getProperty("mac"))
             logger.error(e.message)
         }
     }

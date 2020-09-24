@@ -28,8 +28,8 @@ class SendLog(val service: LogService, val httpService: HttpService) {
                     var re = httpService.post(server + "/addlog", it)
                     var ret = om.readValue<Logsevent>(re)
                     if (ret != null) {
-                        it.toserver = true
-                        service.save(it)
+//                        it.toserver = true
+                        service.delete(it)
                     }
                 }
             }
