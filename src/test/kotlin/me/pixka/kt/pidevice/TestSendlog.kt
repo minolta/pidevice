@@ -30,7 +30,7 @@ class TestSendlog
 
         all.forEach {
             try {
-                http.post("http://localhost:8080/addlog", it)
+                http.post("http://localhost:8080/addlog", it,500)
             }catch (e:Exception)
             {
                 println(e)

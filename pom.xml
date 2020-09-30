@@ -123,6 +123,12 @@
             <artifactId>logback-json-classic</artifactId>
             <version>${logback.contrib.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.mockk</groupId>
+            <artifactId>mockk</artifactId>
+            <version>1.10.0</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 

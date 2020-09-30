@@ -89,7 +89,7 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
 
     fun loadPijob(mac: String): List<Pijob>? {
         try {
-            var re: String? = httpService.get(target+"/${mac}")
+            var re: String? = httpService.get(target+"/${mac}",500)
             logger.debug("Return ${re}")
             if (re != null) {
                 val list = mapper.readValue<List<Pijob>>(re)

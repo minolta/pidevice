@@ -25,7 +25,7 @@ class TestSendpressure
         pv.pressurevalue = BigDecimal("40.2")
         pv.valuedate = Date()
         pv.device = pd
-        var re = httpService.post("http://pi3.pixka.me:2222/pressure/add",pv)
+        var re = httpService.post("http://pi3.pixka.me:2222/pressure/add",pv,500)
 
         println(re)
     }

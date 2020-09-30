@@ -59,7 +59,9 @@ class D1tjobWorker(p: Pijob,
             }
         } catch (e: Exception) {
             logger.error(e.message)
-            lgs.createERROR("${e.message}", Date(), "D1tjobWorker", "", "","run")
+            lgs.createERROR("${e.message}", Date(),
+                    "D1tjobWorker", "", "", "run",
+                    pijob.desdevice?.mac, pijob.refid)
             isRun = false
             status = "D1tjobWorker ${pijob.name} error ${e.message}"
             throw e
@@ -91,12 +93,14 @@ class D1tjobWorker(p: Pijob,
                 var portname = it.portname?.name
                 var value = it.status
                 var url = "http://${ip?.ip}/run?port=${portname}&value=${value?.toInt()}&delay=${runtime}&waittime=${waittime}"
-                var re = httpService.get(url)
+                var re = httpService.get(url,500)
                 var s = om.readValue<Status>(re)
 
                 status = "Set port ${portname} to ${value?.toInt()} run ${runtime} wait${waittime} Status :${s.status}"
             } catch (e: Exception) {
-                lgs.createERROR("ERROR ${pijob.name} ${e.message}", Date(), "D1tjobWorker", "", "", "setPort")
+                lgs.createERROR("${e.message}", Date(),
+                        "D1tjobWorker", "", "", "setPort",
+                pijob.desdevice?.mac,pijob.refid)
                 status = "ERROR ${pijob.name} ${e.message}"
             }
         }
@@ -115,14 +119,12 @@ class D1tjobWorker(p: Pijob,
             }
             return true // ถ้าไม่กำหนด run with ก็ run เลย
         } catch (e: Exception) {
-            lgs.createERROR("D1tjobWorker ${pijob.name} Error runwith() ${e.message}", Date(),"D1tjobWorker"
-                    ,pijob.name,"runwith")
+            lgs.createERROR("D1tjobWorker ${pijob.name} Error runwith() ${e.message}", Date(), "D1tjobWorker", pijob.name, "runwith")
             logger.error("D1tjobWorker ${pijob.name} Error runwith() ${e.message}")
             throw  e
         }
         return false
     }
-
 
 
     var startrun: Date? = null

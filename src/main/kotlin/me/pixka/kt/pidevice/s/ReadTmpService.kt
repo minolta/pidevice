@@ -14,11 +14,6 @@ import java.net.URL
 @Service
 class ReadTmpService {
     var om = ObjectMapper()
-    fun checkTmp(p: Pijob) {
-        var t = readTmp(p.desdevice?.ip!!)
-
-    }
-
     fun readTmp(ip: String): Tmpobj {
         try {
             var url = URL("http://${ip}")

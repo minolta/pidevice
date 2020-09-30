@@ -15,8 +15,10 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmService, val httpService: HttpService,
-               val iptableServicekt: IptableServicekt, val pideviceService: PideviceService, val lgs: LogService) {
+class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmService,
+               val httpService: HttpService,
+               val iptableServicekt: IptableServicekt,
+               val pideviceService: PideviceService, val lgs: LogService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 1000)
@@ -24,10 +26,13 @@ class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmServi
 
         var jobs = findJob.loadjob("readdust")
         logger.debug("Found job to run ${jobs?.size}")
+        var mac:String?=null
         if (jobs != null) {
             jobs.forEach {
                 logger.debug("Run READ DUST ${it.name}")
                 try {
+                    mac = it.desdevice?.mac
+
                     var i = iptableServicekt.findByMac(it.desdevice?.mac!!)
                     if (i != null) {
                         if (!ts.checkrun(it)) {
@@ -37,13 +42,13 @@ class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmServi
                         }
                     } else {
                         lgs.createERROR("No Ip  ${it.name}", Date(),
-                                "ReadDust", "", "39", "run")
+                                "ReadDust", "", "39", "run",mac,it.refid)
                         logger.error("Not have ip")
                     }
                 } catch (e: Exception) {
                     logger.error("ERROR:" + e.message)
                     lgs.createERROR("ERROR  ${e.message}", Date(), "ReadDust",
-                            "", "39", "run")
+                            "", "39", "run",mac,it.refid)
 
                 }
             }

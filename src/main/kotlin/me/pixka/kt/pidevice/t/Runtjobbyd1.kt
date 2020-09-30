@@ -41,7 +41,7 @@ class Runtjobbyd1(val pjs: PijobService,
                                 var ip = ips.findByMac(job.desdevice?.mac!!)
                                 if (ip != null) {
 
-                                    var re = httpService.get("http://${ip.ip}")
+                                    var re = httpService.get("http://${ip.ip}",500)
                                     var t = om.readValue<Tmpobj>(re)
                                     if (checktmp(t, job)) {
                                         var testjob = pjs.findByRefid(job.runwithid)
@@ -52,8 +52,8 @@ class Runtjobbyd1(val pjs: PijobService,
                             }
                         }
                     } catch (e: Exception) {
-                        lgs.createERROR("${job.name} ${e.message}",Date(),"Runtjobbyd1",
-                                "","","",mac
+                        lgs.createERROR("${e.message}",Date(),"Runtjobbyd1",
+                                "","","",mac,job.refid
                         )
                         logger.error("${job.name} ${e.message}")
                     }
@@ -69,13 +69,11 @@ class Runtjobbyd1(val pjs: PijobService,
 
     fun checktmp(t: Tmpobj, job: Pijob): Boolean {
         var tmp: Double = 0.0
-
         if (t.tmp != null) {
             tmp = t.tmp?.toDouble()!!
         } else if (t.t != null) {
             tmp = t.t?.toDouble()!!
         }
-
         if (job.tlow?.toDouble()!! <= tmp && job.thigh?.toDouble()!! >= tmp)
             return true
 
@@ -85,17 +83,22 @@ class Runtjobbyd1(val pjs: PijobService,
 
     fun readtmp(job: Pijob) {
         try {
-            var tmp = readtmp.readTmp(job.desdevice?.ip!!)
-            var run = checktmp(tmp, job)
-            var testjob = pjs.findByRefid(job.runwithid)
-            var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService,lgs)
-            run = task.run(t)
-            if (run)
-                println("Run JOB:${job.name}")
-            else
-                println("Not run ${job.name}")
+            var ip = ips.findByMac(job.desdevice?.mac!!)
+            if(ip!=null) {
+                var tmp = readtmp.readTmp(ip?.ip!!)
+                var run = checktmp(tmp, job)
+                var testjob = pjs.findByRefid(job.runwithid)
+                var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService, lgs)
+                run = task.run(t)
+                if (run)
+                    println("Run JOB:${job.name}")
+                else
+                    println("Not run ${job.name}")
+            }
         } catch (e: Exception) {
-            lgs.createERROR("ERROR Cehck tmp ${e.message}",Date())
+            lgs.createERROR("ERROR Cehck tmp ${e.message}",Date(),
+                    "","","","readtmp",
+                    job.desdevice?.mac,job.refid)
         }
     }
 

@@ -24,7 +24,7 @@ class Sendpressure(val service: PressurevalueService, val httpService: HttpServi
         if (list != null) {
             for (p in list) {
                 try {
-                    var re = httpService.post(target,p)
+                    var re = httpService.post(target,p,500)
                     var result = om.readValue<PressureValue>(re)
 //                    p.toserver = true
                     service.delete(p)

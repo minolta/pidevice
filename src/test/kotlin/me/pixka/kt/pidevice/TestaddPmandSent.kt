@@ -47,7 +47,7 @@ class TestaddPmandSent {
 
         all.forEach {
 
-            var re = http.post("http://localhost:8080/pm/add", it)
+            var re = http.post("http://localhost:8080/pm/add", it,500)
             var pm = om.readValue<Pm>(re)
             println(pm)
         }

@@ -1,13 +1,14 @@
 package me.pixka.kt.pidevice.s
 
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Service
-class CheckTimeService {
+class CheckTimeService(val lgs:LogService) {
 
     var df = SimpleDateFormat("HH:mm")
     fun checkTime(job: Pijob, now: Date): Boolean {
@@ -43,6 +44,9 @@ class CheckTimeService {
                             return true
                     }
         } catch (e: Exception) {
+            lgs.createERROR("${e.message}",Date(),
+            "CheckTimeService","","","",
+            job.desdevice?.mac,job.refid)
             logger.error("ERROR  ${e.message} JOB: ${job.name}")
         }
 

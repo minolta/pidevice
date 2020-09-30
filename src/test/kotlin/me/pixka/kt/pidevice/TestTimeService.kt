@@ -3,12 +3,15 @@ package me.pixka.kt.pidevice
 import me.pixka.kt.pidevice.s.CheckTimeService
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import java.text.SimpleDateFormat
 
 class TestTimeService {
 
     var df = SimpleDateFormat("HH:mm")
-    var ct = CheckTimeService()
+
+    @Autowired
+    lateinit var ct:CheckTimeService
 
     @Test
     fun testCheckTimeService() {

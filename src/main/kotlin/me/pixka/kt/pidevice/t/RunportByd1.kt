@@ -2,45 +2,46 @@ package me.pixka.kt.pidevice.t
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.*
+import me.pixka.kt.pibase.s.FindJob
+import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pibase.s.JobService
+import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.run.D1portjobWorker
 import me.pixka.kt.run.DPortstatus
-import me.pixka.kt.run.GroupRunService
 import me.pixka.kt.run.PorttoCheck
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 @Component
 class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                   val js: JobService,
                   val task: TaskService, val ips: IptableServicekt,
-                  val dhs: Dhtutil, val httpControl: HttpControl,
-                  val httpService: HttpService, val lgs:LogService) {
+                  val dhs: Dhtutil,
+                  val httpService: HttpService, val lgs: LogService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
         logger.debug("Start get task Runportbyd1 ${Date()}")
+        var mac: String? = null
         try {
             var list = findJob.loadjob("runportbyd1")
             if (list != null)
                 logger.debug("Job for Runportbyd1 Port jobsize  ${list.size}")
             if (list != null) {
                 list.forEach {
-//                    Checkrun(it)
                     try {
                         var checks = getPorttocheck(it)
                         var sensorstatus = getSensorstatus(it)
+                        mac = it.desdevice?.mac
                         var r = false
                         if (checks != null) {
                             for (c in checks) {
@@ -50,22 +51,21 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                         }
                         if (r && !task.checkrun(it)) {
 
-                            var t = D1portjobWorker(it, pjs, httpService, task, ips)
+                            var t = D1portjobWorker(it, pjs, httpService, task, ips, lgs)
                             var run = task.run(t)
                             logger.debug("Can run ${run}")
                         }
-                    }catch (e:Exception)
-                    {
+                    } catch (e: Exception) {
                         logger.error("ERROR Set port ${it.name}  ERROR ${e.message}")
-                        lgs.createERROR("ERROR Set port ${it.name}  ERROR ${e.message}",Date(),
-                        "RunportByd1","","","run")
+                        lgs.createERROR("${e.message}", Date(),
+                                "RunportByd1", "", "", "run", mac, it.refid)
                     }
                 }
             }
         } catch (e: Exception) {
             logger.error("Read h by d1 ERROR ${e.message}")
-            lgs.createERROR("Read h by d1 ERROR ${e.message}",Date(),
-            "RunportByd1","","","run")
+            lgs.createERROR("${e.message}", Date(),
+                    "RunportByd1", "", "", "run", mac)
         }
     }
 
@@ -96,8 +96,8 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
 
         } catch (e: Exception) {
-            lgs.createERROR("ERROR ${e.message}",Date(),"RunportByd1",
-            "","","getPorttocheck")
+            lgs.createERROR("ERROR ${e.message}", Date(), "RunportByd1",
+                    "", "", "getPorttocheck", p.desdevice?.mac, p.refid)
             logger.debug("ERROR ${e.message}")
         }
         return null
@@ -105,19 +105,20 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
     fun getSensorstatus(p: Pijob): DPortstatus? {
         var url = ""
-        var ip:Iptableskt?=null
+        var ip: Iptableskt? = null
         try {
             logger.debug("Check Port start")
             var ip = ips.findByMac(p.desdevice?.mac!!)
             url = "http://${ip?.ip}"
-            var re: String? = httpService.get(url)
+            var re: String? = httpService.get(url,500)
             var dp = om.readValue(re, DPortstatus::class.java)
             return dp
 
         } catch (e: Exception) {
             logger.error("Get Sensor status JOB NAME IP:${ip} URL:${url} ${p.name} ${e.message} Des name:${p.desdevice}  ")
-            lgs.createERROR("Get Sensor status JOB NAME IP:${ip} URL:${url} ${p.name} ${e.message} Des name:${p.desdevice}  ",
-                    Date(),"RunportByd1","","","getSensorstatus")
+            lgs.createERROR("${e.message}",
+                    Date(), "RunportByd1", "",
+                    "", "getSensorstatus", p.desdevice?.mac, p.refid)
             throw e
         }
         return null
@@ -153,22 +154,13 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                     return true
             }
         } catch (e: Exception) {
-            lgs.createERROR("ERROR in getsensorstatusvalue message: ${e.message}",Date())
+            lgs.createERROR("${e.message}", Date(), "" +
+                    "RunportByd1", "", "", "getsensorstatusvalue", sensorstatus?.mac)
             logger.error("ERROR in getsensorstatusvalue message: ${e.message}")
         }
 
 
         return false
-    }
-    fun loadjob(): List<Pijob>? {
-        var job = js.findByName("runportbyd1")
-
-        if (job != null) {
-
-            var jobs = pjs.findJob(job.id)
-            return jobs
-        }
-        throw Exception("Not have JOB")
     }
 
     companion object {

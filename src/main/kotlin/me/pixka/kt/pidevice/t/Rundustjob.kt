@@ -14,12 +14,11 @@ import me.pixka.kt.run.DustWorker
 import me.pixka.log.d.LogService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.util.concurrent.CompletableFuture
 
 
 @Component
 class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: IptableServicekt,
-                 val task: TaskService,val ps:PortstatusinjobService,val lgs:LogService) {
+                 val task: TaskService, val ps: PortstatusinjobService, val lgs: LogService) {
 
     val om = ObjectMapper()
 
@@ -40,7 +39,7 @@ class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: Ip
     fun readPm(job: Pijob): Pm? {
         var ip = ips.findByMac(job.desdevice?.mac!!)
         if (ip != null) {
-            val re = httpService.get("http://${ip.ip}")
+            val re = httpService.get("http://${ip.ip}",500)
             var dustobj = om.readValue<Pm>(re)
             return dustobj
         }
@@ -61,21 +60,12 @@ class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: Ip
     }
 
     fun runThread(job: Pijob) {
-        CompletableFuture.supplyAsync {
-            readPm(job)
-        }.thenApply {
-            var canrun = false
-            if (it != null) {
-                canrun = checkCanrun(job, it)
-            }
-            canrun
-        }.thenApply {
-            var ports  = ps.findByPijobid(job.id) as ArrayList<Portstatusinjob>
-            var t = DustWorker(job, ports,ips,httpService)
+        var it = readPm(job)
+        var canrun = checkCanrun(job, it!!)
+        if(canrun) {
+            var ports = ps.findByPijobid(job.id) as ArrayList<Portstatusinjob>
+            var t = DustWorker(job, ports, ips, httpService, lgs)
             task.run(t)
-        }.exceptionally {
-            println(it.message)
-            false
         }
     }
 }

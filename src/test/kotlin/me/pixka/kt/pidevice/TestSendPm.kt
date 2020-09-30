@@ -19,7 +19,7 @@ class TestSendPm {
         pm.pidevice = pd
 
         var http = HttpService()
-        http.post("http://192.168.88.21:2222/pm/add", pm)
+        http.post("http://192.168.88.21:2222/pm/add", pm,500)
 
 
     }

@@ -63,14 +63,15 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
     fun check(ip: String, token: String? = null, device: PiDevice): Boolean {
         logger.debug("checkactive ${ip}")
         try {
-            var re = httpService.get("http://${ip}")
+            var re = httpService.get("http://${ip}",2000)
             var status = om.readValue<Status>(re, Status::class.java)
             state = "Device:${device.name} uptime :${status.uptime} ative ok."
             if (status.errormessage != null) {
                 //ถ้า มี ERROR MESSAGE ให้ ส่งเข้า line เลย
                 if (status.errormessage?.isNotEmpty()!!) {
                     lgs.createERROR("Have ERROR  ${device.name} ${pijob.name} ${status.errormessage}", Date(),
-                            "CheckActiveWoterk",pijob.name,"72","","${device.mac}")
+                            "CheckActiveWoterk", pijob.name, "72", "",
+                            "${device.mac}",pijob.refid)
                     if (token != null)
                         ntfs.message("Have ERROR  ${device.name} ${pijob.name} ${status.errormessage}", token)
                     else
@@ -80,8 +81,9 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
             }
         } catch (e: Exception) {
             logger.error("Error  ${pijob.name}  ${device.name} ${e.message}")
-            lgs.createERROR("Error  ${pijob.name}  ${device.name} ${e.message}",Date(),
-                    "Checkactive","83","","","${device.mac}")
+            lgs.createERROR("Error  ${pijob.name}  ${device.name} ${e.message}", Date(),
+                    "Checkactive", "83", "", "", "${device.mac}",
+            pijob.refid)
             if (token != null)
                 ntfs.message("device not respone ${device.name} ${pijob.name} ${e.message}", token)
             else
@@ -109,7 +111,7 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
         startrun = Date()
         logger.debug(" checkactive Start run ${startrun} ${pijob.name}")
         var token = pijob.token
-        var mac:String?=null
+        var mac: String? = null
 
         try {
             var ports = ps.findByPijobid(pijob.id) as List<Portstatusinjob>
@@ -135,8 +137,8 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
 
         } catch (e: Exception) {
             logger.error(e.message)
-            lgs.createERROR("Error ${e.message} ${pijob.name}",Date(),"" ,
-            "","","","${mac}")
+            lgs.createERROR("Error ${e.message} ${pijob.name}", Date(), "",
+                    "", "", "", "${mac}",pijob.refid)
             state = "Error ${e.message} ${pijob.name}"
         }
 
@@ -154,7 +156,8 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Status(var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
              var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
-             var version: String? = null, var errormessage: String? = null, var status: String? = null) {
+             var version: String? = null, var errormessage: String? = null, var status: String? = null,
+             var pm25: BigDecimal? = null, var pm1: BigDecimal? = null, var pm10: BigDecimal? = null) {
     override fun toString(): String {
         return "${name} ${message} ${ssid} ${version} ${t} ${h} ${ip}"
     }

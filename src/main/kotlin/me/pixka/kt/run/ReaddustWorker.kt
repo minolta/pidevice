@@ -42,15 +42,16 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,va
 
     override fun run() {
         var pm = Pm()
+        var mac:String?=null
         try {
             isRun = true
             startrundate = Date()
             logger.debug("read Start ${startrundate} ${isRun}")
-            var re = httpService.get("http://${ip}")
-            var pd = om.readValue<Pmdata>(re!!)
+            var re = httpService.get("http://${ip}",2000)
+            var pd = om.readValue<Pmdata>(re)
             var pid = pideviceService.findByMac(pd.mac!!)
+            mac = pd.mac
             logger.debug("Pi device is ${pid}")
-
             pm.pidevice = pid
             pm.pm1 = pd.pm1
             pm.pm10 = pd.pm10
@@ -62,9 +63,11 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,va
             logger.error(e.message)
             lgs.createERROR("ERROR READ DUST ${e.message}",Date(),
                     "ReaddustWorker","",
-            "","run")
+            "","run",mac)
             state = e.message
+            exitdate = Date()
             isRun=false
+            throw e
         }
         setEnddate()
         logger.debug("End job ${pijob.name}")

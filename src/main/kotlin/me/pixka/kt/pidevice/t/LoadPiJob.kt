@@ -26,7 +26,7 @@ class LoadPiJob(val httpService: HttpService, val io: Piio, val pjs: PijobServic
         var mac = System.getProperty("mac")
         if (mac == null)
             mac = io.wifiMacAddress()
-        var re: String? = httpService.get(target + "/${mac}")
+        var re: String? = httpService.get(target + "/${mac}",500)
         var alljobs = om.readValue<List<Pijob>>(re!!)
         if (alljobs != null) {
             alljobs.forEach {
@@ -82,7 +82,7 @@ class LoadPiJob(val httpService: HttpService, val io: Piio, val pjs: PijobServic
      */
     fun loadPortinjob(refid: Long): List<Portstatusinjob>? {
         try {
-            var re = httpService.get(targetloadstatus + "/" + refid)
+            var re = httpService.get(targetloadstatus + "/" + refid,500)
             var ports = om.readValue<List<Portstatusinjob>>(re)
             return ports
         } catch (e: Exception) {

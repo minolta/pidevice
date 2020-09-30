@@ -36,7 +36,8 @@ class ReadDhtfromother(val http: HttpControl,
             if(list!=null)
             for (i in list) {
                 try {
-                    var rt = ReadDhtWorker(i, dhts, pds, httpService, ips,lgs)
+                    var ip = ips.findByMac(i.desdevice?.mac!!)
+                    var rt = ReadDhtWorker(i, pds, httpService,ip?.ip!! ,lgs,dhts)
                     task.run(rt)
                 } catch (e: Exception) {
                     logger.error("Run " + e.message)
@@ -53,7 +54,7 @@ class ReadDhtfromother(val http: HttpControl,
 
     fun readDht(url: String): Dhtvalue? {
         try {
-            var value = httpService.get(url)
+            var value = httpService.get(url,500)
             var dhtvalue = om.readValue<Dhtvalue>(value, Dhtvalue::class.java)
             logger.debug("Get value ${dhtvalue}")
             return dhtvalue

@@ -61,31 +61,10 @@
         </encoder>
     </appender>
 
-<!--    <appender name="DB1" class="ch.qos.logback.classic.db.DBAppender">-->
-<!--        <connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">-->
-<!--            <driverClass>org.h2.Driver</driverClass>-->
-<!--            &lt;!&ndash;            jdbc:h2:tcp://dbserv:8084/~/sample&ndash;&gt;-->
-<!--            &lt;!&ndash;            jdbc:h2:~/test;AUTO_SERVER=TRUE&ndash;&gt;-->
-<!--            <url>jdbc:h2:~/pidevice;AUTO_SERVER=TRUE;IGNORECASE=TRUE</url>-->
-<!--            <user>sa</user>-->
-<!--            <password></password>-->
-<!--        </connectionSource>-->
-<!--    </appender>-->
-    <!--    <appender name="db" class="ch.qos.logback.classic.db.DBAppender">-->
-    <!--        <connectionSource-->
-    <!--                class="ch.qos.logback.core.db.DriverManagerConnectionSource">-->
-    <!--            <driverClass>org.h2.Driver</driverClass>-->
-    <!--            <url>jdbc:h2:file:~/logsx</url>-->
-    <!--            <user>sa</user>-->
-    <!--            <password></password>-->
-    <!--        </connectionSource>-->
-    <!--    </appender>-->
-
 
     <root level="ERROR">
-        <!-- <appender-ref ref="ROLLING" /> -->
+         <appender-ref ref="ROLLING" />
         <appender-ref ref="STDOUT"/>
-<!--        <appender-ref ref="ROLLING"/>-->
     </root>
 
     <springProfile name="dev">

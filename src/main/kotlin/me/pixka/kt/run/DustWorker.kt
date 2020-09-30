@@ -7,12 +7,13 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.HttpService
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.util.*
 
 
 class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
-                 var ips: IptableServicekt, val httpService: HttpService) : PijobrunInterface, Runnable {
+                 var ips: IptableServicekt, val httpService: HttpService,val lgs:LogService) : PijobrunInterface, Runnable {
     var om = ObjectMapper()
     var isRun = false
     var startDate: Date? = null
@@ -69,9 +70,11 @@ class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
     override fun run() {
         isRun = true
         startDate = Date()
+        var mac = ""
         try {
             ports.filter { it.enable == true }.forEach {
                 var ip = ips.findByMac(it.device?.mac!!)
+                mac = it.device?.mac!!
                 if (ip != null) {
                     if (it.runtime != null && it.runtime!!.toInt() > totalrun)
                         totalrun = it.runtime!!.toInt()
@@ -81,14 +84,17 @@ class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
 
 
                     var url = "http://${ip.ip}/run?port=${it.portname?.name}&delay=${it.runtime}&value=${it.status?.toInt()}&wait=${it.waittime}"
-                    var re = httpService.get(url)
+                    var re = httpService.get(url,2000)
                     var s = om.readValue<Status>(re)
-                    state = "Set ${it.portname?.name} to ${it.status?.name} uptime:${s.uptime}  status:${s.status}"
+                    state = "Set ${it.portname?.name} to ${it.status?.name} uptime:${s.uptime}  status:${s.status}  Pm2.5:${s.pm25} pm10:${s.pm10} pm1:${s.pm1}"
 
                 }
             }
         } catch (e: Exception) {
-            logger.error("ERROR ${e.message}")
+            logger.error("${e.message}")
+            lgs.createERROR("${e.message}",Date(),"DustWorker","",
+            "","run",mac,pijob.refid)
+            state = "ERROR ${e.message}"
             isRun=false
         }
 

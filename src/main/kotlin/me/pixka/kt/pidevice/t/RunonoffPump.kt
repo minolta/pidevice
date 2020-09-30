@@ -19,8 +19,8 @@ import java.util.concurrent.CompletableFuture
 
 @Component
 class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: HttpService,
-                 val js: JobService,val checkTimeService: CheckTimeService,
-                 val task: TaskService, val ips: IptableServicekt,val lgs:LogService
+                 val js: JobService, val checkTimeService: CheckTimeService,
+                 val task: TaskService, val ips: IptableServicekt, val lgs: LogService
 ) {
 
 
@@ -30,13 +30,13 @@ class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: H
         try {
             var jobs = findJob.loadjob("offpump")
             logger.debug("Found job ${jobs?.size}")
-
+            var mac: String? = null
             if (jobs != null) {
                 for (job in jobs) {
-                    if(checkTimeService.checkTime(job, Date()) && !task.checkrun(job)) {
-                        var offpumpWorker = OffpumpWorker(job, httpService, ips,lgs)
-                        if(!task.run(offpumpWorker))
-                        {
+                    mac = job.desdevice?.mac
+                    if (checkTimeService.checkTime(job, Date()) && !task.checkrun(job)) {
+                        var offpumpWorker = OffpumpWorker(job, httpService, ips, lgs)
+                        if (!task.run(offpumpWorker)) {
                             logger.error("Can not Run ${job.name}")
                         }
                     }
@@ -44,12 +44,14 @@ class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: H
             }
         } catch (e: Exception) {
             logger.error("runoffpumb ${e.message}")
+            lgs.createERROR("${e.message}", Date(),
+                    "RunoffPump", "", "", "run", ""
+            )
 
         }
 
 
     }
-
 
 
     fun Checktime(job: Pijob) {

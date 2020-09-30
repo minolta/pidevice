@@ -18,24 +18,32 @@ class OffpumpWorker(var pijob: Pijob,
     var state: String = "init"
     var isRun = false
     var startrun: Date? = null
-    var exitdate:Date ?=null
+    var exitdate: Date? = null
     val om = ObjectMapper()
 
     var df = SimpleDateFormat("HH:mm")
     override fun setP(p: Pijob) {
         this.pijob = p
     }
+
     fun setEnddate() {
-        var t = 0L
-        if (pijob.waittime != null)
-            t = pijob.waittime!!
-        if (pijob.runtime != null)
-            t += pijob.runtime!!
-        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-        calendar.add(Calendar.SECOND, t.toInt())
-        exitdate = calendar.time
-        if (t == 0L)
-            isRun = false//ออกเลย
+        try {
+            var t = 0L
+            if (pijob.waittime != null)
+                t = pijob.waittime!!
+            if (pijob.runtime != null)
+                t += pijob.runtime!!
+            val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+            calendar.add(Calendar.SECOND, t.toInt())
+            exitdate = calendar.time
+            if (t == 0L)
+                isRun = false//ออกเลย
+        }
+        catch (e:Exception)
+        {
+            isRun = false
+            logger.error(e.message)
+        }
     }
 
     override fun setG(gpios: GpioService) {
@@ -68,23 +76,25 @@ class OffpumpWorker(var pijob: Pijob,
         isRun = true
         startrun = Date()
         logger.debug("Start run ${startrun}")
+        var mac: String? = null
         try {
             var ip = ips.findByMac(pijob.desdevice?.mac!!)
+            mac = pijob.desdevice?.mac
             try {
-                var re = httpService.get("http://${ip?.ip}/off")
+                var re = httpService.get("http://${ip?.ip}/off",500)
                 var status = om.readValue<Status>(re)
                 state = "Off pumb is ok ${status.uptime} Power is off ok."
             } catch (e: Exception) {
                 logger.error("Off pumb error  offpump ${e.message} ${pijob.name}")
-                lgs.createERROR("Off pumb error  offpump ${e.message} ${pijob.name}",Date(),
-                "OffpumpWorker","","","run")
+                lgs.createERROR(" ${e.message}", Date(),
+                        "OffpumpWorker", "", "", "run", mac, pijob.refid)
                 state = "Off pumb error  offpump ${e.message} ${pijob.name}"
                 isRun = false
             }
         } catch (e: Exception) {
             logger.error("offpump ${e.message} ${pijob.name}")
-            lgs.createERROR("offpump ${e.message} ${pijob.name}",Date(),"OffpumpWorker",
-                    "","","run")
+            lgs.createERROR("${e.message}", Date(), "OffpumpWorker",
+                    "", "", "run", mac, pijob.refid)
             state = "offpump ${e.message} ${pijob.name}"
             isRun = false
         }

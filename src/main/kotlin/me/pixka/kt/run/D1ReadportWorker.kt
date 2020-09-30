@@ -10,16 +10,14 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PijobService
-import me.pixka.kt.pibase.t.HttpGetTask
 import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                       val httpService: HttpService,
-                      val task: TaskService, val ips: IptableServicekt)
+                      val task: TaskService, val ips: IptableServicekt, val lgs: LogService)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
@@ -88,6 +86,9 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         } catch (e: Exception) {
             this.state = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
+            lgs.createERROR("${e.message}", Date(),
+                    "D1readportWorker", "", "",
+                    "run", pijob.desdevice?.mac)
             waitstatus = true
             isRun = false
         }
@@ -118,13 +119,19 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                 var pn = it.portname!!.name
                 var v = it.status //สำหรับบอก port ว่าจะเป็น logic อะไร
                 var value = getLogic(v?.name!!)
-                var url = findUrl(it.device!!, pn!!, pr.toLong(), pw.toLong(), value)
-                startrun = Date()
-                logger.debug("URL ${url}")
-                state = "Set port ${url}"
-                var setportreturn = httpService.get(url)
-                var status = om.readValue<Status>(setportreturn)
-                state = "Set port:${pn}  to ${pr}  value : ${value} ok "
+                try {
+                    var url = findUrl(it.device!!, pn!!, pr.toLong(), pw.toLong(), value)
+                    startrun = Date()
+                    logger.debug("URL ${url}")
+                    state = "Set port ${url}"
+                    var setportreturn = httpService.get(url,500)
+                    var status = om.readValue<Status>(setportreturn)
+                    state = "Set port:${pn}  to ${pr}  value : ${value} ok "
+                } catch (e: Exception) {
+                    lgs.createERROR("${e.message}", Date(), "D1ReadportWorker",
+                            "", "", "", it.device?.mac,it.pijob?.refid
+                    )
+                }
             }
         }
     }
@@ -137,9 +144,6 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
             value = 0
         return value
     }
-
-
-
 
 
     fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
@@ -165,7 +169,6 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
     }
 
 
-
     companion object {
         internal var logger = LoggerFactory.getLogger(D1portjobWorker::class.java)
     }
@@ -182,7 +185,8 @@ class PorttoCheck(var name: String? = null, var check: Int? = null) {
 class DPortstatus(var version: Int? = null,
                   var d1: Int? = null, var d2: Int? = 0, var d3: Int? = 0,
                   var d4: Int? = 0, var d5: Int? = 0, var d6: Int? = 0,
-                  var d7: Int? = 0, var d8: Int? = 0, var name: String? = null, var value: Int? = null) {
+                  var d7: Int? = 0, var d8: Int? = 0, var name: String? = null,
+                  var value: Int? = null,var mac:String?=null) {
     override fun toString(): String {
         return "D1:${d1} D2:${d2} D3:${d3} D4:${d4} D5:${d5} D6:${d6} D7:${d7} D8:${d8}"
     }
