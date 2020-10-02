@@ -81,7 +81,7 @@ class OffpumpWorker(var pijob: Pijob,
             var ip = ips.findByMac(pijob.desdevice?.mac!!)
             mac = pijob.desdevice?.mac
             try {
-                var re = httpService.get("http://${ip?.ip}/off",500)
+                var re = httpService.get("http://${ip?.ip}/off",2000)
                 var status = om.readValue<Status>(re)
                 state = "Off pumb is ok ${status.uptime} Power is off ok."
             } catch (e: Exception) {

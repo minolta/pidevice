@@ -46,7 +46,7 @@ class D1readvoltWorker(var pijob: Pijob, val httpService: HttpService,
         startRun = Date()
         Thread.currentThread().name = "JOBID:${pijob.id} D1readvolt : ${pijob.name} ${startRun}"
         try {
-            var re = httpService.get("http://${ip.ip}",500)
+            var re = httpService.get("http://${ip.ip}",2000)
             var v = om.readValue<VbattObject>(re)
             var psv = Vbatt()
             psv.pidevice_id = pijob.desdevice_id

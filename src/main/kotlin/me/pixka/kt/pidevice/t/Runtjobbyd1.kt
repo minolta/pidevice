@@ -41,7 +41,7 @@ class Runtjobbyd1(val pjs: PijobService,
                                 var ip = ips.findByMac(job.desdevice?.mac!!)
                                 if (ip != null) {
 
-                                    var re = httpService.get("http://${ip.ip}",500)
+                                    var re = httpService.get("http://${ip.ip}",2000)
                                     var t = om.readValue<Tmpobj>(re)
                                     if (checktmp(t, job)) {
                                         var testjob = pjs.findByRefid(job.runwithid)

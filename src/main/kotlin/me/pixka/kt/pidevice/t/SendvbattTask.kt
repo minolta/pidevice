@@ -24,7 +24,7 @@ class Sendvbatt(val service: VbattService, val httpService: HttpService) {
 
 
                 try {
-                    var re = httpService.post(target, it,500)
+                    var re = httpService.post(target, it,1000)
                     var status = om.readValue<Status>(re)
                     it.toserver = true
                     var v = service.save(it)

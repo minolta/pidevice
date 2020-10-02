@@ -93,7 +93,7 @@ class D1tjobWorker(p: Pijob,
                 var portname = it.portname?.name
                 var value = it.status
                 var url = "http://${ip?.ip}/run?port=${portname}&value=${value?.toInt()}&delay=${runtime}&waittime=${waittime}"
-                var re = httpService.get(url,500)
+                var re = httpService.get(url,2000)
                 var s = om.readValue<Status>(re)
 
                 status = "Set port ${portname} to ${value?.toInt()} run ${runtime} wait${waittime} Status :${s.status}"

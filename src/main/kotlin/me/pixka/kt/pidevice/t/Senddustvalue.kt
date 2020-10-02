@@ -24,7 +24,7 @@ class Senddustvalue(val server: PmService, val httpService: HttpService,val lgs:
             datas.forEach {
 
                 try {
-                    var h = httpService.post(host + "/pm/add", it,500)
+                    var h = httpService.post(host + "/pm/add", it,2000)
                     var r = om.readValue<Status>(h)
 //                    it.toserver = true
 //                    server.save(it)

@@ -37,7 +37,7 @@ class SendDht(val dhts: DhtvalueService, val http: HttpService,val lgs:LogServic
                     logger.debug("Obj for send ${obj} URL ${target}")
                     try {
 
-                        var value = http.post(target,obj,500)
+                        var value = http.post(target,obj,2000)
                         var d = om.readValue<Dhtvalue>(value)
                         if (d != null) {
                             dhts.delete(dht)

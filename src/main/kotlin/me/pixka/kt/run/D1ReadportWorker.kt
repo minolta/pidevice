@@ -124,7 +124,7 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
-                    var setportreturn = httpService.get(url,500)
+                    var setportreturn = httpService.get(url,2000)
                     var status = om.readValue<Status>(setportreturn)
                     state = "Set port:${pn}  to ${pr}  value : ${value} ok "
                 } catch (e: Exception) {

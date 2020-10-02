@@ -110,7 +110,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
             logger.debug("Check Port start")
             var ip = ips.findByMac(p.desdevice?.mac!!)
             url = "http://${ip?.ip}"
-            var re: String? = httpService.get(url,500)
+            var re: String? = httpService.get(url,2000)
             var dp = om.readValue(re, DPortstatus::class.java)
             return dp
 

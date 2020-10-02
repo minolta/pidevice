@@ -25,7 +25,7 @@ class SendLog(val service: LogService, val httpService: HttpService) {
                         it.mac = System.getProperty("mac")
                     }
 
-                    var re = httpService.post(server + "/addlog", it,500)
+                    var re = httpService.post(server + "/addlog", it,2000)
                     var ret = om.readValue<Logsevent>(re)
                     if (ret != null) {
 //                        it.toserver = true

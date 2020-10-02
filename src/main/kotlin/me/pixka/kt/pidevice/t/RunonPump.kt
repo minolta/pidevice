@@ -126,7 +126,7 @@ class OnpumbWorker(var pijob: Pijob, val httpService: HttpService, var ip: Iptab
             var ip = ip?.ip
             status = "call url http://${ip}/on"
             try {
-                var re = httpService.get("http://${ip}/on",500)
+                var re = httpService.get("http://${ip}/on",2000)
                 var s = om.readValue<Status>(re)
                 status = "on pumb is ok ${s.status} Uptime ${s.uptime}"
             } catch (e: Exception) {

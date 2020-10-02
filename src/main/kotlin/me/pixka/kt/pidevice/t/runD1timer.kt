@@ -36,7 +36,7 @@ class runD1Timer(val pjs: PijobService,
                         logger.debug("Run ${job}")
                         var ip = ips.findByMac(job.desdevice?.mac!!)
                         if (ip != null) {
-                            var re = httpService.get("http://${ip.ip}",500)
+                            var re = httpService.get("http://${ip.ip}",2000)
                             var tmpobj = om.readValue<Tmpobj>(re)
                             if (job.tlow?.toDouble()!! <= tmpobj.tmp?.toDouble()!!) {
                                 //ถ้า tmp == tlow จะทำการ รอ thigh

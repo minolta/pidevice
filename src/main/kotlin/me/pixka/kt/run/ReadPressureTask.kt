@@ -51,7 +51,7 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
             if (ip != null) {
                 var ipstring = ip.ip
                 try {
-                    var re = httpService.get("http://${ipstring}",500)
+                    var re = httpService.get("http://${ipstring}",2000)
                     var o = om.readValue<PSIObject>(re)
                     logger.debug("${pijob.name} Get pressure ${o}")
                     status = "${pijob.name} Get pressure ${o}"

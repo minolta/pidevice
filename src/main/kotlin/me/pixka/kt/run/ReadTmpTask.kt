@@ -35,7 +35,7 @@ class ReadTmpTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
                 //ไม่มีข้อมูลของ tmpobj
                 var ip = ips.findByMac(pijob.desdevice?.mac!!)
                 if (ip != null) {
-                    var re = httpService.get("http://${ip.ip}",500)
+                    var re = httpService.get("http://${ip.ip}",2000)
                      tmpobj = om.readValue<Tmpobj>(re)
                 }
             }

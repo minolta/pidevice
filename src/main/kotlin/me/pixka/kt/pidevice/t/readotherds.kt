@@ -37,7 +37,7 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, va
                     logger.debug("Run job ${i}")
                     if (i.tlow != null) {
                         var ip = ips.findByMac(i.desdevice?.mac!!)
-                        var re = httpService.get("http://${ip?.ip}",500)
+                        var re = httpService.get("http://${ip?.ip}",2000)
                         var o = om.readValue<Tmpobj>(re)
                         var t = o.tmp?.toDouble()
                         if (i.tlow?.toDouble()!! <= t!!
