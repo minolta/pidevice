@@ -124,12 +124,14 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
-                    var setportreturn = httpService.get(url,2000)
+                    var setportreturn = httpService.get(url, 4000)
                     var status = om.readValue<Status>(setportreturn)
                     state = "Set port:${pn}  to ${pr}  value : ${value} ok "
                 } catch (e: Exception) {
-                    lgs.createERROR("${e.message}", Date(), "D1ReadportWorker",
-                            "", "", "", it.device?.mac,it.pijob?.refid
+                    lgs.createERROR("${e.message}", Date(),
+                            "D1ReadportWorker",
+                            "", "", "", it.device?.mac,
+                            it.pijob?.refid
                     )
                 }
             }
@@ -146,7 +148,8 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
     }
 
 
-    fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
+    fun findUrl(target: PiDevice, portname: String, runtime: Long,
+                waittime: Long, value: Int): String {
         if (pijob.desdevice != null) {
             var ip = ips.findByMac(target.mac!!)
             if (ip != null) {
@@ -186,7 +189,7 @@ class DPortstatus(var version: Int? = null,
                   var d1: Int? = null, var d2: Int? = 0, var d3: Int? = 0,
                   var d4: Int? = 0, var d5: Int? = 0, var d6: Int? = 0,
                   var d7: Int? = 0, var d8: Int? = 0, var name: String? = null,
-                  var value: Int? = null,var mac:String?=null) {
+                  var value: Int? = null, var mac: String? = null) {
     override fun toString(): String {
         return "D1:${d1} D2:${d2} D3:${d3} D4:${d4} D5:${d5} D6:${d6} D7:${d7} D8:${d8}"
     }

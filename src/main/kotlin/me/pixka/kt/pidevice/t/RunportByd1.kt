@@ -97,7 +97,8 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
         } catch (e: Exception) {
             lgs.createERROR("ERROR ${e.message}", Date(), "RunportByd1",
-                    "", "", "getPorttocheck", p.desdevice?.mac, p.refid)
+                    "", "", "getPorttocheck",
+                    p.desdevice?.mac, p.refid)
             logger.debug("ERROR ${e.message}")
         }
         return null
@@ -110,7 +111,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
             logger.debug("Check Port start")
             var ip = ips.findByMac(p.desdevice?.mac!!)
             url = "http://${ip?.ip}"
-            var re: String? = httpService.get(url,2000)
+            var re: String? = httpService.get(url,4000)
             var dp = om.readValue(re, DPortstatus::class.java)
             return dp
 
