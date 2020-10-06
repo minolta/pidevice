@@ -184,7 +184,7 @@ class D1hjobWorker(var pijob: Pijob,
                     state = "Set port ${url}"
                     try {
                         //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-                        var v = httpService.get(url,2000)
+                        var v = httpService.get(url,12000)
                         state = "Delay  ${runtime} + ${waittime}"
                         var status = om.readValue<Status>(v)
                         logger.debug("D1h Value ${status}")

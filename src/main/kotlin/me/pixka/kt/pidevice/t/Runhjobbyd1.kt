@@ -115,7 +115,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
         logger.debug("Call IP : ${ip} RunH")
         try {
             if (ip != null) {
-                var re = httpService.get("http://${ip.ip}", 2000)
+                var re = httpService.get("http://${ip.ip}", 12000)
                 var h = om.readValue<HObject>(re)
                 return h
             }
