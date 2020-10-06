@@ -29,7 +29,7 @@ class D1tjobWorker(p: Pijob,
         if (pijob.runtime != null)
             t += pijob.runtime!!
 
-        t = t + totalwait + totalrun  //ต้อง ลบ 5 มันทำงานเร็วขึ้น
+        t += (totalwait + totalrun)  //ต้อง ลบ 5 มันทำงานเร็วขึ้น
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, t.toInt())
         var exitdate = calendar.time
@@ -60,7 +60,7 @@ class D1tjobWorker(p: Pijob,
         } catch (e: Exception) {
             logger.error(e.message)
             lgs.createERROR("${e.message}", Date(),
-                    "D1tjobWorker", "", "", "run",
+                    "D1tjobWorker", "", "43", "run",
                     pijob.desdevice?.mac, pijob.refid)
             isRun = false
             status = "D1tjobWorker ${pijob.name} error ${e.message}"
@@ -93,7 +93,7 @@ class D1tjobWorker(p: Pijob,
                 var portname = it.portname?.name
                 var value = it.status
                 var url = "http://${ip?.ip}/run?port=${portname}&value=${value?.toInt()}&delay=${runtime}&waittime=${waittime}"
-                var re = httpService.get(url,4000)
+                var re = httpService.get(url,10000)
                 var s = om.readValue<Status>(re)
 
                 status = "Set port ${portname} to ${value?.toInt()} run ${runtime} wait${waittime} Status :${s.status}"

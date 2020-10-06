@@ -111,20 +111,27 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
     }
 
     fun getHobj(job: Pijob): HObject? {
-        var ip = iptableServicekt.findByMac(job.desdevice?.mac!!)
-        logger.debug("Call IP : ${ip} RunH")
         try {
+            var ip = iptableServicekt.findByMac(job.desdevice?.mac!!)
+            logger.debug("Call IP : ${ip} RunH")
             if (ip != null) {
                 var re = httpService.get("http://${ip.ip}", 12000)
                 var h = om.readValue<HObject>(re)
                 return h
             }
+            lgs.createERROR("IP is null ", Date(),
+                    "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
+                    job.refid)
+            throw Exception("Ip is null")
 
         } catch (e: Exception) {
+            lgs.createERROR("${e.message}", Date(),
+                    "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
+                    job.refid)
             throw e
         }
 
-        return null
+//        return null
     }
 
 
@@ -151,7 +158,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
             logger.debug("Remove ${job.name} from queue is ${removed}")
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),
-                    "Runhjobd1", "", "", "removeJobFromQ",
+                    "Runhjobd1", "", "155", "removeJobFromQ",
                     job.desdevice?.mac, job.refid)
             logger.error("Remove Q ${job.name} ERROR ${e.message}")
         }
@@ -161,33 +168,38 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
      * ต้อง clar คิวให้หมดก่อน
      */
     fun runQueue() {
-        var mac:String?=null
-        var refid:Long ?=0
+        var mac: String? = null
+        var refid: Long? = 0
         try {
             logger.debug("Run inqueue ${Date()}")
-
-            for (q in queue.queue) {
-                mac = q.pijob?.desdevice?.mac
-                refid = q.pijob?.refid
-                if (task.checktime(q.pijob!!)) {
-                    if (groups.c(q.pijob!!))
-                        runfromQ(q)
-                    else {
-                        q.message = "Wait for other use water ${Date()}"
-                        logger.error("Some job use water")
+            if (queue != null && queue.queue != null && queue.queue.size > 0)
+                for (q in queue.queue) {
+                    try {
+                        mac = q.pijob?.desdevice?.mac
+                        refid = q.pijob?.refid
+                    } catch (e: Exception) {
+                        lgs.createERROR("${e.message}", Date(), "",
+                                "", "178", "runQueue()", "${mac}", q.pijob?.refid)
                     }
-                } else {//ถ้า job เกินเวลาแล้วเอาออกเลย
-                    q.message = "Out of date !! ${q.pijob?.stimes} - ${q.pijob?.etimes}"
-                    removeJobFromQ(q.pijob!!)
+                    if (task.checktime(q.pijob!!)) {
+                        if (groups.c(q.pijob!!))
+                            runfromQ(q)
+                        else {
+                            q.message = "Wait for other use water ${Date()}"
+                            logger.error("Some job use water")
+                        }
+                    } else {//ถ้า job เกินเวลาแล้วเอาออกเลย
+                        q.message = "Out of date !! ${q.pijob?.stimes} - ${q.pijob?.etimes}"
+                        removeJobFromQ(q.pijob!!)
+                    }
+                    if (!task.checkrun(q.pijob!!)) {//ถ้ามีอยู่ในtask แล้วก็เอาออกจาก Queue เลย
+                        removeJobFromQ(q.pijob!!)
+                    }
                 }
-                if (!task.checkrun(q.pijob!!)) {//ถ้ามีอยู่ในtask แล้วก็เอาออกจาก Queue เลย
-                    removeJobFromQ(q.pijob!!)
-                }
-            }
         } catch (e: Exception) {
             logger.error("ERROR ${e.message}")
-            lgs.createERROR("${e.message}",Date(),"Runhjobbyd1",
-            "","","",mac,refid)
+            lgs.createERROR("${e.message}", Date(), "Runhjobbyd1",
+                    "", "173", "runQueue()", mac, refid)
         }
 
     }

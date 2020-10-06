@@ -245,9 +245,10 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     @ResponseBody
     fun lt(@PathVariable("name") name: String): ArrayList<tl> {
         logger.debug("Call Tl")
-        var list = ArrayList<tl>()
-        var runs = taskService.runinglist.filter { it.getPJ().name?.indexOf(name)!=-1 }
         var n = name.toLowerCase()
+        var list = ArrayList<tl>()
+        var runs = taskService.runinglist.filter { it.getPJ().name?.toLowerCase()?.indexOf(n)!=-1 }
+
         for (run in runs) {
             try {
                 var pj = run.getPJ()

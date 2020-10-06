@@ -6,6 +6,7 @@ import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.*
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component
  * สำหรับ load pi job แบบใหม่ แบบเก่าไม่ใช้แล้ว
  */
 @Component
+@Profile("!test")
 class LoadPiJob(val httpService: HttpService, val io: Piio, val pjs: PijobService, val pds: PideviceService,
                 val ptijs: PortstatusinjobService, val js: JobService, val pgs: PijobgroupService,
                 val pns: PortnameService, val ls: LogistateService, val ips: IptableServicekt) {

@@ -59,7 +59,7 @@ class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
             t = pijob.waittime!!
         if (pijob.runtime != null)
             t += pijob.runtime!!
-        t + t + (totalrun + totalwait)
+        t += (totalrun + totalwait)
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, t.toInt())
         exitdate = calendar.time
@@ -81,7 +81,7 @@ class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
                     if (it.waittime != null && it.waittime!!.toInt() > totalwait)
                         totalwait = it.waittime!!.toInt()
                     var url = "http://${ip.ip}/run?port=${it.portname?.name}&delay=${it.runtime}&value=${it.status?.toInt()}&wait=${it.waittime}"
-                    var re = httpService.get(url, 10000)
+                    var re = httpService.get(url, 12000)
                     var s = om.readValue<Status>(re)
                     state = "Set ${it.portname?.name} to ${it.status?.name} uptime:${s.uptime}  status:${s.status}  Pm2.5:${s.pm25} pm10:${s.pm10} pm1:${s.pm1}"
                 }

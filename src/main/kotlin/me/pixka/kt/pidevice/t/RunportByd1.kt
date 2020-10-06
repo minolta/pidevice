@@ -58,14 +58,14 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                     } catch (e: Exception) {
                         logger.error("ERROR Set port ${it.name}  ERROR ${e.message}")
                         lgs.createERROR("${e.message}", Date(),
-                                "RunportByd1", "", "", "run", mac, it.refid)
+                                "RunportByd1", "", "41", "run", mac, it.refid)
                     }
                 }
             }
         } catch (e: Exception) {
             logger.error("Read h by d1 ERROR ${e.message}")
             lgs.createERROR("${e.message}", Date(),
-                    "RunportByd1", "", "", "run", mac)
+                    "RunportByd1", "", "35", "run", mac)
         }
     }
 
@@ -96,8 +96,8 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
 
         } catch (e: Exception) {
-            lgs.createERROR("ERROR ${e.message}", Date(), "RunportByd1",
-                    "", "", "getPorttocheck",
+            lgs.createERROR("${e.message}", Date(), "RunportByd1",
+                    "", "73", "getPorttocheck",
                     p.desdevice?.mac, p.refid)
             logger.debug("ERROR ${e.message}")
         }
@@ -106,21 +106,21 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
 
     fun getSensorstatus(p: Pijob): DPortstatus? {
         var url = ""
-        var ip: Iptableskt? = null
+        val ip: Iptableskt? = null
         try {
             logger.debug("Check Port start")
-            var ip = ips.findByMac(p.desdevice?.mac!!)
+            val ip = ips.findByMac(p.desdevice?.mac!!)
             url = "http://${ip?.ip}"
-            var re: String? = httpService.get(url,4000)
-            var dp = om.readValue(re, DPortstatus::class.java)
+            val re: String? = httpService.get(url,10000)
+            val dp = om.readValue(re, DPortstatus::class.java)
             return dp
 
         } catch (e: Exception) {
             logger.error("Get Sensor status JOB NAME IP:${ip} URL:${url} ${p.name} ${e.message} Des name:${p.desdevice}  ")
             lgs.createERROR("${e.message}",
                     Date(), "RunportByd1", "",
-                    "", "getSensorstatus", p.desdevice?.mac, p.refid)
-            throw e
+                    "110", "getSensorstatus", p.desdevice?.mac, p.refid)
+
         }
         return null
     }
@@ -155,8 +155,9 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                     return true
             }
         } catch (e: Exception) {
-            lgs.createERROR("${e.message}", Date(), "" +
-                    "RunportByd1", "", "", "getsensorstatusvalue", sensorstatus?.mac)
+            lgs.createERROR("${e.message}", Date(),
+                    "RunportByd1", "", "130",
+                    "getsensorstatusvalue", sensorstatus?.mac)
             logger.error("ERROR in getsensorstatusvalue message: ${e.message}")
         }
 

@@ -107,7 +107,8 @@ class D1hjobWorker(var pijob: Pijob,
             exitdate = task.findExitdate(pijob)
             logger.error("ERROR 1 ${e.message}")
             state = "ERROR 1 ${e.message}"
-            lgs.createERROR("ERROR 1 ${e.message}",Date())
+            lgs.createERROR("ERROR 1 ${e.message}",Date(),"D1hjobWorker",
+            "","","","",pijob.refid)
             waitstatus = true
             throw e
         }
@@ -176,7 +177,8 @@ class D1hjobWorker(var pijob: Pijob,
                             url = findUrl(portname!!, runtime, waittime, value)
                     } catch (e: Exception) {
                         logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
-                        lgs.createERROR("Find URL ERROR ${e.message} port: ${port} portname ${portname}",Date())
+                        lgs.createERROR("${e.message}",Date(),"D1hjobWorker",
+                        "","","go()",port.device?.mac,pijob.refid)
                         state = "Find URL ERROR ${e.message} port: ${port} portname ${portname}"
                     }
                     startrun = Date()
@@ -203,7 +205,8 @@ class D1hjobWorker(var pijob: Pijob,
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")
                     state = " Error 2 ${e.message}"
-                    lgs.createERROR(" Error 2 ${e.message}",Date())
+                    lgs.createERROR(" Error 2 ${e.message}",Date(),"D1hjobWorker",
+                    "","","go()",pijob.desdevice?.mac,pijob.refid)
                     isRun = false
                     waitstatus = true //หยุดใช้น้ำแล้ว
                     break //ออกเลย
@@ -252,7 +255,6 @@ class D1hjobWorker(var pijob: Pijob,
                 return url
             }
         }
-
         throw Exception("Error Can not find url")
     }
 
@@ -264,7 +266,6 @@ class D1hjobWorker(var pijob: Pijob,
                 return url
             }
         }
-
         throw Exception("Error Can not find url")
     }
 

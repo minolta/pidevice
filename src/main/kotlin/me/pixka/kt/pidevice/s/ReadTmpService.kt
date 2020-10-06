@@ -4,34 +4,28 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.HttpService
+import me.pixka.log.d.LogService
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.math.BigDecimal
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.*
 
 @Service
-class ReadTmpService {
+class ReadTmpService(val httpService: HttpService,val lgs:LogService) {
     var om = ObjectMapper()
     fun readTmp(ip: String): Tmpobj {
         try {
-            var url = URL("http://${ip}")
-            var c = url.openConnection() as HttpURLConnection
-            c.requestMethod = "GET"
-            c.connectTimeout = 2000
-            val buf = BufferedReader(
-                    InputStreamReader(
-                            c.inputStream))
-            val response = StringBuilder()
-            var inputLine: String? = ""
-            while (buf.readLine().also({ inputLine = it }) != null)
-                response.append(inputLine)
-            var re = response.toString()
+            var re = httpService.get("http://${ip}",5000)
             var t = om.readValue<Tmpobj>(re)
             return t
         } catch (e: Exception) {
-            e.printStackTrace()
+//            e.printStackTrace()
+            lgs.createERROR("${e.message}", Date(),"ReadTmpService",
+                    "","21","readTmp()","",null)
             throw e
         }
     }

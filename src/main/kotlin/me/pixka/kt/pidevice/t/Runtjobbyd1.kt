@@ -27,21 +27,24 @@ class Runtjobbyd1(val pjs: PijobService,
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
+        var mac: String? = null
+        var jid:Long?=0
         try {
             logger.debug("Start run ${Date()}")
             var list = findJob.loadjob("runtbyd1")
             logger.debug("found job ${list?.size}")
-            var mac:String ? = null
+
             if (list != null) {
                 for (job in list) {
+                    jid = job.refid
                     try {
                         if (!task.checkrun(job)) {
-                            if(job.desdevice?.mac!=null) {
+                            if (job.desdevice?.mac != null) {
                                 mac = job.desdevice?.mac
                                 var ip = ips.findByMac(job.desdevice?.mac!!)
                                 if (ip != null) {
 
-                                    var re = httpService.get("http://${ip.ip}",4000)
+                                    var re = httpService.get("http://${ip.ip}", 10000)
                                     var t = om.readValue<Tmpobj>(re)
                                     if (checktmp(t, job)) {
                                         var testjob = pjs.findByRefid(job.runwithid)
@@ -52,31 +55,35 @@ class Runtjobbyd1(val pjs: PijobService,
                             }
                         }
                     } catch (e: Exception) {
-                        lgs.createERROR("${e.message}",Date(),"Runtjobbyd1",
-                                "","","",mac,job.refid
+                        lgs.createERROR("${e.message}", Date(), "Runtjobbyd1",
+                                "", "37", "run", mac, job.refid
                         )
                         logger.error("${job.name} ${e.message}")
                     }
                 }
             }
         } catch (e: Exception) {
-            lgs.createERROR("${e.message}" ,Date(),"Runtjobbyd1",""
-                    ,""
-                    ,"run",System.getProperty("mac"))
+            lgs.createERROR("${e.message}", Date(),
+                    "Runtjobbyd1", "",
+                    "30", "run", mac,jid)
             logger.error(e.message)
         }
     }
 
     fun checktmp(t: Tmpobj, job: Pijob): Boolean {
-        var tmp: Double = 0.0
-        if (t.tmp != null) {
-            tmp = t.tmp?.toDouble()!!
-        } else if (t.t != null) {
-            tmp = t.t?.toDouble()!!
+        try {
+            var tmp: Double = 0.0
+            if (t.tmp != null) {
+                tmp = t.tmp?.toDouble()!!
+            } else if (t.t != null) {
+                tmp = t.t?.toDouble()!!
+            }
+            if (job.tlow?.toDouble()!! <= tmp && job.thigh?.toDouble()!! >= tmp)
+                return true
+        } catch (e: Exception) {
+            lgs.createERROR("${e.message}", Date(), "Runtjobbyd1", "",
+                    "71", "checktmp", job.desdevice?.mac, job.refid)
         }
-        if (job.tlow?.toDouble()!! <= tmp && job.thigh?.toDouble()!! >= tmp)
-            return true
-
         return false
 
     }
@@ -84,21 +91,24 @@ class Runtjobbyd1(val pjs: PijobService,
     fun readtmp(job: Pijob) {
         try {
             var ip = ips.findByMac(job.desdevice?.mac!!)
-            if(ip!=null) {
-                var tmp = readtmp.readTmp(ip?.ip!!)
+            if (ip != null) {
+                var re = httpService.get("http://${ip}", 5000)
+                var tmp = om.readValue<Tmpobj>(re)
                 var run = checktmp(tmp, job)
                 var testjob = pjs.findByRefid(job.runwithid)
-                var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService, lgs)
-                run = task.run(t)
-                if (run)
-                    println("Run JOB:${job.name}")
-                else
-                    println("Not run ${job.name}")
+                if (!task.checkrun(job)) {
+                    var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService, lgs)
+                    run = task.run(t)
+                    if (run)
+                        println("Run JOB:${job.name}")
+                    else
+                        println("Not run ${job.name}")
+                }
             }
         } catch (e: Exception) {
-            lgs.createERROR("ERROR Cehck tmp ${e.message}",Date(),
-                    "","","","readtmp",
-                    job.desdevice?.mac,job.refid)
+            lgs.createERROR("${e.message}", Date(),
+                    "Runtjobbyd1", "", "87", "readtmp",
+                    job.desdevice?.mac, job.refid)
         }
     }
 
