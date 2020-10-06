@@ -39,7 +39,7 @@ class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: Ip
     fun readPm(job: Pijob): Pm? {
         var ip = ips.findByMac(job.desdevice?.mac!!)
         if (ip != null) {
-            val re = httpService.get("http://${ip.ip}",500)
+            val re = httpService.get("http://${ip.ip}",10000)
             var dustobj = om.readValue<Pm>(re)
             return dustobj
         }

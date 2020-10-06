@@ -84,7 +84,7 @@ class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
 
 
                     var url = "http://${ip.ip}/run?port=${it.portname?.name}&delay=${it.runtime}&value=${it.status?.toInt()}&wait=${it.waittime}"
-                    var re = httpService.get(url,2000)
+                    var re = httpService.get(url,10000)
                     var s = om.readValue<Status>(re)
                     state = "Set ${it.portname?.name} to ${it.status?.name} uptime:${s.uptime}  status:${s.status}  Pm2.5:${s.pm25} pm10:${s.pm10} pm1:${s.pm1}"
 

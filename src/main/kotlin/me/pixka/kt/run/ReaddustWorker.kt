@@ -47,7 +47,7 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,va
             isRun = true
             startrundate = Date()
             logger.debug("read Start ${startrundate} ${isRun}")
-            var re = httpService.get("http://${ip}",2000)
+            var re = httpService.get("http://${ip}",12000)
             var pd = om.readValue<Pmdata>(re)
             var pid = pideviceService.findByMac(pd.mac!!)
             mac = pd.mac
