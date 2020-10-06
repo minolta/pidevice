@@ -22,7 +22,7 @@ class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: Ip
 
     val om = ObjectMapper()
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
 
         var jobs = findJob.loadjob("rundustjob")
