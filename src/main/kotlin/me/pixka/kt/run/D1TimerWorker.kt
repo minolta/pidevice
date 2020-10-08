@@ -322,6 +322,10 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
 
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     fun display(runtime: Int?, ip: Iptableskt) {
         val c = Calendar.getInstance()
         c.add(Calendar.SECOND, runtime!!)

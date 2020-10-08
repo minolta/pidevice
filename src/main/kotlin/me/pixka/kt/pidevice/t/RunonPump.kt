@@ -119,6 +119,10 @@ class OnpumbWorker(var pijob: Pijob, val httpService: HttpService, var ip: Iptab
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
 
     override fun run() {
         try {

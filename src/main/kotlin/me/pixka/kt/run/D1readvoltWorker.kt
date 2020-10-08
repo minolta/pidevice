@@ -107,6 +107,10 @@ class D1readvoltWorker(var pijob: Pijob, val httpService: HttpService,
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
 
 }
 

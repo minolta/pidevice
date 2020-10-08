@@ -39,6 +39,10 @@ class D1hjobWorker(var pijob: Pijob,
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun runStatus(): Boolean {
         return isRun
     }

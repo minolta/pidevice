@@ -32,6 +32,10 @@ class ReadcounterWorker(val service: CountfgService, val p: Pijob, var pijs: Por
             isRun = false//ออกเลย
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun run() {
 
         startRun = Date()

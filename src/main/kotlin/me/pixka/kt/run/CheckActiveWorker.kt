@@ -60,6 +60,10 @@ class CheckActiveWorker(var pijob: Pijob, val ps: PortstatusinjobService, val ht
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     fun check(ip: String, token: String? = null, device: PiDevice): Boolean {
         logger.debug("checkactive ${ip}")
         try {

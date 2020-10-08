@@ -76,6 +76,10 @@ class Dummyjob(var id: Long, var isRun: Boolean, var delay: Long) : PijobrunInte
         TODO("Not yet implemented")
     }
 
+    override fun exitdate(): Date? {
+        TODO("Not yet implemented")
+    }
+
     override fun run() {
         println("Start run " + Date() + Thread.currentThread().name)
         TimeUnit.SECONDS.sleep(delay)

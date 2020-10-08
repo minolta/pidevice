@@ -32,11 +32,11 @@ class D1tjobWorker(p: Pijob,
         t += (totalwait + totalrun)  //ต้อง ลบ 5 มันทำงานเร็วขึ้น
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, t.toInt())
-        var exitdate = calendar.time
+        var x = calendar.time
         if (t == 0L)
             return null
 
-        return exitdate
+        return x
     }
 
     override fun run() {
@@ -99,7 +99,7 @@ class D1tjobWorker(p: Pijob,
                 status = "Set port ${portname} to ${value?.toInt()} run ${runtime} wait${waittime} Status :${s.status}"
             } catch (e: Exception) {
                 lgs.createERROR("${e.message}", Date(),
-                        "D1tjobWorker", "", "", "setPort",
+                        "D1tjobWorker", "", "82", "setPort",
                 pijob.desdevice?.mac,pijob.refid)
                 status = "ERROR ${pijob.name} ${e.message}"
             }
@@ -119,7 +119,8 @@ class D1tjobWorker(p: Pijob,
             }
             return true // ถ้าไม่กำหนด run with ก็ run เลย
         } catch (e: Exception) {
-            lgs.createERROR("D1tjobWorker ${pijob.name} Error runwith() ${e.message}", Date(), "D1tjobWorker", pijob.name, "runwith")
+            lgs.createERROR("${e.message}", Date(), "D1tjobWorker",
+                    pijob.name, "runwith")
             logger.error("D1tjobWorker ${pijob.name} Error runwith() ${e.message}")
             throw  e
         }
@@ -128,6 +129,9 @@ class D1tjobWorker(p: Pijob,
 
 
     var startrun: Date? = null
+    override fun exitdate(): Date? {
+        return exitdate
+    }
 
     override fun toString(): String {
         return "${pijob.name} "

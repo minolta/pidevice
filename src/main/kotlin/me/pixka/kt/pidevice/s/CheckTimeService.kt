@@ -8,9 +8,22 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Service
-class CheckTimeService(val lgs:LogService) {
+class CheckTimeService(val lgs: LogService) {
 
     var df = SimpleDateFormat("HH:mm")
+    fun findExitdate(job: Pijob): Date? {
+        var tvalue: Long? = 0L
+        if (job.waittime != null)
+            tvalue = job.waittime!!
+        if (tvalue != null) {
+            if (job.runtime != null)
+                tvalue += job.runtime!!
+        }
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, tvalue!!.toInt())
+        return calendar.time
+    }
+
     fun checkTime(job: Pijob, now: Date): Boolean {
         try {
             var n = df.parse(df.format(now))
@@ -44,9 +57,9 @@ class CheckTimeService(val lgs:LogService) {
                             return true
                     }
         } catch (e: Exception) {
-            lgs.createERROR("${e.message}",Date(),
-            "CheckTimeService","","","",
-            job.desdevice?.mac,job.refid)
+            lgs.createERROR("${e.message}", Date(),
+                    "CheckTimeService", "", "", "",
+                    job.desdevice?.mac, job.refid)
             logger.error("ERROR  ${e.message} JOB: ${job.name}")
         }
 

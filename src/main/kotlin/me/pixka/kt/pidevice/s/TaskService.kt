@@ -21,8 +21,6 @@ class TaskService(val context: ApplicationContext) {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
 
     val pool = context.getBean("pool") as ExecutorService
-
-    //    val pool = context.getBean("pool2") as ExecutorService
     fun run(work: PijobrunInterface): Boolean {
         try {
             var forrun = checkalreadyrun(work)
@@ -99,112 +97,115 @@ class TaskService(val context: ApplicationContext) {
     fun checkExitdate() {
         try {
             var now = Date().time
-
-            runinglist.filter {
-                it is D1hjobWorker || it is D1tjobWorker
-                        || it is OffpumpWorker || it is ReadDhtWorker
-                        || it is D1portjobWorker || it is CheckActiveWorker || it is OffpumpWorker
-                        || it is ReadPressureTask || it is ReadTmpTask ||
-                        it is NotifyPressureWorker || it is OnpumbWorker || it is ReaddustWorker
-                        || it is DustWorker || it is D1TimerWorker
-            }.forEach {
-
-                if (it is D1hjobWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.state = "End job"
-                    }
-                } else if (it is D1tjobWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit  job by exitdate"
-                    }
-                } else if (it is ReadDhtWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit  job by exitdate"
-                    }
-                } else if (it is D1readvoltWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit  job by exitdate"
-                    }
-                } else if (it is D1portjobWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.state = "Exit  job by exitdate"
-                    }
-
-                } else if (it is CheckActiveWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.state = "Exit  job by exitdate"
-                    }
-
-                } else if (it is OffpumpWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.state = "Exit  job by exitdate"
-                    }
-
-                } else if (it is ReadPressureTask) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit  job by exitdate"
-                    }
-                } else if (it is ReadTmpTask) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit  job by exitdate"
-                    }
-                } else if (it is NotifyPressureWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit  job by exitdate"
-                    }
-                } else if (it is OnpumbWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit  job by exitdate"
-                    }
-                } else if (it is ReaddustWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.state = "Exit  job by exitdate"
-                    }
-                } else if (it is DustWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.state = "Exit  job by exitdate"
-                    }
-                } else if (it is D1TimerWorker) {
-                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
-                        it.setrun(false) //end this job have to remove
-                        it.status = "Exit job by exitdate"
-                    }
+            runinglist.forEach {
+                if (it.exitdate() != null && it.exitdate()?.time!! <= now) {
+                    it.setrun(false) //end this job have to remove
                 }
-
             }
+//            runinglist.filter {
+//                it is D1hjobWorker || it is D1tjobWorker
+//                        || it is OffpumpWorker || it is ReadDhtWorker
+//                        || it is D1portjobWorker || it is CheckActiveWorker || it is OffpumpWorker
+//                        || it is ReadPressureTask || it is ReadTmpTask ||
+//                        it is NotifyPressureWorker || it is OnpumbWorker || it is ReaddustWorker
+//                        || it is DustWorker || it is D1TimerWorker
+//            }.forEach {
+//
+//                if (it is D1hjobWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "End job"
+//                    }
+//                } else if (it is D1tjobWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is ReadDhtWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is D1readvoltWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is D1portjobWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//
+//                } else if (it is CheckActiveWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//
+//                } else if (it is OffpumpWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//
+//                } else if (it is ReadPressureTask) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is ReadTmpTask) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is NotifyPressureWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is OnpumbWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is ReaddustWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//                } else if (it is DustWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//                } else if (it is D1TimerWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit job by exitdate"
+//                    }
+//                }
+//
+//            }
 
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error("ERROR set exit time ${e.message}")
         }
 
     }
 
     fun findExitdate(pijob: Pijob): Date? {
-        var t = 0L
-
+        var tvalue: Long? = 0L
         if (pijob.waittime != null)
-            t = pijob.waittime!!
-        if (pijob.runtime != null)
-            t += pijob.runtime!!
+            tvalue = pijob.waittime!!
+        if (tvalue != null) {
+            if (pijob.runtime != null)
+                tvalue += pijob.runtime!!
+        }
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-
-        calendar.add(Calendar.SECOND, t.toInt())
-        var exitdate = calendar.time
-        if (t == 0L)
+        calendar.add(Calendar.SECOND, tvalue!!.toInt())
+        val exitdate = calendar.time
+        if (tvalue == 0L)
             return null
 
         return exitdate

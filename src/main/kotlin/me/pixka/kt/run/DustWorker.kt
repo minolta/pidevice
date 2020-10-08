@@ -53,6 +53,10 @@ class DustWorker(var pijob: Pijob, var ports: ArrayList<Portstatusinjob>,
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     fun setEnddate() {
         var t = 0L
         if (pijob.waittime != null)

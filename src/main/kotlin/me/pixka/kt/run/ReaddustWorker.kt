@@ -108,6 +108,10 @@ class ReaddustWorker(var pijob: Pijob, var ip: String, var service: PmService,va
         this.isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     companion object {
         internal var logger = LoggerFactory.getLogger(ReaddustWorker::class.java)
     }

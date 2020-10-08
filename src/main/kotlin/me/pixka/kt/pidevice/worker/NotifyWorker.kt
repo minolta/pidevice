@@ -52,6 +52,10 @@ class NotifyPressureWorker(var pijob: Pijob, var readStatusService: ReadStatusSe
         run = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun run() {
         try {
             runDate = Date()

@@ -8,6 +8,7 @@ import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.t.OnpumbWorker
 import me.pixka.kt.pidevice.u.ReadUtil
+import me.pixka.kt.pidevice.worker.DisplaytmpWorker
 import me.pixka.kt.pidevice.worker.NotifyPressureWorker
 import me.pixka.kt.run.*
 import org.slf4j.LoggerFactory
@@ -101,36 +102,38 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
             try {
                 var pj = run.getPJ()
                 var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
-                        run.runStatus(), pj.ports, run.getPJ().job?.name, run.startRun(), run.getPJ().refid)
-
-                if (run is D1tjobWorker)
-                    t.exitdate = run.exitdate
-                if (run is D1hjobWorker)
-                    t.exitdate = run.exitdate
-                if (run is D1portjobWorker)
-                    t.exitdate = run.exitdate
-                if (run is D1readvoltWorker)
-                    t.exitdate = run.exitdate
-                if (run is ReadDhtWorker)
-                    t.exitdate = run.exitdate
-                if (run is CheckActiveWorker)
-                    t.exitdate = run.exitdate
-                if (run is OffpumpWorker)
-                    t.exitdate = run.exitdate
-                if (run is ReadPressureTask)
-                    t.exitdate = run.exitdate
-                if (run is ReadTmpTask)
-                    t.exitdate = run.exitdate
-                if (run is NotifyPressureWorker)
-                    t.exitdate = run.exitdate
-                if (run is OnpumbWorker)
-                    t.exitdate = run.exitdate
-                if (run is ReaddustWorker)
-                    t.exitdate = run.exitdate
-                if (run is DustWorker)
-                    t.exitdate = run.exitdate
-                if (run is D1TimerWorker)
-                    t.exitdate = run.exitdate
+                        run.runStatus(), pj.ports, run.getPJ().job?.name, run.exitdate(), run.getPJ().refid)
+//
+//                if (run is D1tjobWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is D1hjobWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is D1portjobWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is D1readvoltWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is ReadDhtWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is CheckActiveWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is OffpumpWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is ReadPressureTask)
+//                    t.exitdate = run.exitdate
+//                if (run is ReadTmpTask)
+//                    t.exitdate = run.exitdate
+//                if (run is NotifyPressureWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is OnpumbWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is ReaddustWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is DustWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is D1TimerWorker)
+//                    t.exitdate = run.exitdate
+//                if (run is DisplaytmpWorker)
+//                    t.exitdate = run.exitdate
                 list.add(t)
             } catch (e: Exception) {
                 logger.error("List task error ${e.message}")
@@ -182,9 +185,6 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         var re = taskService.runinglist.filter { it.runStatus() }.map {
 
             var tl = getTl(it)
-
-
-
             tl
         }
 
@@ -193,50 +193,8 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 
     fun getTl(it: PijobrunInterface): tl {
         var tl = tl(it.getPijobid(), it.getPJ().name, it.startRun(), it.state(),
-                it.runStatus(), it.getPJ().ports, it.getPJ().job?.name, it.startRun(), it.getPJ().refid)
+                it.runStatus(), it.getPJ().ports, it.getPJ().job?.name, it.exitdate(), it.getPJ().refid)
         tl.name = it.getPJ().name
-        if (it is D1hjobWorker) {
-            tl.exitdate = it.exitdate
-            tl.jobtype = it.pijob.job?.name
-            tl.name = it.pijob.name
-            tl.runstatus = it.isRun
-            tl.state = it.state
-        }
-        if (it is D1tjobWorker) {
-            tl.exitdate = it.exitdate
-            tl.jobtype = it.pijob.job?.name
-            tl.name = it.pijob.name
-            tl.runstatus = it.isRun
-            tl.state = it.status
-        }
-        if (it is D1readvoltWorker) {
-            tl.exitdate = it.exitdate
-            tl.jobtype = it.pijob.job?.name
-            tl.name = it.pijob.name
-            tl.runstatus = it.isRun
-            tl.state = it.status
-        }
-        if (it is D1portjobWorker) {
-            tl.exitdate = it.exitdate
-            tl.jobtype = it.pijob.job?.name
-            tl.name = it.pijob.name
-            tl.runstatus = it.isRun
-            tl.state = it.state
-        }
-        if (it is OnpumbWorker) {
-            tl.exitdate = it.exitdate
-            tl.jobtype = it.pijob.job?.name
-            tl.name = it.pijob.name
-            tl.runstatus = it.isRun
-            tl.state = it.status
-        }
-        if (it is ReaddustWorker) {
-            tl.exitdate = it.exitdate
-            tl.jobtype = it.pijob.job?.name
-            tl.name = it.pijob.name
-            tl.runstatus = it.isRun
-            tl.state = it.state
-        }
         return tl
     }
 
@@ -287,17 +245,17 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
                 list.add(t)
                 i++
             } else
-                if (thread is Worker) {
-                    var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
-//                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
-                    list.add(t)
-                    i++
-                } else if (thread is DefaultWorker) {
-                    var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
-//                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
-                    list.add(t)
-                    i++
-                }
+//                if (thread is Worker) {
+//                    var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+////                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
+//                    list.add(t)
+//                    i++
+//                } else if (thread is DefaultWorker) {
+//                    var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+////                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
+//                    list.add(t)
+//                    i++
+//                }
             try {
                 var t = thread as PijobrunInterface
                 var tt = tl(t.getPijobid(), t.getPJ().name, t.startRun(), t.state(), t.runStatus(), null)

@@ -17,6 +17,7 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
     var isRun = false
     var state = "Init"
     var startrun: Date? = null
+    var exitdate:Date?=null
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -24,6 +25,11 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
     override fun setrun(p: Boolean) {
         isRun = p
     }
+
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun runStatus(): Boolean {
         return isRun
     }

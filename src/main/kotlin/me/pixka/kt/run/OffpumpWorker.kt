@@ -72,6 +72,10 @@ class OffpumpWorker(var pijob: Pijob,
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun run() {
         isRun = true
         startrun = Date()

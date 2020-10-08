@@ -34,6 +34,10 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun runStatus(): Boolean {
         return isRun
     }

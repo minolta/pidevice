@@ -20,6 +20,7 @@ class NotifytmpWorker(var pijob: Pijob, var readStatusService: ReadStatusService
     var run: Boolean = false
     var runDate: Date? = null
     var tmp:Double? =0.0
+    var exitdate:Date?=null
     override fun setP(pijob: Pijob) {
         this.pijob = pijob
     }
@@ -50,6 +51,10 @@ class NotifytmpWorker(var pijob: Pijob, var readStatusService: ReadStatusService
 
     override fun setrun(p: Boolean) {
         run = p
+    }
+
+    override fun exitdate(): Date? {
+        return exitdate
     }
 
     override fun run() {

@@ -72,6 +72,11 @@ class ReadTmpTask(p: Pijob, readvalue: ReadUtil?, var ips: IptableServicekt,
         if (t == 0L || !isRun)
             isRun = false//ออกเลย
     }
+
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun toString(): String {
         return "${pijob.name}"
     }

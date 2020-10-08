@@ -16,6 +16,11 @@ import java.util.concurrent.TimeUnit
 class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService, var runwithjob: Pijob,
                 var pjs: PijobService)
     : DefaultWorker(p, gpios, readUtil, ps, logger) {
+    var exitdate:Date?=null
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun run() {
         var ports: List<Portstatusinjob>? = null
         try {

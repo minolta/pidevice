@@ -81,6 +81,10 @@ class ReadDhtWorker(pijob: Pijob, val pds: PideviceService,
         internal var logger = LoggerFactory.getLogger(ReadDhtWorker::class.java)
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun toString(): String {
         return "READ DHT name: ${getPJ().name} Start ${startRun()}"
     }

@@ -108,6 +108,10 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
 
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun toString(): String {
         return "${pijob.name}"
     }
