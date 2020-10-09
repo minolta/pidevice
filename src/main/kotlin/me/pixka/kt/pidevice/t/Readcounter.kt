@@ -1,36 +1,52 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.d.CountfgService
+import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.FindJob
+import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pibase.s.JobService
+import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.d.CountfgService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.ReadcounterWorker
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-class Readcounter(val pjs: PijobService, val js: JobService,
-                  val iptableServicekt: IptableServicekt, val ts: TaskService,
-                  val cfgs: CountfgService) {
+class Readcounter(val pjs: PijobService, val js: JobService, val findJob: FindJob,
+                  val logService: LogService, val ts: TaskService, val httpService: HttpService,
+                  val cfgs: CountfgService, val iptableServicekt: IptableServicekt) {
     @Scheduled(initialDelay = 3000, fixedDelay = 10000)
     fun read() {
+        var jobid: Long? = null
+        var mac: String? = null
         try {
-            var jobs = loadjob()
+            var jobs = findJob.loadjob("readcounter")
 
             if (jobs != null) {
                 for (p in jobs) {
-                    var t = ReadcounterWorker(cfgs, p, null, iptableServicekt)
-                    ts.run(t)
+                    mac = p.desdevice?.mac
+                    jobid = p.refid
+                    if (!ts.checkrun(p)) {
+                        var ip = iptableServicekt.findByMac(p.desdevice?.mac!!)
+                        if (ip != null) {
+                            var t = ReadcounterWorker(cfgs, p, null, ip.ip!!, logService,httpService)
+                            ts.run(t)
+                        }
+                    }
+
                 }
             }
         } catch (e: Exception) {
+            logService.createERROR("${e.message}", Date(),
+                    "ReadCounter", "", "27", "read()", mac, jobid)
             logger.error("Read Counter error ${e.message}")
         }
 

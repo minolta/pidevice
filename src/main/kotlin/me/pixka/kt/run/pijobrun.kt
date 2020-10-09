@@ -13,4 +13,5 @@ interface PijobrunInterface {
     fun startRun(): Date?
     fun state(): String? //สำหรับบอกว่าทำอะไรอยู่
     fun setrun(p:Boolean)
+    fun exitdate():Date?
 }

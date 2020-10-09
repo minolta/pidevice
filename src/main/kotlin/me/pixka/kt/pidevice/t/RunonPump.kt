@@ -1,70 +1,52 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pibase.s.*
+import me.pixka.kt.pidevice.s.CheckTimeService
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.pidevice.u.Dhtutil
-import me.pixka.kt.pidevice.u.TimeUtil
-import me.pixka.kt.run.OffpumpWorker
 import me.pixka.kt.run.PijobrunInterface
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
+import me.pixka.kt.run.Status
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 @Component
-class RunonPump(val pjs: PijobService,
-                val js: JobService,
-                val task: TaskService,
-                val timeUtil: TimeUtil, val dhts: Dhtutil) {
+class RunonPump(val pjs: PijobService, val checkTimeService: CheckTimeService,
+                val js: JobService, val ips: IptableServicekt,
+                val task: TaskService, val findJob: FindJob, val httpService: HttpService,
+                val lgs: LogService) {
 
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
-
-        logger.debug("Run off pump")
+        logger.debug("Run on pump")
         try {
-            var jobs = loadjob()
+            var jobs = findJob.loadjob("onpump")
             if (jobs != null) {
-                logger.debug("Job size ${jobs?.size}")
+                logger.debug("Job size ${jobs.size}")
 
-                var t = Executors.newSingleThreadExecutor()
                 for (job in jobs) {
-                    var intime = task.checktime(job)
-                    try {
-                        if (intime) {
-                            task.run(OnpumbWorker(job, timeUtil, dhts))
-                        } else {
-                            logger.debug("Not in time ${job.name}")
+                    if (checkTimeService.checkTime(job, Date()) && !task.checkrun(job)) {
+                        var ip = ips.findByMac(job.desdevice?.mac!!)
+                        if (ip != null && !task.run(OnpumbWorker(job, httpService, ip,lgs))) {
+//                          logger.error("Can not Run ${job.name}")
                         }
-                    } catch (e: Exception) {
-                        logger.error("offpump ${job.name} : ${e.message}")
                     }
-
                 }
             }
         } catch (e: Exception) {
+            lgs.createERROR("${e.message}", Date(), "RunonPump", "",
+                    "", "Run", System.getProperty("mac"))
             logger.error("On pump ${e.message}")
         }
 
 
-    }
-
-    fun loadjob(): List<Pijob>? {
-        var job = js.findByName("onpump")
-
-        if (job != null) {
-
-            var jobs = pjs.findJob(job.id)
-            return jobs
-        }
-        throw Exception("Not have JOB")
     }
 
     companion object {
@@ -74,16 +56,39 @@ class RunonPump(val pjs: PijobService,
 }
 
 
-class OnpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
-                   val dhts: Dhtutil)
+class OnpumbWorker(var pijob: Pijob, val httpService: HttpService, var ip: Iptableskt?,var lgs:LogService)
     : PijobrunInterface, Runnable {
 
     val om = ObjectMapper()
     var status: String? = null
-    var isRun = false
+    var isRun = true
     var startdate: Date? = null
+    var exitdate: Date? = null
     override fun setP(pijob: Pijob) {
         this.pijob = pijob
+    }
+
+    fun setEnddate() {
+        try {
+            var t = 0L
+
+            if (pijob.waittime != null)
+                t = pijob.waittime!!
+            if (pijob.runtime != null)
+                t += pijob.runtime!!
+            val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+
+            calendar.add(Calendar.SECOND, t.toInt())
+            exitdate = calendar.time
+            if (t == 0L)
+                isRun = false//ออกเลย
+        }catch (e:Exception)
+        {
+            isRun=false
+            exitdate = Date()
+            lgs.createERROR("${e.message}",Date(),"OnpumbWorker","",
+            "","setEnddate()",pijob.desdevice?.mac)
+        }
     }
 
     override fun setG(gpios: GpioService) {
@@ -114,31 +119,36 @@ class OnpumbWorker(var pijob: Pijob, val timeUtil: TimeUtil,
         isRun = p
     }
 
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
 
     override fun run() {
-        var t = Executors.newSingleThreadExecutor()
         try {
-            var ip = dhts.mactoip(pijob.desdevice?.mac!!)
-            var task = HttpGetTask("http://${ip?.ip}/on")
-            status = "call url http://${ip?.ip}/on"
-            var f = t.submit(task)
+            startdate = Date()
+            var ip = ip?.ip
+            status = "call url http://${ip}/on"
             try {
-                var re = f.get(30, TimeUnit.SECONDS)
-                status = "on pumb is ok ${re}"
-                TimeUnit.SECONDS.sleep(5)
+                var re = httpService.get("http://${ip}/on",2000)
+                var s = om.readValue<Status>(re)
+                status = "on pumb is ok ${s.status} Uptime ${s.uptime}"
             } catch (e: Exception) {
-                OffpumpWorker.logger.error("on pumb error  onpump ${e.message} ${pijob.name}")
+                logger.error("on pumb error  onpump ${e.message} ${pijob.name}")
+                lgs.createERROR("${e.message}",Date(),
+                "RunonPump",pijob.name,"","",pijob.desdevice?.mac,pijob.refid)
                 status = "on pumb error  onpump ${e.message} ${pijob.name}"
-                TimeUnit.SECONDS.sleep(5)
+                isRun = false
 
             }
         } catch (e: Exception) {
-            OffpumpWorker.logger.error("offpump ${e.message} ${pijob.name}")
+            logger.error("offpump ${e.message} ${pijob.name}")
+            lgs.createERROR("${e.message}",Date(),
+            pijob.name,"","","",pijob.desdevice?.mac,pijob.refid)
             status = "offpump ${e.message} ${pijob.name}"
-            TimeUnit.SECONDS.sleep(10)
-
+            isRun = false //ออกเลยที่มีปัญฆา
         }
-        isRun = false
+        setEnddate()
     }
 
 

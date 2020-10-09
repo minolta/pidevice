@@ -1,7 +1,7 @@
 package me.pixka.kt.pidevice.s
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.Usewaterinformation
 import me.pixka.kt.pibase.d.Waterinfo

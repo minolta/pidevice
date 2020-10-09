@@ -1,5 +1,6 @@
 package me.pixka.kt.run
 
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pidevice.s.TaskService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -47,6 +48,56 @@ class GroupRunService(val task: TaskService) {
         //ถ้าไม่เจอ ทำงานได้
         logger.debug("${job} checkgroup Now this job can run ")
         return true
+    }
+
+    /**
+     * ใ้สำหรับค้นหา pijob ที่ใช้น้ำอยู่ถ้าใช้จะ return true
+     */
+    fun findOtherUserwater(job: Pijob): Boolean {
+        try {
+
+            var found = false
+            //หาว่า มี Job ไหนยังไม่หยุดใช้น้ำ
+            task.runinglist.forEach {
+                if(it is D1hjobWorker) {
+                    if (it.getPJ().pijobgroup_id == job.pijobgroup_id && it.waitstatus == false)
+                        found = true
+                }
+            }
+
+            return found
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return false
+    }
+
+    /***
+     * สำหรับตรวจสอบว่าในกลุ่มของ job นี้มีการ ใช้น้ำอยู่หรือเปล่า
+     * return true ถ้าไม่มีการใช้น้ำ
+     * return false ถ้ามีการใช้น้ำ
+     */
+    fun c(j: Pijob): Boolean {
+        try {
+            var samerun = task.checkrun(j)
+            if (samerun) {
+                logger.error("This job already run  from JOB ${j.name}")
+                return false //ไม่สามารถ run job นี้ได้
+            }
+
+            //หาว่าobject ตัวไหนจะยัง run อยู่แต่อยู่ใน status run
+
+            if (findOtherUserwater(j)) {
+                logger.error("Some one use water ${j.name}")
+                return false //ไม่สามารถ run job นี้ได้
+            }
+        } catch (e: Exception) {
+            return false
+        }
+        return true
+
+
     }
 
     companion object {

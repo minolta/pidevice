@@ -1,10 +1,13 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.c.HttpControl
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.Dhtvalue
+import me.pixka.kt.pibase.s.DhtvalueService
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.t.HttpPostTask
+import me.pixka.log.d.LogService
 import me.pixka.pibase.o.Infoobj
-import me.pixka.pibase.s.DhtvalueService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -13,49 +16,41 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
-//@Profile("pi", "lite")
-class SendDht(val dhts: DhtvalueService, val http: HttpControl) {
-
-
+class SendDht(val dhts: DhtvalueService, val http: HttpService,val lgs:LogService) {
+    val om = ObjectMapper()
     @Scheduled(fixedDelay = 1000)
     fun run() {
-
-
-//        println("Date : ${Date()}")
         var target = System.getProperty("savedht")
-
         if (target == null)
-            target = System.getProperty("piserver")+"/dht/add"
-
+            target = System.getProperty("piserver") + "/dht/add"
         val list = dhts.notInserver() as List<Dhtvalue>
-
+        var mac:String? = ""
         if (list != null) {
-            var t = Executors.newSingleThreadExecutor()
             logger.debug("Found dht for send ${list.size}")
             for (dht in list) {
                 try {
                     var obj = Infoobj()
                     obj.dhtvalue = dht
                     obj.mac = dht.pidevice?.mac
+                    mac = obj.mac
+
                     logger.debug("Obj for send ${obj} URL ${target}")
-                    var task = HttpPostTask(target, obj)
                     try {
-                        var f = t.submit(task)
 
-                        var value = f.get(5, TimeUnit.SECONDS)
-//                    var value = http.postJson(target, obj)
-                        logger.debug("Return Save DHT ${value.statusLine}")
-
-                        if (value != null) {
-                            dht.toserver = true
-                            dhts.save(dht)
+                        var value = http.post(target,obj,2000)
+                        var d = om.readValue<Dhtvalue>(value)
+                        if (d != null) {
+                            dhts.delete(dht)
                         }
                     } catch (e: Exception) {
+                        lgs.createERROR("${e.message} ", Date(),"Senddht",
+                        "","","run",mac)
                         logger.error("Send Dht ERROR ${e.message}")
                     }
                 } catch (e: Exception) {
+                    lgs.createERROR("${e.message} ", Date(),"Senddht",
+                            "","","run",System.getProperty("mac"))
                     logger.error("Error ${e.message}")
-                    t.shutdownNow()
                 }
 
 

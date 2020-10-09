@@ -1,71 +1,117 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
+import com.fasterxml.jackson.module.kotlin.readValue
+import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.*
+import me.pixka.kt.pidevice.s.ReadTmpService
 import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.pidevice.s.Tmpobj
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1tjobWorker
-import me.pixka.pibase.s.JobService
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
+import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-//@Profile("pi")
 class Runtjobbyd1(val pjs: PijobService,
                   val js: JobService,
-                  val task: TaskService,
-//                  val gpios: GpioService,
-                  val dhs: Dhtutil, val httpControl: HttpControl, val psij: PortstatusinjobService,
-                  val readUtil: ReadUtil) {
+                  val task: TaskService, val ips: IptableServicekt,
+                  val dhs: Dhtutil, val httpService: HttpService, val psij: PortstatusinjobService,
+                  val readUtil: ReadUtil, val findJob: FindJob, val readtmp: ReadTmpService, val lgs: LogService) {
     val om = ObjectMapper()
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
+        var mac: String? = null
+        var jid:Long?=0
         try {
             logger.debug("Start run ${Date()}")
-            var list = loadjob()
+            var list = findJob.loadjob("runtbyd1")
             logger.debug("found job ${list?.size}")
+
             if (list != null) {
                 for (job in list) {
+                    jid = job.refid
                     try {
-                        var testjob = pjs.findByRefid(job.runwithid)
-                        logger.debug("")
-                        var t = D1tjobWorker(job, readUtil, psij, testjob)
-                        task.run(t)
+                        if (!task.checkrun(job)) {
+                            if (job.desdevice?.mac != null) {
+                                mac = job.desdevice?.mac
+                                var ip = ips.findByMac(job.desdevice?.mac!!)
+                                if (ip != null) {
 
-//                        if (t.checktmp(job)) {
-//                            var canrun = task.run(t)
-//                            logger.debug("This job run JOB:${job.name} ==> ${canrun}")
-//                        }
-//                        else
-//                            logger.debug("Job out of rang")
+                                    var re = httpService.get("http://${ip.ip}", 10000)
+                                    var t = om.readValue<Tmpobj>(re)
+                                    if (checktmp(t, job)) {
+                                        var testjob = pjs.findByRefid(job.runwithid)
+                                        var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService, lgs)
+                                        var run = task.run(t)
+                                    }
+                                }
+                            }
+                        }
                     } catch (e: Exception) {
+                        lgs.createERROR("${e.message}", Date(), "Runtjobbyd1",
+                                "", "37", "run", mac, job.refid
+                        )
                         logger.error("${job.name} ${e.message}")
                     }
                 }
             }
         } catch (e: Exception) {
+            lgs.createERROR("${e.message}", Date(),
+                    "Runtjobbyd1", "",
+                    "30", "run", mac,jid)
             logger.error(e.message)
         }
     }
 
-
-    fun loadjob(): List<Pijob>? {
-        var job = js.findByName("runtbyd1")
-
-        if (job != null) {
-
-            var jobs = pjs.findJob(job.id)
-            return jobs
+    fun checktmp(t: Tmpobj, job: Pijob): Boolean {
+        try {
+            var tmp: Double = 0.0
+            if (t.tmp != null) {
+                tmp = t.tmp?.toDouble()!!
+            } else if (t.t != null) {
+                tmp = t.t?.toDouble()!!
+            }
+            if (job.tlow?.toDouble()!! <= tmp && job.thigh?.toDouble()!! >= tmp)
+                return true
+        } catch (e: Exception) {
+            lgs.createERROR("${e.message}", Date(), "Runtjobbyd1", "",
+                    "71", "checktmp", job.desdevice?.mac, job.refid)
         }
-        throw Exception("Not have JOB")
+        return false
+
     }
+
+    fun readtmp(job: Pijob) {
+        try {
+            var ip = ips.findByMac(job.desdevice?.mac!!)
+            if (ip != null) {
+                var re = httpService.get("http://${ip}", 5000)
+                var tmp = om.readValue<Tmpobj>(re)
+                var run = checktmp(tmp, job)
+                var testjob = pjs.findByRefid(job.runwithid)
+                if (!task.checkrun(job)) {
+                    var t = D1tjobWorker(job, readUtil, psij, testjob, ips, httpService, lgs)
+                    run = task.run(t)
+                    if (run)
+                        println("Run JOB:${job.name}")
+                    else
+                        println("Not run ${job.name}")
+                }
+            }
+        } catch (e: Exception) {
+            lgs.createERROR("${e.message}", Date(),
+                    "Runtjobbyd1", "", "87", "readtmp",
+                    job.desdevice?.mac, job.refid)
+        }
+    }
+
 
     companion object {
         internal var logger = LoggerFactory.getLogger(Runtjobbyd1::class.java)

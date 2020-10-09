@@ -1,10 +1,10 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
-import me.pixka.kt.pidevice.s.NotifyService
-import me.pixka.ktbase.io.Configfilekt
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.BufferedReader
@@ -16,17 +16,18 @@ import java.util.*
 
 
 @Component
-//@Profile("pi")
-class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: NotifyService) {
+@Profile("!test")
+class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)
     }
 
+    var directcommand: String? = null
     var s: String? = null
     var command: String? = "nmap -n -sP "
 
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 600000)
     fun loadip() {
         logger.info("Scan ip ${Date()}")
         setup()
@@ -54,9 +55,9 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
 
 
     fun setup() {
-        // logger.debug("Set ups")
         command = "nmap -n -sP"
-        //dbcfg.findorcreate("nmap", "nmap -n -sP").value
+        directcommand = System.getProperty("directcommand")
+
     }
 
 
@@ -68,7 +69,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
             for (n in nw) {
                 var ipdata = n.split(",")
                 val n = n.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val nn = n[0] + "." + n[1] + "." + n[2] + ".0/24"
+                val nn = n[0] + "." + n[1] + "." + n[2] + ".0/23"
                 buffer.add(nn)
             }
         } catch (e: Exception) {
@@ -80,7 +81,10 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
     }
 
     fun findIP(network: String, cmd: String): ArrayList<Ip> {
-        val c = cmd + " " + network
+        var c = cmd + " " + network
+
+        if (directcommand != null)
+            c = directcommand!!
         val proc = Runtime.getRuntime().exec(c)
         logger.debug("Command is ${c}")
         val stdInput = BufferedReader(InputStreamReader(proc.inputStream))
@@ -122,9 +126,6 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
             var network = getNet()
             logger.debug("Network found ${network}")
 
-//            network.map {
-//                findIP(it,command!!)
-//            }
             for (n in network) {
                 var b = findIP(n, command!!)
                 logger.debug("Ip found ${b}")
@@ -141,14 +142,14 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
 
     fun savetoDB(buf: ArrayList<Ip>) {
 
-       buf.map {
+        buf.map {
             var oldip = service.findByMac(it.mac!!)
             if (oldip != null) {
                 //edit
                 oldip.ip = it.ip
                 oldip.lastupdate = Date()
                 oldip = service.save(oldip)
-                logger.debug("Update ${oldip?.devicename}  TO IP ${oldip?.ip} MAC:${oldip?.mac}")
+                logger.debug("Update ${oldip.devicename}  TO IP ${oldip.ip} MAC:${oldip.mac}")
 
             } else {
                 var newip = Iptableskt()
@@ -157,53 +158,10 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
                 newip.lastupdate = Date()
                 newip.adddate = Date()
 
-                var np = service.save(newip)!!
+                var np = service.save(newip)
                 logger.debug("New Ip address MAC:${np.mac} IP:${np.ip}")
             }
         }
-//        try {
-//            for (i in buf) {
-//                //  logger.debug("find iptables : ${i}")
-//                if (i.mac != null) {
-//
-//                    //      logger.debug("I for find ADDRESS: ${i.mac} Service is ${service}")
-//
-//                    var mac = i.mac
-//                    //      logger.debug("mac value : ${mac}")
-//                    var ii: Iptableskt? = service.findByMac(mac!!)
-//                    //      logger.debug("Address  Found: ${ii}")
-//                    if (ii == null) {
-//                        ii = Iptableskt()
-//                        ii.ip = i.ip
-//                        ii.mac = i.mac
-//                        newIptable(ii)
-//                    } else {
-//                        service.updateiptable(ii, i.ip!!)
-//                    }
-//                } else {
-//                    logger.info("Saveme: ${i}")
-//                    //me device
-//                    var ii: Iptableskt? = service.findByMac("")
-//                    //      logger.debug("Address  Found: ${ii}")
-//                    if (ii == null) {
-//                        ii = Iptableskt()
-//                        ii.ip = i.ip
-//                        ii.mac = i.mac
-//                        newIptable(ii)
-//                    } else {
-//                        service.updateiptable(ii, i.ip!!)
-//                    }
-//
-//                }
-//            }
-//
-//
-//            buf.clear()
-//            logger.debug("Clear buffer : ${buf} buf size: ${buf.size}")
-//        } catch (e: Exception) {
-//            logger.debug("Error in for : ${e}")
-//            e.printStackTrace()
-//        }
     }
 
     @Throws(SocketException::class)
@@ -223,7 +181,6 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
                         var mac = getMacAddress(i)
                         if (mac != null)
                             buffer.add("${i.hostAddress},${mac}")
-                        //return "${i.hostAddress},${mac}"
                     }
                 }
 
@@ -263,7 +220,7 @@ class Findip(val service: IptableServicekt, val cfg: Configfilekt, val ntfs: Not
             idv.ip = it.ip
             idv.mac = it.mac
             idv.lastcheckin = Date()
-            idv = service.save(idv)!!
+            idv = service.save(idv)
             logger.debug("loadiptable New iptables : ${idv}")
         } catch (e: Exception) {
             e.printStackTrace()

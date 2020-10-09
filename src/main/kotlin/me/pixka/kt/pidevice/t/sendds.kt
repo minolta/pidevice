@@ -1,15 +1,12 @@
 package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.s.DbconfigService
-import me.pixka.kt.base.s.ErrorlogService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
+import me.pixka.kt.pibase.s.Ds18valueService
 import me.pixka.kt.pibase.t.HttpPostTask
-import me.pixka.ktbase.io.Configfilekt
 import me.pixka.pibase.o.Infoobj
-import me.pixka.pibase.s.Ds18valueService
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
@@ -21,28 +18,12 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-//@Profile("pi", "lite")
 class Sendds(val service: Ds18valueService, val io: Piio) {
 
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 30000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun sendtask() {
-//        try {
-//
-//            var f = task.run()
-//            if (f != null) {
-//                var sendok = f.get(5, TimeUnit.SECONDS)
-//
-//                if (sendok) {
-//                    logger.debug("End Send ds")
-//                } else {
-//                    logger.error("Send ds 18 error")
-//                }
-//            }
-//        } catch (e: Exception) {
-//            logger.error("Error send Sendds ${e.message}")
-//        }
-//
+
 
         var target = System.getProperty("piserver") + "/ds18value/add"
         val list = service.notInserver()
@@ -53,7 +34,6 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
                 try {
                     val info = Infoobj()
                     info.token = System.getProperty("token")
-                    // info.ip = io.wifiIpAddress()
                     info.mac = io.wifiMacAddress()
                     info.ds18value = item
                     var task = HttpPostTask(target, info)
@@ -62,8 +42,8 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
                     try {
                         var re = f.get(5, TimeUnit.SECONDS)
                         if(re.statusLine.statusCode == 200) {
-                            item.toserver = true
-                            service.save(item)
+//                            item.toserver = true
+                            service.delete(item)
                         }
                         else
                         {
@@ -93,8 +73,8 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
 @Component
 //@Profile("pi", "lite")
 class SenddsTask(val io: Piio, val service: Ds18valueService,
-                 val http: HttpControl, val cfg: Configfilekt,
-                 val err: ErrorlogService, val dbcfg: DbconfigService) {
+                 val http: HttpControl
+) {
 
 
     var target = "http://localhost:5555/ds18value/add"
@@ -166,7 +146,7 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
         logger.debug("Setup...")
         var host = System.getProperty("piserver")
         if (host == null)
-            host = dbcfg.findorcreate("hosttarget", "http://pi1.pixka.me").value
+            host = System.getProperty("hosttarget", "http://pi1.pixka.me")
 
         target = host + "/ds18value/add"
         logger.debug("Target ${target}")

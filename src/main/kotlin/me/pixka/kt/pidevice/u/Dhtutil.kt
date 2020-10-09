@@ -1,15 +1,16 @@
 package me.pixka.kt.pidevice.u
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.d.Dhtvalue
+import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.s.NotifyService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -25,9 +26,10 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt, val ntfs: Notify
 
             try {
                 rep = f.get(15, TimeUnit.SECONDS)
+//                rep = URL(url).readText()
             } catch (e: Exception) {
                 logger.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
-                ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
+//                ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
                 ee.shutdownNow()
                 throw Exception("GetDHT value ERROR ${e.message} ${e}")
             }
@@ -37,7 +39,7 @@ class Dhtutil(val http: HttpControl, val ips: IptableServicekt, val ntfs: Notify
         } catch (e: Exception) {
             logger.error("line 56 ${e.message} ${url}")
 
-            ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
+//            ntfs.error("GetDHT DHTUTIL value ERROR ${e.message} ${e} ${url}")
             ee.shutdownNow()
             throw e
         }

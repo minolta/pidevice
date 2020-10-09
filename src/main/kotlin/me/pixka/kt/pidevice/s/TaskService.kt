@@ -1,7 +1,9 @@
 package me.pixka.kt.pidevice.s
 
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.run.PijobrunInterface
+import me.pixka.kt.pidevice.t.OnpumbWorker
+import me.pixka.kt.pidevice.worker.NotifyPressureWorker
+import me.pixka.kt.run.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Scheduled
@@ -9,8 +11,6 @@ import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 /**
@@ -19,20 +19,21 @@ import kotlin.collections.ArrayList
 @Service
 class TaskService(val context: ApplicationContext) {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
+
+    val pool = context.getBean("pool") as ExecutorService
     fun run(work: PijobrunInterface): Boolean {
         try {
-            val pool = context.getBean("pool") as ExecutorService
             var forrun = checkalreadyrun(work)
             logger.debug("CheckJOB job can run ? ${forrun}")
-            if (forrun != null) {
-                runinglist.add(forrun)
-                logger.debug("CheckJOB Run this JOB: ${forrun.getPijobid()}")
-                pool.submit(forrun as Runnable)
-                logger.debug("Run ${forrun.getPijobid()} Buffer size ${runinglist.size}")
+            if (!forrun) {
+                runinglist.add(work)
+                logger.debug("CheckJOB Run this JOB: ${work.getPijobid()}")
+                pool.submit(work as Runnable)
+                logger.debug("Run ${work.getPijobid()} Buffer size ${runinglist.size}")
                 return true
             } else {
                 //มี job นี้ run อยู่แล้ว
-                logger.error("Have This job run already ${forrun}")
+                logger.warn("Have This job run already ${forrun}")
                 return false
             }
         } catch (e: Exception) {
@@ -41,134 +42,191 @@ class TaskService(val context: ApplicationContext) {
         return false
     }
 
+    /**
+     *
+     * สำหรับตรวจสอบว่า มี การ run อยู่เปล่า
+     * return false ถ้า run อยู่
+     * return true ถ้าไม่มีการ run อยู่
+     */
+
+    fun checkrun(w: Pijob): Boolean {
+
+        try {
+
+            var run = runinglist.find {
+                it.getPijobid() == w.id && it.runStatus()
+            }
+            if (run != null)
+                return true
+            return false
+        } catch (e: Exception) {
+            e.printStackTrace()
+
+        }
+        return true //ถ้า ERROR ก็ส่ง 1 ออกไปเลย
+    }
 
     /**
      * สำหรับตรวจว่า job ไหน ยัง run ไม่เสร็จก็ไม่ต้อง run ทับละ
+     * return true ถ้าเจอ return false ถ้าไม่เจอ
      */
-    fun checkalreadyrun(w: PijobrunInterface): PijobrunInterface? {
-
+    fun checkalreadyrun(w: PijobrunInterface): Boolean {
         try {
             logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")
             if (runinglist.size > 0) {
                 logger.debug("CheckJOB have thread run ${runinglist.size}")
-                for (b in runinglist) {
-                    try {
-                        logger.debug("CheckJOB runstatus ${b.runStatus()} id: ${w.getPijobid()}")
-                        logger.debug("CheckJOB ${b.getPijobid()} == ${w.getPijobid()}")
-                        if (b.getPijobid().toInt() == w.getPijobid().toInt()) {
-                            if (b.runStatus()) {
-                                logger.error("CheckJOB Reject run ${w}")
-                                return null //ถ้าเจอเหมือน null
-                            }
-                        }
-                        logger.debug("CheckJOB Next Check")
-                    } catch (e: Exception) {
-                        logger.error("Check run error ${e.message}")
-                    }
-                }
+                if (runinglist.find { it.getPijobid() == w.getPijobid() && it.runStatus() } != null)
+                    return true
+
 
                 logger.debug("CheckJOB This jobcanrun ${w}")
                 logger.debug("#Runjob TASKSERVICE  ${w.getPJ().name} ")
-                return w //ถ้าไม่เจอ return w ไป exec
+                return false //ถ้าไม่เจอ return w ไป exec
             } else {
                 logger.debug("CheckJOB This jobcanrun ${w}")
-                return w
+                return false
             }
 
         } catch (e: Exception) {
             logger.error("Error check run ${e.message}")
         }
-
-
-
-
-        return null
+        return false
     }
 
-
-    fun runAsyn(f: Future<Any>, timeout: Int): Any? {
+    @Scheduled(fixedDelay = 1000)
+    fun checkExitdate() {
         try {
-            var count = 0
-            while (true) {
-                if (f.isDone) {
-                    logger.info("Run commplete")
-                    return f.get()
-                    break
+            var now = Date().time
+            runinglist.forEach {
+                if (it.exitdate() != null && it.exitdate()?.time!! <= now) {
+                    it.setrun(false) //end this job have to remove
                 }
-                TimeUnit.SECONDS.sleep(1)
-                count++
-
-                if (count > timeout) {
-                    f.cancel(true)
-                    logger.error("Timeout")
-                    return null
-
-                }
-
             }
+//            runinglist.filter {
+//                it is D1hjobWorker || it is D1tjobWorker
+//                        || it is OffpumpWorker || it is ReadDhtWorker
+//                        || it is D1portjobWorker || it is CheckActiveWorker || it is OffpumpWorker
+//                        || it is ReadPressureTask || it is ReadTmpTask ||
+//                        it is NotifyPressureWorker || it is OnpumbWorker || it is ReaddustWorker
+//                        || it is DustWorker || it is D1TimerWorker
+//            }.forEach {
+//
+//                if (it is D1hjobWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "End job"
+//                    }
+//                } else if (it is D1tjobWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is ReadDhtWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is D1readvoltWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is D1portjobWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//
+//                } else if (it is CheckActiveWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//
+//                } else if (it is OffpumpWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//
+//                } else if (it is ReadPressureTask) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is ReadTmpTask) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is NotifyPressureWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is OnpumbWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit  job by exitdate"
+//                    }
+//                } else if (it is ReaddustWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//                } else if (it is DustWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.state = "Exit  job by exitdate"
+//                    }
+//                } else if (it is D1TimerWorker) {
+//                    if (it.exitdate != null && it.exitdate?.time!! <= now) {
+//                        it.setrun(false) //end this job have to remove
+//                        it.status = "Exit job by exitdate"
+//                    }
+//                }
+//
+//            }
 
         } catch (e: Exception) {
-            logger.error(e.message)
-            throw e
+            logger.error("ERROR set exit time ${e.message}")
         }
+
     }
 
-    @Scheduled(initialDelay = 2000,
-            fixedDelay = 20000)
-    fun removefinished() {
-        logger.debug("Start Remove job finished size: ${runinglist.size}")
-        try {
-            if (runinglist != null && runinglist.size > 0) {
-
-                var items = runinglist.iterator()
-                logger.debug("Size Before remove ${runinglist.size}")
-                while (items.hasNext()) {
-
-                    var item = items.next()
-                    logger.debug("Remove Job in list ${item}")
-                    if (item != null)
-                        if (!item.runStatus()) {
-                            items.remove()
-                            logger.debug("Remove finished run ${item} ")
-                        }
-                }
-
-                logger.debug("Size after remove ${runinglist.size}")
-
-                /*
-                for (old in runinglist) {
-                    logger.debug("Remove Job in list ${old}")
-                    if (old != null)
-                        if (!old.runStatus()) {
-                            logger.debug("Remove finished run ${old} ")
-                            runinglist.remove(old)
-                        }
-                }
-                */
-            }
-
-
-        } catch (e: Exception) {
-            logger.error("Remove Error ${e.message}")
-            e.printStackTrace()
+    fun findExitdate(pijob: Pijob): Date? {
+        var tvalue: Long? = 0L
+        if (pijob.waittime != null)
+            tvalue = pijob.waittime!!
+        if (tvalue != null) {
+            if (pijob.runtime != null)
+                tvalue += pijob.runtime!!
         }
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, tvalue!!.toInt())
+        val exitdate = calendar.time
+        if (tvalue == 0L)
+            return null
 
-        logger.debug("Remove Already run size: ${runinglist.size}    ")
+        return exitdate
+    }
 
-        logger.debug(" THREADISRUN ======================================RUN===========================================  ")
-        for (run in runinglist) {
-            logger.debug("THREADISRUN ID:${run.getPJ().name} ${run.getPijobid()} Start date ${run.startRun()} Status :${run.state()} " +
-                    "is run ? : ${run.runStatus()}")
-        }
-        logger.debug("THREADISRUN ======================================================================================")
+    @Scheduled(initialDelay = 120000,
+            fixedDelay = 120000)
+    fun removeEndjob(): List<PijobrunInterface> {
+        var notrun = runinglist.filter { it.runStatus() == false }
+        runinglist.removeAll(notrun)
+        return runinglist
     }
 
     var df = SimpleDateFormat("HH:mm")
+
+    /**
+     * ตรวจสอบว่าอยู่ในช่วงเวลาหรือเปล่า
+     */
     fun checktime(job: Pijob): Boolean {
         var can = false
         try {
-//            df.timeZone = TimeZone.getTimeZone("+0700")
-
             var n = df.format(Date())
             var now = df.parse(n)
             logger.debug("checktime  ${job.name} : N:${n} now ${now} now time ${now.time}")

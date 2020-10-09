@@ -1,29 +1,35 @@
 package me.pixka.kt.run
 
-import me.pixka.c.HttpControl
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
-import me.pixka.pibase.s.DhtvalueService
+import me.pixka.log.d.LogService
+import me.pixka.log.d.Logsevent
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import java.net.ConnectException
 import java.util.*
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
-class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
-                   val dhts: Dhtutil, val httpControl: HttpControl, val task: TaskService)
+class D1hjobWorker(var pijob: Pijob,
+                   val dhts: Dhtutil, val httpService: HttpService,
+                   val task: TaskService, val ntfs: NotifyService, val lgs: LogService)
     : PijobrunInterface, Runnable {
     var isRun = false
     var state = "Init"
     var startrun: Date? = null
     var waitstatus = false
-
-//    @Autowired
-//    lateinit var errorlog: ErrorlogServiceII
+    var haveerror = false
+    var errormessage = ""
+    var exitdate: Date? = null
+    var om=ObjectMapper()
 
     override fun setG(gpios: GpioService) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -31,6 +37,10 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
 
     override fun setrun(p: Boolean) {
         isRun = p
+    }
+
+    override fun exitdate(): Date? {
+        return exitdate
     }
 
     override fun runStatus(): Boolean {
@@ -59,104 +69,86 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         return state
     }
 
-    /**
-     * สพหรับตรวจสอบ h ว่าอยู่ในช่วงแล้วหรือยัง
-     */
-    fun checkCanrun(): Boolean {
 
 
-        var h: Float? = 0.0F
-        try {
-            var dhtvalue = dhts.readByPijob(pijob)
-            logger.debug("DHTVALUE ${dhtvalue}")
-            state = "Get value from traget [${dhtvalue}]"
-            if (dhtvalue != null) {
-                if (dhtvalue.h != null)
-                    h = dhtvalue.h?.toFloat()
-                if (checkH(pijob.hlow?.toFloat()!!, pijob.hhigh?.toFloat()!!, dhtvalue.h?.toFloat()!!)) {
-                    return true
-                } else {
-                    state = "H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}"
-                    logger.error("H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${dhtvalue.h}")
-                }
+    /*
+    * เป็นการ จบ Thread แต่ยังไม่เอาออกจาก list เพราะต้องคืน Core ให้กับระบบ แต่ run อยู่
+    * */
+    fun setEnddate() {
+        var t = 0L
 
-            }
-            else
-            {
-                logger.error("DHT Value is null ${pijob.name}")
-                    dhts.ntfs.error("DHT Value is null ${pijob.name}")
-
-            }
-        } catch (e: Exception) {
-            logger.error("Check Can run ERROR ${e.message}")
-            state = "Check Can run ERROR ${e.message} H not in ranger HLOW ${pijob.hlow} HHIGH ${pijob.hhigh} H:${h}"
-        }
-        return false
+        if (pijob.waittime != null)
+            t = pijob.waittime!!
+        if (pijob.runtime != null)
+            t += pijob.runtime!!
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, t.toInt())
+        exitdate = calendar.time
+        if (t == 0L)
+            isRun = false//ออกเลย
     }
 
     override fun run() {
-
         startrun = Date()
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
         Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} ${startrun}"
-
         try {
-            if (pijob.tlow != null) {
+            if (pijob.tlow != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
                 logger.debug("Slow start ${pijob.tlow}")
-                //prility
             }
-
-            if (checkCanrun()) {
-                waitstatus = false
-                go()
-                waitstatus = true
-                var waittime = pijob.waittime
-                if (waittime != null) {
-                    state = "Wait time of job ${waittime}"
-                    TimeUnit.SECONDS.sleep(waittime)
-                }
-            } else {
-                logger.warn("Dht not found")
-                waitstatus = true
+            waitstatus = false //ใช้น้ำ
+            go()
+            waitstatus = true //หยุดใช้น้ำแล้ว
+            exitdate = task.findExitdate(pijob)
+            if (exitdate == null)
                 isRun = false
-                state = "End job"
-            }
-
-
+            state = "End normal"
+            return
         } catch (e: Exception) {
             isRun = false
+            exitdate = task.findExitdate(pijob)
             logger.error("ERROR 1 ${e.message}")
             state = "ERROR 1 ${e.message}"
+            lgs.createERROR("ERROR 1 ${e.message}",Date(),"D1hjobWorker",
+            "","","","",pijob.refid)
             waitstatus = true
             throw e
         }
 
-        waitstatus = true
-        isRun = false
-        state = "End job"
+//        waitstatus = true
+//        isRun = false
+//        state = "End job"
     }
 
-    fun checkH(l: Float, h: Float, v: Float): Boolean {
-        state = "Check value ${l} < ${v} > ${h}"
-        if (v >= l && v <= h) {
-            logger.debug("Run this job ${pijob.name}")
-            return true
+
+    fun getLogic(v: Logistate?): Int {
+        var value = 0
+        if (v != null && v.name != null) {
+            if (v.name.equals("high") || v.name?.indexOf("1") != -1) {
+                value = 1
+            } else
+                value = 0
+        } else {
+            if (v != null)
+                state = "Value to set ERROR ${v.name}"
+            else
+                state = "Port state Error is Null"
+
         }
-        logger.debug("Check value ${l} < ${v} > ${h} Not run this job ${pijob.name}")
-        TimeUnit.SECONDS.sleep(2)
-        return false
+
+        return value
     }
 
     fun go() {//Run
-        var ee = Executors.newSingleThreadExecutor()
+//        var ee = Executors.newSingleThreadExecutor()
+        var token = pijob.token
         state = "Run set port "
         var ports = pijob.ports
         logger.debug("Ports ${ports}")
         if (ports != null)
             for (port in ports) {
-
                 if (port.enable == null || !port.enable!!) {
                     logger.debug("Port disable ${port}")
                     continue //ข้ามไปเลย
@@ -179,23 +171,9 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 } else if (pijob.waittime != null) {
                     waittime = pijob.waittime!!
                 }
-                var value = 0
-                if (v != null && v.name != null) {
-                    if (v.name.equals("high") || v.name?.indexOf("1") != -1) {
-                        value = 1
-                    } else value = 0
-                } else {
-                    if (v != null)
-                        state = "Value to set ERROR ${v.name}"
-                    else
-                        state = "Port state Error is Null"
-
-                    TimeUnit.SECONDS.sleep(5)
-                }
-
+                var value = getLogic(v)
                 try {
                     var url = ""
-
                     try {
                         if (port.device != null)
                             url = findUrl(port.device!!, portname!!, runtime, waittime, value)
@@ -203,36 +181,74 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                             url = findUrl(portname!!, runtime, waittime, value)
                     } catch (e: Exception) {
                         logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
+                        lgs.createERROR("${e.message}",Date(),"D1hjobWorker",
+                        "","","go()",port.device?.mac,pijob.refid)
+                        state = "Find URL ERROR ${e.message} port: ${port} portname ${portname}"
                     }
-//                    logger.debug("URL ${url}")
                     startrun = Date()
                     logger.debug("URL ${url}")
                     state = "Set port ${url}"
-                    var get = HttpGetTask(url)
-                    var f = ee.submit(get)
                     try {
-                        var value = f.get(30, TimeUnit.SECONDS)
+                        //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
+                        var v = httpService.get(url,12000)
                         state = "Delay  ${runtime} + ${waittime}"
-                        logger.debug("D1h Value ${value}")
-                        state = "${value} and run ${runtime}"
+                        var status = om.readValue<Status>(v)
+                        logger.debug("D1h Value ${status}")
+                        state = "Set ${portname} to ${value}  ${status.status} and run ${runtime}"
                         TimeUnit.SECONDS.sleep(runtime)
 
                         if (waittime != null) {
                             state = "Wait time of port ${waittime}"
                             TimeUnit.SECONDS.sleep(waittime)
                         }
-                    } catch (e: Exception) {
-                        logger.error("Set port error  ${e.message}")
-//                        errorlog.save(ErrorlogII("Set port error ${portname} ${pijob.name} ", Date(), port.device!!))
+                    } catch (e: ConnectException) {
+                        haveError(token, e)
+                    } catch (e: TimeoutException) {
+                        haveError(token, e)
                     }
                 } catch (e: Exception) {
                     logger.error("Error 2 ${e.message}")
                     state = " Error 2 ${e.message}"
-                    ee.shutdownNow()
-                }
-            }
+                    lgs.createERROR(" Error 2 ${e.message}",Date(),"D1hjobWorker",
+                    "","","go()",pijob.desdevice?.mac,pijob.refid)
+                    isRun = false
+                    waitstatus = true //หยุดใช้น้ำแล้ว
+                    break //ออกเลย
 
-        state = "Set port ok "
+                }
+            } //end for
+
+        if (!haveerror)
+            state = "Set port ok "
+        else
+            state = "Set port error "
+    }
+
+    fun haveError(token: String?, e: Exception) {
+        logger.error("Set port error  ${e.message}")
+        state = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
+        lgs.createERROR("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}",Date())
+        if (token != null)
+            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name} ", token)
+        else
+            ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ")
+
+        TimeUnit.SECONDS.sleep(5)
+
+
+        if (token != null)
+            ntfs.message("End job  ${pijob.name}  Can not connect to target ", token)
+        else
+            ntfs.message("End job  ${pijob.name}   Can not connect to target ")
+
+        state = "End job  ${pijob.name}  Can not connect to target "
+
+        TimeUnit.SECONDS.sleep(5)
+        haveerror = true
+        errormessage = "End job  ${pijob.name}  Can not connect to target"
+        //                        continue// setport ต่อ ไป
+
+        //ไม่ทำอะไรข้ามไปเลยแล้วก็จบ job เลยถ้ามีปัญหารอรอบหน้าเลย
     }
 
     fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
@@ -243,7 +259,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 return url
             }
         }
-
         throw Exception("Error Can not find url")
     }
 
@@ -255,7 +270,6 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
                 return url
             }
         }
-
         throw Exception("Error Can not find url")
     }
 
@@ -273,24 +287,5 @@ class D1hjobWorker(var pijob: Pijob, val dhtvalueService: DhtvalueService,
         return "name ${pijob.name}"
     }
 
-    fun checkgroup(job: Pijob): Pijob? {
-        var runs = task.runinglist
 
-        for (run in runs) {
-            if (run is D1hjobWorker) {
-                //ถ้า job รอแล้ว
-                logger.debug("Wait status is ${run.waitstatus} RunGROUPID ${run.pijob.pijobgroup_id} " +
-                        "JOBGROUPID ${job.pijobgroup_id} ")
-
-                if (/*ทำงานอยู่*/run.isRun && /*อยู่ในการพักอยู่*/ !run.waitstatus &&
-                        /*ไม่ใช่ตัวเอง*/run.getPijobid().toInt() != job.id.toInt()) {
-                    if (run.pijob.pijobgroup_id?.toInt() == job.pijobgroup_id?.toInt()) {
-                        return null //อยู่ในกลุ่มเดียวกัน
-                    }
-                }
-            }
-        }
-        logger.debug("No Job in this group run ${job}")
-        return job
-    }
 }

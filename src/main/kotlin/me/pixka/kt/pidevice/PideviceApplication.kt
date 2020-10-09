@@ -22,16 +22,15 @@ import javax.annotation.PostConstruct
 @EnableAsync
 @EnableScheduling
 @ComponentScan(basePackages = arrayOf("me.pixka"))
-@EnableJpaRepositories(basePackages = arrayOf("me.pixka"))
-@EntityScan(basePackages = arrayOf("me.pixka"))
+//@EnableJpaRepositories(basePackages = arrayOf("me.pixka"))
+//@EntityScan(basePackages = arrayOf("me.pixka"))
 class PideviceApplication {
 
     @Bean
     fun taskScheduler(): ThreadPoolTaskScheduler {
         val taskScheduler = ThreadPoolTaskScheduler()
-        taskScheduler.poolSize = 150
+        taskScheduler.poolSize = 250
         taskScheduler.threadNamePrefix = "SS-"
-
 
         return taskScheduler
     }
@@ -76,12 +75,18 @@ class PideviceApplication {
         if(sc!=null)
             coresize = sc.toInt()
         var mp = System.getProperty("maxpoolsize")
-        if(sc!=null)
+        if(mp!=null)
             maxpool = mp.toInt()
-        val threadpool = ThreadPoolExecutor(coresize, maxpool, 1,
-                TimeUnit.SECONDS, LinkedBlockingDeque<Runnable>(400),
-                ThreadPoolExecutor.CallerRunsPolicy())
-        return threadpool
+        return Executors.newFixedThreadPool(coresize)
+//
+//        val threadpool = ThreadPoolExecutor(coresize, maxpool, 1,
+//                TimeUnit.SECONDS, LinkedBlockingDeque<Runnable>(400),
+//                ThreadPoolExecutor.CallerRunsPolicy())
+//        return threadpool
+    }
+    @Bean(name = arrayOf("pool2"))
+    fun p(): ExecutorService? {
+        return Executors.newFixedThreadPool(20)
     }
     @PostConstruct
     fun init() {

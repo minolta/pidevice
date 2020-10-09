@@ -1,16 +1,13 @@
 package me.pixka.kt.pidevice.u
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.base.d.Iptableskt
-import me.pixka.kt.base.s.IptableServicekt
+import me.pixka.kt.pibase.c.HttpControl
 import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
+import me.pixka.kt.pibase.s.DS18sensorService
+import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.s.SensorService
 import me.pixka.kt.pibase.t.HttpGetTask
-import me.pixka.kt.pidevice.s.InfoService
-import me.pixka.pibase.s.DS18sensorService
-import me.pixka.pibase.s.PideviceService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -22,7 +19,7 @@ import java.util.concurrent.TimeUnit
 //@Profile("pi")
 class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServicekt: IptableServicekt,
                val dss: DS18sensorService, val io: Piio, val ps: PideviceService,
-               val pideviceService: PideviceService, val ss: SensorService, val infoService: InfoService) {
+               val pideviceService: PideviceService, val ss: SensorService) {
     val om = ObjectMapper()
 
     var buffer = ArrayList<ReadBuffer>()
@@ -224,35 +221,35 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
     /**
      * ใช้สำหรับตรวจสอบ pijob ว่า แรงดัน อยู่ในช่วนหรือเปล่า
      */
-    fun checkLocalPressure(pijob: Pijob): Boolean {
-        try {
-            logger.debug("Run localpressure")
-            var now = infoService.A0?.psi?.toDouble()
-            if (now == null)
-                throw Exception("Can not read localpressure")
-
-            logger.debug("Read local localpressure ${now}")
-            if (pijob.hlow != null && pijob.hhigh != null) {
-
-                var l = pijob.hlow?.toDouble()
-                var h = pijob.hhigh?.toDouble()
-
-                logger.debug("check localpressure l:${l} <= ${now}  <= ${h}")
-                if (l!! <= now && now <= h!!) {
-                    logger.debug("In rang localpressure")
-                    return true
-                }
-                logger.debug(" pressure in  rang localpressure ")
-                return false
-            }
-
-        } catch (e: Exception) {
-            logger.error("${e.message} localpressure")
-            throw e
-        }
-        throw Exception("Pressure not set localpressure")
-
-    }
+//    fun checkLocalPressure(pijob: Pijob): Boolean {
+//        try {
+//            logger.debug("Run localpressure")
+//            var now = infoService.A0?.psi?.toDouble()
+//            if (now == null)
+//                throw Exception("Can not read localpressure")
+//
+//            logger.debug("Read local localpressure ${now}")
+//            if (pijob.hlow != null && pijob.hhigh != null) {
+//
+//                var l = pijob.hlow?.toDouble()
+//                var h = pijob.hhigh?.toDouble()
+//
+//                logger.debug("check localpressure l:${l} <= ${now}  <= ${h}")
+//                if (l!! <= now && now <= h!!) {
+//                    logger.debug("In rang localpressure")
+//                    return true
+//                }
+//                logger.debug(" pressure in  rang localpressure ")
+//                return false
+//            }
+//
+//        } catch (e: Exception) {
+//            logger.error("${e.message} localpressure")
+//            throw e
+//        }
+//        throw Exception("Pressure not set localpressure")
+//
+//    }
 
     fun readLocal(job: Pijob): DS18value? {
         var localsensor = dss.find(job.ds18sensor_id!!)
@@ -262,7 +259,7 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             logger.debug("5 Read Temp from ${localsensor} ")
             var v = null
             try {
-                var v = io.readDs18(localsensor.name!!)
+                var v = io.readDs18()
             } catch (e: Exception) {
                 logger.error("6 ${e.message}")
                 throw e

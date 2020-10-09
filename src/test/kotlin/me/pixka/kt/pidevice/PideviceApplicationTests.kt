@@ -1,30 +1,36 @@
 package me.pixka.kt.pidevice
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.c.HttpControl
-import me.pixka.kt.run.D1portjobWorker
-import me.pixka.kt.run.DPortstatus
-import me.pixka.kt.run.PorttoCheck
-import org.junit.Test
-import org.junit.runner.RunWith
+import me.pixka.base.line.s.NotifyService
+import me.pixka.kt.pibase.c.HttpControl
+import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.DhtvalueService
+import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.pidevice.u.Dhtutil
+import me.pixka.kt.run.*
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.test.context.junit4.SpringRunner
+import java.net.URL
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
-@RunWith(SpringRunner::class)
 @SpringBootTest
+@EnableAsync
 class PideviceApplicationTests {
-    @Autowired
-    lateinit var http: HttpControl
+
 
     @Test
     fun contextLoads() {
-      test1()
+//        test1()
+        testQueue()
     }
 
-    fun testgetStatus()
-    {
+
+    fun testgetStatus() {
         val mapper = ObjectMapper()
         val re = http.get("http://192.168.88.160")
 //        val list = mapper.readValue<List<DPortstatus>>(re)
@@ -33,6 +39,7 @@ class PideviceApplicationTests {
         var dp = mapper.readValue(re, DPortstatus::class.java)
         println(dp)
     }
+
     fun test2() {
         var bufs = ArrayList<PorttoCheck>()
 
@@ -44,10 +51,127 @@ class PideviceApplicationTests {
 
     }
 
+
+    @Autowired
+    lateinit var ds: DhtvalueService
+
+    @Autowired
+    lateinit var ntf: NotifyService
+
+    @Autowired
+    lateinit var dhts: Dhtutil
+
+    @Autowired
+    lateinit var http: HttpControl
+
+    @Autowired
+    lateinit var task: TaskService
+
+    @Test
+    fun group() {
+//        var groupid = 2
+//        var runs = ArrayList<PijobrunInterface>()
+//        var j = Pijob()
+//        j.id = 10
+//        j.name = "10"
+//        j.pijobgroup_id = 1
+//        var worker = D1hjobWorker(j, ds, dhts, http, task, ntf)
+//        runs.add(worker)
+//
+//        j = Pijob()
+//        j.id = 20
+//        j.name = "20"
+//        j.pijobgroup_id = 2
+//
+//        var worker1 = D1hjobWorker(j, ds, dhts, http, task, ntf)
+//        worker1.isRun = true
+//        worker1.waitstatus = false //false ยังใช้น้ำอยู่ true ไม่ใช้แล้ว
+//        runs.add(worker1)
+//
+//        println(runs)
+//
+//        println("find run:" + runs.find {
+//            it is D1hjobWorker && (it.getPijobid() == j.id && it.runStatus())
+//        })
+//
+//
+//        //หาว่าobject ตัวไหนจะยัง run อยู่แต่อยู่ใน status run
+//        println("Find use water:" + runs.find {
+//            it is D1hjobWorker &&
+//                    (it.pijob.pijobgroup_id?.toInt() == groupid.toInt() && !it.waitstatus)
+//                    && it.runStatus()
+//        })
+//
+
+    }
+
+    @Test
+    fun testQueue() {
+        var queue = LinkedList<Pijob>()
+
+        var pijob = Pijob()
+        pijob.id = 1
+        pijob.name = "1"
+        queue.add(pijob)
+
+        pijob = Pijob()
+        pijob.id = 2
+        pijob.name = "2"
+        queue.add(pijob)
+
+        queue.map { println(it) }
+
+        println(queue.contains(pijob))
+
+
+        pijob = Pijob()
+        pijob.id = 3
+        pijob.name = "3"
+        queue.add(pijob)
+
+        pijob = Pijob()
+        pijob.id = 9
+        pijob.name = "3"
+        queue.add(pijob)
+        pijob = Pijob()
+        pijob.id = 4
+        pijob.name = "4"
+        queue.add(pijob)
+        queue.map { println(it) }
+        println("peek: " + queue.poll())
+
+        queue.map { println(it) }
+
+
+    }
+
+
+
+    @Test
+    fun readIps() {
+
+        var ips = setOf("http://192.168.89.35/status",
+                "http://192.168.89.100/status",
+                "http://192.168.89.69/status", "http://192.168.89.200")
+
+        test("http://192.168.89.35/status").thenApply{i->{println("cccccc:"+i)}}
+        test1( "http://192.168.89.69/status").thenApply { i->{
+            println("dddd "+i)
+        } }
+//        for (i in ips) {
+//            test(i).thenApply { i -> println(i) }
+//        }
+        println("End  *************************  ${Date()} ***************")
+
+//        var t = URL(" http://192.168.89.100/status").readText()
+
+
+    }
+
     fun test1() {
         var description = "D5,1,D6,1"
         var bufs = ArrayList<PorttoCheck>()
-        var c = description?.split(",")
+        var c = description.split(",")
         if (c == null || c.size < 1) {
             println("False")
         }
@@ -55,18 +179,18 @@ class PideviceApplicationTests {
         var c1 = PorttoCheck()
         c.map {
             D1portjobWorker.logger.debug("Value : ${it}")
-            if(it.toIntOrNull()==null)
+            if (it.toIntOrNull() == null)
                 c1.name = it
             else {
                 c1.check = it.toInt()
                 bufs.add(c1)
-             //   c1 = PorttoCheck()
+                //   c1 = PorttoCheck()
             }
         }
         var ps = DPortstatus()
-        ps.d5=1
-        ps.d6=1
-        getsensorstatusvalue(c1.name?.toLowerCase()!!,c1.check!!,ps)
+        ps.d5 = 1
+        ps.d6 = 1
+        getsensorstatusvalue(c1.name?.toLowerCase()!!, c1.check!!, ps)
         println(bufs)
     }
 
@@ -106,4 +230,21 @@ class PideviceApplicationTests {
         return false
     }
 
+}
+
+
+@Async
+fun test(u: String): CompletableFuture<Boolean> {
+    println(" Thread: ${Thread.currentThread().name}====>" + URL(u).readText())
+    println("XXXXXXXXXXXXXXX ${Date()} XXXXXXXXXXXXXXXXXXXX")
+    Thread.sleep(3000)
+    return CompletableFuture.completedFuture(true)
+}
+
+@Async
+fun test1(u: String): CompletableFuture<Boolean> {
+    println(" Thread: ${Thread.currentThread().name}====>" + URL(u).readText())
+    println("XXXXXXXXXXXXXXX ${Date()} XXXXXXXXXXXXXXXXXXXX")
+    Thread.sleep(5000)
+    return CompletableFuture.completedFuture(true)
 }

@@ -3,8 +3,6 @@ package me.pixka.kt.pidevice.c
 import me.pixka.kt.pibase.s.GpioService
 import org.springframework.context.annotation.Profile
 import org.springframework.web.bind.annotation.*
-import java.io.BufferedReader
-import java.io.File
 
 
 @RestController

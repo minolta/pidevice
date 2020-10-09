@@ -3,10 +3,9 @@ package me.pixka.kt.run
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pidevice.t.RungasJob
+import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.pibase.s.PijobService
-import me.pixka.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -17,6 +16,11 @@ import java.util.concurrent.TimeUnit
 class GasWorker(p: Pijob, gpios: GpioService, readUtil: ReadUtil, ps: PortstatusinjobService, var runwithjob: Pijob,
                 var pjs: PijobService)
     : DefaultWorker(p, gpios, readUtil, ps, logger) {
+    var exitdate:Date?=null
+    override fun exitdate(): Date? {
+        return exitdate
+    }
+
     override fun run() {
         var ports: List<Portstatusinjob>? = null
         try {

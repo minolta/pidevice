@@ -1,6 +1,6 @@
 package me.pixka.kt.pidevice.t
 
-import me.pixka.pibase.s.Ds18valueService
+import me.pixka.kt.pibase.s.Ds18valueService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
