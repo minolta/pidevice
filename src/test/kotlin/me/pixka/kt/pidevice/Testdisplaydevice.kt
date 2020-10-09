@@ -65,7 +65,7 @@ class Testdisplaydevice {
         var ports = listOf<Portstatusinjob>(pij)
         var w = DisplaytmpWorker(pj, lgs, http, ips, ports,ct)
         w.run()
-        println("StartDATE: ${w.sd} Exitdate:${w.exitdate}")
+        println("StartDATE: ${w.startRun} Exitdate:${w.exitdate}")
 //        println(w.exitdate)
         findExitdate(pj)
 

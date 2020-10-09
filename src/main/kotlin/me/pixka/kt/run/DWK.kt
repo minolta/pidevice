@@ -2,10 +2,11 @@ package me.pixka.kt.run
 
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.GpioService
+import java.text.SimpleDateFormat
 import java.util.*
 
 
-open class DWK(var pijob: Pijob? = null, var status: String = "",
+open class DWK(var pijob: Pijob, var status: String = "",
                var isRun: Boolean = false, var startRun: Date = Date(),
                var exitdate: Date? = null) : PijobrunInterface {
 
@@ -45,5 +46,19 @@ open class DWK(var pijob: Pijob? = null, var status: String = "",
 
     override fun exitdate(): Date? {
         return exitdate
+    }
+
+    var df = SimpleDateFormat("HH:mm")
+    fun findExitdate(job: Pijob): Date? {
+        var tvalue: Long? = 0L
+        if (job.waittime != null)
+            tvalue = job.waittime!!
+        if (tvalue != null) {
+            if (job.runtime != null)
+                tvalue += job.runtime!!
+        }
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, tvalue!!.toInt())
+        return calendar.time
     }
 }

@@ -11,6 +11,7 @@ import me.pixka.kt.pidevice.s.CheckTimeService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.s.Tmpobj
 import me.pixka.kt.run.D1hjobWorker
+import me.pixka.kt.run.DWK
 import me.pixka.kt.run.PijobrunInterface
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
@@ -18,61 +19,28 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.*
 
-class DisplaytmpWorker(var pijob: Pijob,
+class DisplaytmpWorker(p: Pijob,
                        val lgs: LogService,
                        val httpService: HttpService,
                        val iptableServicekt: IptableServicekt,
-                       val ports: List<Portstatusinjob>?,val ct:CheckTimeService) : PijobrunInterface, Runnable {
-    var isRun = true
-    var status = ""
-    var sd: Date? = null
-    var exitdate: Date? = null
+                       val ports: List<Portstatusinjob>?,val ct:CheckTimeService) : DWK(p), Runnable {
+
     val om = ObjectMapper()
-    override fun setP(pijob: Pijob) {
-        this.pijob = pijob
-    }
-
-    override fun setG(gpios: GpioService) {
-        TODO("Not yet implemented")
-    }
-
-    override fun runStatus(): Boolean {
-        return isRun
-    }
-
-    override fun getPijobid(): Long {
-        return pijob.id
-    }
-
-    override fun getPJ(): Pijob {
-        return pijob
-    }
-
-    override fun startRun(): Date? {
-        return sd
-    }
-
-    override fun state(): String? {
-        return status
-    }
-
-    override fun setrun(p: Boolean) {
-        isRun = p
-    }
-
-    override fun exitdate(): Date? {
-        return exitdate
-    }
-
     override fun run() {
-        sd = Date()
+        startRun = Date()
         isRun = true
         status = "Start run"
         var mac: String? = null
         var refid: Long? = 0L
 
         try {
-            val t = readTemp(pijob)
+            var t = readTemp(pijob)
+            if(pijob.tlow!=null &&t!=null) //แสดงว่ามีการกำหนดอุณหภูมิขั้นตำสำหรับแสดงผล
+            {
+                val low = pijob.tlow?.toDouble()
+                if(t<low!!)
+                    t=null
+            }
             var name = pijob.desdevice?.name
             if (t != null && ports != null) {
 
@@ -80,6 +48,7 @@ class DisplaytmpWorker(var pijob: Pijob,
                     val displayip = ip(it.device?.mac!!)
                     mac = it.device?.mac
                     refid = it.refid
+
 //                    val name = it.device?.name
                     if (displayip != null) {
                         var url = httpService.encode("ความร้อน : ${name} = ${t}")
@@ -113,7 +82,7 @@ class DisplaytmpWorker(var pijob: Pijob,
         }
 
 
-        println("StartDATE: ${sd} exitdate:${exitdate}")
+        println("StartDATE: ${startRun} exitdate:${exitdate}")
 
 //        status = "Job end wait for exit ${exitdate}"
         //ถ้าทุกอย่างปกติกให้ taskserver เป็น คน end เอง
