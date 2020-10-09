@@ -51,8 +51,13 @@ class DisplaytmpWorker(p: Pijob,
 
 //                    val name = it.device?.name
                     if (displayip != null) {
+                        var l  = 0
+                        if(pijob.hlow!=null)
+                        {
+                            l = pijob.hlow?.toInt()!!
+                        }
                         var url = httpService.encode("ความร้อน : ${name} = ${t}")
-                        var u = "http://${displayip}/settext?t=${url}&tn=2"
+                        var u = "http://${displayip}/settext?t=${url}&tn=2&l=${l}"
                         status = u
                         var re = httpService.get(u, 10000)
                         status = "set Tmp ${name} ${t} ${re}"
