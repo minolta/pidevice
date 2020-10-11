@@ -21,13 +21,12 @@ class Sendvbatt(val service: VbattService, val httpService: HttpService) {
         var list = service.nottoserver()
         if (list != null && !list.isEmpty()) {
             list.map {
-
-
                 try {
-                    var re = httpService.post(target, it,1000)
+                    it.id=0
+                    var re = httpService.post(target, it, 1000)
                     var status = om.readValue<Status>(re)
-                    it.toserver = true
-                    var v = service.save(it)
+//                    it.toserver = true
+                    service.delete(it)
                 } catch (e: Exception) {
                     logger.error("Send ds18vale error ${e.message}")
                 }
