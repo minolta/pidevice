@@ -18,7 +18,7 @@ class Senddustvalue(val server: PmService, val httpService: HttpService,val lgs:
     val om = ObjectMapper()
     var mac = System.getProperty("mac")
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
         var host = System.getProperty("piserver")
         var datas = server.findByToServer(false)

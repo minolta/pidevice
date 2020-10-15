@@ -1,6 +1,5 @@
 package me.pixka.kt.pidevice.c
 
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.s.DS18sensorService
 import me.pixka.kt.pibase.s.Ds18valueService
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @Profile("pi")
-class DS18Control(val service: Ds18valueService, val dss: DS18sensorService, val io: Piio) {
+class DS18Control(val service: Ds18valueService, val dss: DS18sensorService) {
     @CrossOrigin
     @RequestMapping(value = ["/ds18value"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
@@ -38,25 +37,25 @@ class DS18Control(val service: Ds18valueService, val dss: DS18sensorService, val
         return null
     }
 
-    @CrossOrigin
-    @RequestMapping(value = ["/ds18valuebysensor/{sensor}"], method = arrayOf(RequestMethod.GET))
-    @ResponseBody
-    @Throws(Exception::class)
-    fun value(@PathVariable("sensor") sensor: String): DS18value? {
-
-        //เปลียนไป read direct
-        var values = io.reads()
-        if (values != null) {
-            for (value in values) {
-
-                if (value.ds18sensor?.name.equals(sensor)) {
-                    return value
-                }
-            }
-        }
-
-        return null
-    }
+//    @CrossOrigin
+//    @RequestMapping(value = ["/ds18valuebysensor/{sensor}"], method = arrayOf(RequestMethod.GET))
+//    @ResponseBody
+//    @Throws(Exception::class)
+//    fun value(@PathVariable("sensor") sensor: String): DS18value? {
+//
+//        //เปลียนไป read direct
+//        var values = io.reads()
+//        if (values != null) {
+//            for (value in values) {
+//
+//                if (value.ds18sensor?.name.equals(sensor)) {
+//                    return value
+//                }
+//            }
+//        }
+//
+//        return null
+//    }
 
 
     companion object {

@@ -2,7 +2,6 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.s.TaskService
@@ -19,8 +18,7 @@ import org.springframework.stereotype.Component
  *
  */
 @Component
-//@Profile("pi", "lite")
-class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService, val io: Piio,
+class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
               val dvs: Ds18valueService, val ss: SensorService, val dss: DS18sensorService,
               val pideviceService: PideviceService, val findJob: FindJob, val httpService: HttpService,
               val ips: IptableServicekt, val taskService: TaskService) {

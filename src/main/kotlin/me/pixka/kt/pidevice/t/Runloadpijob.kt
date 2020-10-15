@@ -2,7 +2,6 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pibase.t.HttpGetTask
@@ -18,7 +17,7 @@ import java.util.concurrent.TimeUnit
 //ไม่ใช้แล้ว
 //@Component
 //@Profile("!test")
-class Runloadpijob(val io: Piio, val service: PijobService, val psijs: PortstatusinjobService,
+class Runloadpijob( val service: PijobService, val psijs: PortstatusinjobService,
                    val ls: LogistateService, val pijobgroupService: PijobgroupService,
                    val js: JobService, val dsservice: DS18sensorService,val httpService: HttpService,
                    val ps: PortnameService, val pds: PideviceService,val lgs:LogService) {
@@ -31,8 +30,8 @@ class Runloadpijob(val io: Piio, val service: PijobService, val psijs: Portstatu
     fun run() {
         try {
             var mac = System.getProperty("mac")
-            if (mac == null)
-                mac = io.wifiMacAddress()
+//            if (mac == null)
+//                mac = io.wifiMacAddress()
             var list = loadPijob(mac)
             if (list != null) {
                 save(list)

@@ -14,7 +14,7 @@ import java.util.*
 class Sendvbatt(val service: VbattService, val httpService: HttpService) {
     val om = ObjectMapper()
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 30000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 1000)
     fun sendtask() {
         println("Send v batt " + Date())
         var target = System.getProperty("piserver") + "/vbatt/add"

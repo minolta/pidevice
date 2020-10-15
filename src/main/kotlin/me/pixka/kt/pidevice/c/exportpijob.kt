@@ -1,14 +1,12 @@
 package me.pixka.kt.pidevice.c
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -22,7 +20,7 @@ import java.io.FileOutputStream
 
 @RestController
 //@Profile("pi", "lite")
-class Exportpijob(val ps: PijobService, val piio: Piio, val psijs: PortstatusinjobService) {
+class Exportpijob(val ps: PijobService, val psijs: PortstatusinjobService) {
     @CrossOrigin
     @RequestMapping(value = ["/pijob"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
@@ -36,7 +34,7 @@ class Exportpijob(val ps: PijobService, val piio: Piio, val psijs: Portstatusinj
         var buf = ArrayList<Pijob>()
         for (item in all) {
             var p = PiDevice()
-            p.mac = piio.wifiMacAddress()
+//            p.mac = piio.wifiMacAddress()
             item.pidevice = p
             var portlist = psijs.findByPijobid(item.id) as List<Portstatusinjob>
             logger.debug("${portlist}")

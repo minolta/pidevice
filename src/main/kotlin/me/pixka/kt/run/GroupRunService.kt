@@ -85,21 +85,16 @@ class GroupRunService(val task: TaskService) {
                 logger.error("This job already run  from JOB ${j.name}")
                 return false //ไม่สามารถ run job นี้ได้
             }
-
             //หาว่าobject ตัวไหนจะยัง run อยู่แต่อยู่ใน status run
-
             if (findOtherUserwater(j)) {
-                logger.error("Some one use water ${j.name}")
+                logger.warn("Some one use water ${j.name}")
                 return false //ไม่สามารถ run job นี้ได้
             }
         } catch (e: Exception) {
             return false
         }
         return true
-
-
     }
-
     companion object {
         internal var logger = LoggerFactory.getLogger(GroupRunService::class.java)
     }
