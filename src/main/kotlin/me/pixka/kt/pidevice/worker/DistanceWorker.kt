@@ -14,6 +14,8 @@ import java.util.*
 class DistanceWorker(job: Pijob, var mtp: MactoipService,
                      var portstatusinjobService: PortstatusinjobService) : DWK(job), Runnable {
 
+    var rt = 0.0
+    var wt = 0.0
     fun checkdistance(currentdistance: Double): Boolean {
         try {
             var dl = pijob.tlow?.toDouble()
@@ -28,7 +30,8 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
                     "DistanceWorker", Thread.currentThread().name, "14",
                     "checkdistance()",
                     pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
-            throw  e
+            logger.error("${e.message}")
+            throw e
         }
     }
 
@@ -36,6 +39,7 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
 
         isRun = true
         startRun = Date()
+        status = "Start run ${startRun}"
 
         try {
             var mac = pijob.desdevice?.mac
@@ -46,20 +50,38 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
                 var distance = mtp.om.readValue<DistanceObj>(re)
                 if (distance.distance != null) {
                     if (checkdistance(distance.distance!!.toDouble())) {
-
                         go() //run
                         status = "Run complate "
-                        exitdate = findExitdate(pijob)
+                        exitdate = findExitdate(pijob, (rt + wt).toLong())
                     }
                 }
+                else
+                {
+                    isRun = false
+                    status = "Not in range"
+                    exitdate = Date()
+                }
             }
+            else
+            {
+                isRun=false
+                status = "No ip"
+                mtp.lgs.createERROR("No ip", Date(),
+                        "DistanceWorker", Thread.currentThread().name,
+                        "61", "run()",
+                        pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
+            }
+
+
         } catch (e: Exception) {
+            isRun = false
+            exitdate = Date()
+            status = "Error ${e.message}"
+            logger.error(e.message)
             mtp.lgs.createERROR("${e.message}", Date(),
                     "DistanceWorker", Thread.currentThread().name,
-                    "37", "run()",
+                    "43", "run()",
                     pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
-            logger.error(e.message)
-
         }
 
 
@@ -69,17 +91,23 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
         var ports = portstatusinjobService.findByPijobid(pijob.id) as List<Portstatusinjob>
         if (ports != null) {
             ports.forEach {
-
                 try {
-
+                    status = "Set device ${it.device?.name} port ${it.portname?.name}"
                     var re = mtp.setport(it)
-                    status  = "Set port ok"
+                    if (it.runtime != null && it.runtime!!.toDouble() > rt)
+                        rt = it.runtime!!.toDouble()
+
+                    if (it.waittime != null && it.waittime!!.toDouble() > wt)
+                        wt = it.waittime!!.toDouble()
+                    status = "Set port ok"
                 } catch (e: Exception) {
+                    status = "ERROR ${e.message}"
                     mtp.lgs.createERROR("${e.message}", Date(),
                             "DistanceWorker", Thread.currentThread().name,
                             "65", "go()",
                             it.device?.mac, pijob.refid, pijob.pidevice_id)
                     logger.error(e.message)
+
                 }
             }
 

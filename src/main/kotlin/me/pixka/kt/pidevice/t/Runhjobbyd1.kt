@@ -172,28 +172,35 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
         var refid: Long? = 0
         try {
             logger.debug("Run inqueue ${Date()}")
-            if (queue != null && queue.queue != null && queue.queue.size > 0)
+            if (queue.queue.size > 0)
                 for (q in queue.queue) {
                     try {
-                        mac = q.pijob?.desdevice?.mac
-                        refid = q.pijob?.refid
-                    } catch (e: Exception) {
-                        lgs.createERROR("${e.message}", Date(), "",
-                                "", "178", "runQueue()", "${mac}", q.pijob?.refid)
-                    }
-                    if (task.checktime(q.pijob!!)) {
-                        if (groups.c(q.pijob!!))
-                            runfromQ(q)
-                        else {
-                            q.message = "Wait for other use water ${Date()}"
-                            logger.error("Some job use water")
+                        if (q.pijob != null) {
+                            mac = q.pijob?.desdevice?.mac
+                            refid = q.pijob?.refid
                         }
-                    } else {//ถ้า job เกินเวลาแล้วเอาออกเลย
-                        q.message = "Out of date !! ${q.pijob?.stimes} - ${q.pijob?.etimes}"
-                        removeJobFromQ(q.pijob!!)
+                    } catch (e: Exception) {
+                        lgs.createERROR("${e.message}", Date(), "Runhjobbyd1",
+                                Thread.currentThread().name, "178", "runQueue()",
+                                "${mac}", q.pijob?.refid)
                     }
-                    if (!task.checkrun(q.pijob!!)) {//ถ้ามีอยู่ในtask แล้วก็เอาออกจาก Queue เลย
-                        removeJobFromQ(q.pijob!!)
+
+                    if (q.pijob != null) {
+                        if (task.checktime(q.pijob!!)) {
+                            if (groups.c(q.pijob!!))
+                                runfromQ(q)
+                            else {
+                                q.message = "Wait for other use water ${Date()}"
+//                                logger.error("Some job use water")
+                            }
+                        } else {//ถ้า job เกินเวลาแล้วเอาออกเลย
+                            q.message = "Out of date !! ${q.pijob?.stimes} - ${q.pijob?.etimes}"
+                            removeJobFromQ(q.pijob!!)
+                        }
+                        if (!task.checkrun(q.pijob!!)) {//ถ้ามีอยู่ในtask แล้วก็เอาออกจาก Queue เลย
+                            q.message = "this job already run"
+                            removeJobFromQ(q.pijob!!)
+                        }
                     }
                 }
         } catch (e: Exception) {

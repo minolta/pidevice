@@ -6,11 +6,8 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.pidevice.t.OnpumbWorker
 import me.pixka.kt.pidevice.u.ReadUtil
-import me.pixka.kt.pidevice.worker.DisplaytmpWorker
-import me.pixka.kt.pidevice.worker.NotifyPressureWorker
-import me.pixka.kt.run.*
+import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.web.bind.annotation.*
@@ -103,37 +100,6 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
                 var pj = run.getPJ()
                 var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
                         run.runStatus(), pj.ports, run.getPJ().job?.name, run.exitdate(), run.getPJ().refid)
-//
-//                if (run is D1tjobWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is D1hjobWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is D1portjobWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is D1readvoltWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is ReadDhtWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is CheckActiveWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is OffpumpWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is ReadPressureTask)
-//                    t.exitdate = run.exitdate
-//                if (run is ReadTmpTask)
-//                    t.exitdate = run.exitdate
-//                if (run is NotifyPressureWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is OnpumbWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is ReaddustWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is DustWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is D1TimerWorker)
-//                    t.exitdate = run.exitdate
-//                if (run is DisplaytmpWorker)
-//                    t.exitdate = run.exitdate
                 list.add(t)
             } catch (e: Exception) {
                 logger.error("List task error ${e.message}")
@@ -205,11 +171,10 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         logger.debug("Call Tl")
         var n = name.toLowerCase()
         var list = ArrayList<tl>()
-        var runs = taskService.runinglist.filter { it.getPJ().name?.toLowerCase()?.indexOf(n)!=-1 }
+        var runs = taskService.runinglist.filter { it.getPJ().name?.toLowerCase()?.indexOf(n) != -1 }
 
         for (run in runs) {
             try {
-                var pj = run.getPJ()
                 var t = getTl(run)
                 list.add(t)
             } catch (e: Exception) {
@@ -225,8 +190,7 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     @CrossOrigin
     @RequestMapping(value = ["/liststask"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
-    fun listSC()
-    {
+    fun listSC() {
 
     }
 
@@ -256,15 +220,15 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
 //                    list.add(t)
 //                    i++
 //                }
-            try {
-                var t = thread as PijobrunInterface
-                var tt = tl(t.getPijobid(), t.getPJ().name, t.startRun(), t.state(), t.runStatus(), null)
+                try {
+                    var t = thread as PijobrunInterface
+                    var tt = tl(t.getPijobid(), t.getPJ().name, t.startRun(), t.state(), t.runStatus(), null)
 //                logger.debug("threadpool ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} FULL:${thread}")
-                list.add(tt)
-                i++
-            } catch (e: Exception) {
-                logger.error("Can not case ****** ")
-            }
+                    list.add(tt)
+                    i++
+                } catch (e: Exception) {
+                    logger.error("Can not case ****** ")
+                }
             logger.debug("threadpoollist ${i}: ===> ID:${thread.id} NAME:${thread.name} RUN:${thread.isAlive} state:${thread.state}")
 
         }

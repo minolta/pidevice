@@ -31,18 +31,30 @@ class ReadDistanceWorker(job: Pijob, var mtp: MactoipService, var ds: DistanceSe
                     distance.pidevice = pijob.desdevice
                     distance.valuedate = Date()
                     distance.distancevalue = d.distance
-                    ds.save(distance)
+                    if (d.distance!!.toInt() > 0)
+                        ds.save(distance)
+
                     status = "End read ${d.distance}"
                     exitdate = findExitdate(pijob)
+                } else {
+                    mtp.lgs.createERROR("No ip ", Date(),
+                            "ReadDistanceWorker", "", "26", "run()", mac, pijob.refid, pijob.pidevice_id)
+                    isRun = false
+
                 }
+            } else {
+                mtp.lgs.createERROR("No mac", Date(),
+                        "ReadDistanceWorker", "", "23", "run()", mac, pijob.refid, pijob.pidevice_id)
+                isRun = false
+
             }
         } catch (e: Exception) {
             mtp.lgs.createERROR(
                     "${e.message}", Date(),
-                    "ReadDistanceWorker", "", "13", "run()",mac,pijob.refid
+                    "ReadDistanceWorker", "", "13", "run()", mac, pijob.refid
             )
             logger.error(e.message)
-            isRun=false
+            isRun = false
         }
     }
 

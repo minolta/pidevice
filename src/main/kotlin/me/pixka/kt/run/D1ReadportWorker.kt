@@ -2,17 +2,9 @@ package me.pixka.kt.run
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.pibase.d.IptableServicekt
-import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.s.HttpService
-import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.MactoipService
-import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.util.*
 
@@ -31,13 +23,14 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
             goII()
             waitstatus = true
         } catch (e: Exception) {
+            waitstatus = true
+            isRun = false
             this.status = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
             mtp.lgs.createERROR("${e.message}", Date(),
                     "D1readportWorker", "", "",
                     "run", pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
-            waitstatus = true
-            isRun = false
+
         }
 
         waitstatus = true
