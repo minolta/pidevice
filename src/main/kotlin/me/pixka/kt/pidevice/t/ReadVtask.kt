@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.VbattService
 import me.pixka.kt.pibase.o.VbattObject
 import me.pixka.kt.pibase.s.*
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1readvoltWorker
@@ -19,9 +20,8 @@ import java.util.concurrent.CompletableFuture
 @Component
 class ReadVtask(val pjs: PijobService,
                 val js: JobService,
-                val task: TaskService, val readUtil: ReadUtil,
-                val portstatusinjobService: PortstatusinjobService,
-                val ips: IptableServicekt,
+                val task: TaskService,
+               val mtp:MactoipService,
                 val pss: VbattService, val ntf: NotifyService, val findJob: FindJob,
                 val httpService: HttpService) {
     var exitdate: Date? = null
@@ -37,8 +37,8 @@ class ReadVtask(val pjs: PijobService,
                 list.forEach {
                     var id = it.id
                     if (task.runinglist.find { it.getPijobid() == id && it.runStatus() } == null) {
-                        var ip = ips.findByMac(it.desdevice?.mac!!)
-                        var run = task.run(D1readvoltWorker(it,httpService,pss,ntf,ip!!))
+                        var ip = mtp.mactoip(it.desdevice?.mac!!)
+                        var run = task.run(D1readvoltWorker(it,pss,mtp))
                         logger.debug("Run ? ${run}")
                     }
                     else
@@ -52,18 +52,6 @@ class ReadVtask(val pjs: PijobService,
             logger.error("ERROR READ V ${e.message}")
         }
     }
-
-//    fun loadjob(): List<Pijob>? {
-//        var job = js.findByName("runreadvolt")
-//
-//        if (job != null) {
-//
-//            var jobs = pjs.findJob(job.id)
-//            return jobs
-//        }
-//        throw Exception("Not have JOB")
-//    }
-
     companion object {
         internal var logger = LoggerFactory.getLogger(ReadVtask::class.java)
     }

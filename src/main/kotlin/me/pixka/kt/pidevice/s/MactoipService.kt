@@ -54,9 +54,7 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             var url = findUrl(portstatusinjob.device!!, portstatusinjob.portname!!.name!!,
                     portstatusinjob.runtime!!.toLong(), portstatusinjob.waittime!!.toLong(),
                     portstatusinjob.status!!.toInt())
-
-            var re = http.get(url, 12000)
-            return re
+          return  http.get(url, 5000)
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),
                     "MactoipService", Thread.currentThread().name, "51",

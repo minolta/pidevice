@@ -33,7 +33,9 @@ class TestDistanceWorker
         every { pijob.tlow } returns BigDecimal(1)
         every { pijob.thigh } returns BigDecimal(50)
         every { pijob.id } returns 1
-        every { device.mac } returns ""
+        every { pijob.desdevice } returns device
+        every { pijob.refid } returns 1
+        every { device.mac } returns "99"
         var p  = mockk<Portstatusinjob>()
         every{ p.portname } returns Portname("D1")
         every { p.runtime  } returns 10
@@ -46,5 +48,8 @@ class TestDistanceWorker
 
         var worker = DistanceWorker(pijob,mtp,pijs)
         Assertions.assertTrue(worker.checkdistance(5.0))
+
+        worker.run()
+
     }
 }

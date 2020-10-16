@@ -16,20 +16,24 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
 
         startRun = Date()
         isRun = true
+        status = "Start run ${startRun}"
         waitstatus = false //เริ่มมาก็ทำงาน
         Thread.currentThread().name = "JOBID:${pijob.id} D1PORT : ${pijob.name} ${startRun}"
         try {
             waitstatus = false
             goII()
             waitstatus = true
+            status = "End job ${Date()}"
         } catch (e: Exception) {
             waitstatus = true
             isRun = false
-            this.status = "Run By port is ERROR ${e.message}"
+            status = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
             mtp.lgs.createERROR("${e.message}", Date(),
-                    "D1readportWorker", "", "",
+                    "D1readportWorker", Thread.currentThread().name, "22",
                     "run", pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
+
+
 
         }
 
@@ -54,18 +58,18 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
                 if (pr!! > rt) {
                     rt = pr
                 }
-                var pn = it.portname!!.name
-                var v = it.status //สำหรับบอก port ว่าจะเป็น logic อะไร
-                var value = getLogic(v?.name!!)
                 try {
+                    status = "Set port ${it.portname?.name}"
                     var re = mtp.setport(it)
                     var st = mtp.om.readValue<Status>(re)
+                    status = "Set port ${it.portname!!.name} ${st.uptime}"
                 } catch (e: Exception) {
                     mtp.lgs.createERROR("${e.message}", Date(),
                             "D1ReadportWorker",
-                            "", "", "", it.device?.mac,
+                            Thread.currentThread().name, "61", "goII()", it.device?.mac,
                             it.pijob?.refid
                     )
+                    status = "ERROR ${e.message}"
                 }
             }
         }

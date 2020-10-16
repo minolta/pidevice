@@ -26,13 +26,21 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
 
             return false
         } catch (e: Exception) {
+            status = "Error ${e.message}  checkdistance"
             mtp.lgs.createERROR("${e.message}", Date(),
                     "DistanceWorker", Thread.currentThread().name, "14",
                     "checkdistance()",
                     pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
             logger.error("${e.message}")
+
             throw e
         }
+    }
+
+    fun getData(ip:String): DistanceObj {
+        var re = mtp.http.get("http://${ip}", 20000)
+        var distance = mtp.om.readValue<DistanceObj>(re)
+        return distance
     }
 
     override fun run() {
@@ -46,25 +54,28 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
             var ip = mtp.mactoip(mac!!)
 
             if (ip != null) {
-                var re = mtp.http.get("http://${ip}", 20000)
-                var distance = mtp.om.readValue<DistanceObj>(re)
+
+                var distance = getData(ip)
+
                 if (distance.distance != null) {
                     if (checkdistance(distance.distance!!.toDouble())) {
                         go() //run
                         status = "Run complate "
                         exitdate = findExitdate(pijob, (rt + wt).toLong())
                     }
-                }
-                else
-                {
+                    else
+                    {
+                        status = "Not in range"
+                        exitdate = Date()
+                        isRun = false
+                    }
+                } else {
                     isRun = false
                     status = "Not in range"
                     exitdate = Date()
                 }
-            }
-            else
-            {
-                isRun=false
+            } else {
+                isRun = false
                 status = "No ip"
                 mtp.lgs.createERROR("No ip", Date(),
                         "DistanceWorker", Thread.currentThread().name,
@@ -83,6 +94,9 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
                     "43", "run()",
                     pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
         }
+
+
+//        status = "End job"
 
 
     }
