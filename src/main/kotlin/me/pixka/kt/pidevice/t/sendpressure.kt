@@ -32,8 +32,8 @@ class Sendpressure(val service: PressurevalueService, val httpService: HttpServi
                     service.delete(p)
                 } catch (e: Exception) {
                     logger.error("Send pressure error ${e.message} ${target} ${p}")
-                    lgs.createERROR("${e.message}", Date(),
-                    "Sendpressure",Thread.currentThread().name,"28","send()")
+//                    lgs.createERROR("${e.message}", Date(),
+//                    "Sendpressure",Thread.currentThread().name,"28","send()")
                 }
             }
         }

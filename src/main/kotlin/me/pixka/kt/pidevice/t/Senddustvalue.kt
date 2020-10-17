@@ -29,9 +29,10 @@ class Senddustvalue(val server: PmService, val httpService: HttpService,val lgs:
                     var r = om.readValue<Status>(h)
                     server.delete(it)
                 } catch (e: Exception) {
-                    lgs.createERROR("${e.message}", Date(),
-                    "Senddustvalue","","26","run",mac)
+//                    lgs.createERROR("${e.message}", Date(),
+//                    "Senddustvalue","","26","run",mac)
                     logger.error(e.message)
+
                 }
 
             }

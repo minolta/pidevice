@@ -31,8 +31,8 @@ class Senddistance(val service: DistanceService, val httpService: HttpService, v
                 }
             }
         } catch (e: Exception) {
-            lgs.createERROR("${e.message}", Date(), "Senddistance",
-                    "", "20", "send()", System.getProperty("mac"))
+//            lgs.createERROR("${e.message}", Date(), "Senddistance",
+//                    "", "20", "send()", System.getProperty("mac"))
             logger.error(e.message)
         }
     }

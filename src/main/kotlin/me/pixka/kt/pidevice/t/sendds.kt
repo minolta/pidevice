@@ -103,8 +103,6 @@ class SenddsTask( val service: Ds18valueService,
         try {
             val mapper = ObjectMapper()
             val list = service.notInserver()
-
-
             logger.debug("Values for send ${list!!.size}")
             for (item in list) {
                 logger.debug("[sendds18b20]  " + item)

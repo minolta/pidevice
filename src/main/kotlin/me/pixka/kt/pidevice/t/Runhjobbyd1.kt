@@ -146,7 +146,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
             }
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),
-                    "Runhjobbyd1", "", "", "runfromQ",
+                    "Runhjobbyd1", Thread.currentThread().name, "140", "runfromQ",
                     q.pijob?.desdevice?.mac,
                     q.pijob?.desdevice?.refid)
         }
@@ -158,7 +158,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
             logger.debug("Remove ${job.name} from queue is ${removed}")
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),
-                    "Runhjobd1", "", "155", "removeJobFromQ",
+                    "Runhjobd1", Thread.currentThread().name, "156", "removeJobFromQ",
                     job.desdevice?.mac, job.refid)
             logger.error("Remove Q ${job.name} ERROR ${e.message}")
         }

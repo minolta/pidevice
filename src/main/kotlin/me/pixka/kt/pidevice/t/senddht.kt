@@ -41,13 +41,13 @@ class SendDht(val dhts: DhtvalueService, val http: HttpService,val lgs:LogServic
                         var d = om.readValue<Dhtvalue>(value)
                             dhts.delete(dht)
                     } catch (e: Exception) {
-                        lgs.createERROR("${e.message} ", Date(),"Senddht",
-                        "","","run",mac)
+//                        lgs.createERROR("${e.message} ", Date(),"Senddht",
+//                        "","","run",mac)
                         logger.error("Send Dht ERROR ${e.message}")
                     }
                 } catch (e: Exception) {
-                    lgs.createERROR("${e.message} ", Date(),"Senddht",
-                            "","","run",System.getProperty("mac"))
+//                    lgs.createERROR("${e.message} ", Date(),"Senddht",
+//                            "","","run",System.getProperty("mac"))
                     logger.error("Error ${e.message}")
                 }
 
