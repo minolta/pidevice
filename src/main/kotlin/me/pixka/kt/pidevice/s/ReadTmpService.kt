@@ -19,11 +19,10 @@ class ReadTmpService(val httpService: HttpService,val lgs:LogService) {
     var om = ObjectMapper()
     fun readTmp(ip: String): Tmpobj {
         try {
-            var re = httpService.get("http://${ip}",5000)
+            var re = httpService.get("http://${ip}",15000)
             var t = om.readValue<Tmpobj>(re)
             return t
         } catch (e: Exception) {
-//            e.printStackTrace()
             lgs.createERROR("${e.message}", Date(),"ReadTmpService",
                     "","21","readTmp()","",null)
             throw e
@@ -34,3 +33,13 @@ class ReadTmpService(val httpService: HttpService,val lgs:LogService) {
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Tmpobj(var t: BigDecimal? = null, var tmp: BigDecimal? = null,
              val ip: String? = null, val mac: String? = null)
+{
+    fun getTmp(): Double? {
+        if(tmp!=null)
+            return tmp!!.toDouble()
+        if(t!=null)
+            return t!!.toDouble()
+
+        return null
+    }
+}

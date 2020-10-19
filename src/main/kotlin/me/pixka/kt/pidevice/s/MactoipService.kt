@@ -6,13 +6,14 @@ import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.log.d.LogService
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
 class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: HttpService,
-                     val dhts: ReadDhtService) {
+                     val dhts: ReadDhtService,val psis:PortstatusinjobService) {
     val om = ObjectMapper()
     fun mactoip(mac: String): String? {
 
@@ -32,7 +33,9 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
 
 
     }
-
+    fun getPortstatus(job:Pijob): List<Portstatusinjob>? {
+        return psis.findByPijobid(job.id) as List<Portstatusinjob>?
+    }
     fun findUrl(target: PiDevice, portname: String, runtime: Long,
                 waittime: Long, value: Int): String {
         try {

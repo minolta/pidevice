@@ -21,14 +21,16 @@ import java.util.*
 class Runtjobbyd1(val pjs: PijobService,
                   val js: JobService,
                   val task: TaskService, val ips: IptableServicekt,
-                  val dhs: Dhtutil, val httpService: HttpService, val psij: PortstatusinjobService,
-                  val readUtil: ReadUtil, val findJob: FindJob, val readtmp: ReadTmpService, val lgs: LogService) {
+                  val dhs: Dhtutil, val httpService: HttpService,
+                  val psij: PortstatusinjobService,
+                  val readUtil: ReadUtil, val findJob: FindJob,
+                  val readtmp: ReadTmpService, val lgs: LogService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
         var mac: String? = null
-        var jid:Long?=0
+        var jid: Long? = 0
         try {
             logger.debug("Start run ${Date()}")
             var list = findJob.loadjob("runtbyd1")
@@ -65,7 +67,7 @@ class Runtjobbyd1(val pjs: PijobService,
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),
                     "Runtjobbyd1", "",
-                    "30", "run", mac,jid)
+                    "30", "run", mac, jid)
             logger.error(e.message)
         }
     }
@@ -112,8 +114,6 @@ class Runtjobbyd1(val pjs: PijobService,
         }
     }
 
+    val logger = LoggerFactory.getLogger(Runtjobbyd1::class.java)
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(Runtjobbyd1::class.java)
-    }
 }

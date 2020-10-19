@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.ReadDhtService
 import me.pixka.log.d.LogService
@@ -36,7 +37,7 @@ class TestSetport {
         every { pit.status } returns lg
 
         var mtp = MactoipService(ips,mockk<LogService>(relaxed = true),
-                spyk<HttpService>(),mockk<ReadDhtService>(relaxed = true))
+                spyk<HttpService>(),mockk<ReadDhtService>(relaxed = true),mockk<PortstatusinjobService>())
 
 
         mtp.setport(pit)
