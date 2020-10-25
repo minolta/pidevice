@@ -16,10 +16,11 @@ import java.util.*
 
 @Service
 class ReadTmpService(val httpService: HttpService,val lgs:LogService) {
+
     var om = ObjectMapper()
     fun readTmp(ip: String): Tmpobj {
         try {
-            var re = httpService.get("http://${ip}",15000)
+            var re = httpService.get("http://${ip}",2000)
             var t = om.readValue<Tmpobj>(re)
             return t
         } catch (e: Exception) {

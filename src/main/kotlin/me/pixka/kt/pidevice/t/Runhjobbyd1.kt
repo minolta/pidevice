@@ -3,15 +3,12 @@ package me.pixka.kt.pidevice.t
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
-import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.o.HObject
 import me.pixka.kt.pibase.s.FindJob
-import me.pixka.kt.pibase.s.HttpService
-import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.run.D1hjobWorker
 import me.pixka.kt.run.GroupRunService
 import me.pixka.log.d.LogService
@@ -21,15 +18,15 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import java.util.*
 
+/**
+ * เป็น การ run แบบเรียงลำดับ
+ */
 @Component
 class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
-                  val js: JobService,
                   val task: TaskService,
-                  val dhs: Dhtutil,
-                  val iptableServicekt: IptableServicekt,
+                  val mtp: MactoipService,
                   val groups: GroupRunService, val lgs: LogService,
-                  val ntfs: NotifyService, val queue: QueueService,
-                  val httpService: HttpService) {
+                  val ntfs: NotifyService, val queue: QueueService) {
     val om = ObjectMapper()
 
     fun rQ() {
@@ -47,11 +44,10 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
         }
     }
 
-    @Scheduled(fixedDelay = 2000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
         rQ()
         try {
-
             //Run ปกติ
             var list = findJob.loadjob("runhbyd1")
             list?.forEach {
@@ -63,7 +59,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                             if (h != null) {
                                 if (checkHtorun(it, h)) {
                                     if (groups.c(job)) {//ไม่มี job run อยู่ และในกลุม run ไม่มีใครใช้น้ำ
-                                        var t = D1hjobWorker(job, dhs, httpService, task, ntfs, lgs)
+                                        var t = D1hjobWorker(job, mtp, ntfs)
                                         var run = task.run(t)
                                         logger.debug("H job is run ${run}")
                                         //ถ้าการ run อยู่จะเอาเข้าคิว
@@ -80,7 +76,6 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                                         }
                                     }
                                 }
-
                             }
                         } catch (e: Exception) {
                             logger.error("ERROR ${e.message}")
@@ -112,10 +107,10 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
 
     fun getHobj(job: Pijob): HObject? {
         try {
-            var ip = iptableServicekt.findByMac(job.desdevice?.mac!!)
+            var ip = mtp.mactoip(job.desdevice?.mac!!)
             logger.debug("Call IP : ${ip} RunH")
             if (ip != null) {
-                var re = httpService.get("http://${ip.ip}", 12000)
+                var re = mtp.http.get("http://${ip}", 12000)
                 var h = om.readValue<HObject>(re)
                 return h
             }
@@ -137,11 +132,17 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
 
     fun runfromQ(q: Qobject) {
         try {
-            var t = D1hjobWorker(q.pijob!!, dhs, httpService, task, ntfs, lgs)
-            var run = task.run(t)
-            if (run) {
-                q.message = "Run !! remove from Queue"
-                q.addDate = Date()
+            var t = D1hjobWorker(q.pijob!!, mtp, ntfs)
+            if (!task.checkrun(q.pijob!!)) {
+                var run = task.run(t)
+                if (run) {
+                    q.message = "Run !! remove from Queue"
+                    q.addDate = Date()
+                    removeJobFromQ(q.pijob!!)
+                }
+            }
+            else
+            {
                 removeJobFromQ(q.pijob!!)
             }
         } catch (e: Exception) {

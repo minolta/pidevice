@@ -1,91 +1,46 @@
 package me.pixka.kt.run
 
-import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressureValue
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.u.ReadUtil
 import org.slf4j.LoggerFactory
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 
-class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
-    : PijobrunInterface, Runnable {
-    var isRun = false
-    var state = "Init"
-    var startrun: Date? = null
-    var exitdate:Date?=null
-
-    override fun setG(gpios: GpioService) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-    override fun setrun(p: Boolean) {
-        isRun = p
-    }
-
-    override fun exitdate(): Date? {
-        return exitdate
-    }
-
-    override fun runStatus(): Boolean {
-        return isRun
-    }
-
-    override fun getPijobid(): Long {
-        if (pijob != null) {
-            return this.pijob.id
-        }
-        throw Exception("Pijob is null")
-    }
-
-    override fun getPJ(): Pijob {
-        if (pijob != null) {
-            return pijob
-        }
-        throw Exception("Pi job is null from getPJ")
-    }
-
-    override fun startRun(): Date? {
-        return startrun
-    }
-
-    override fun state(): String? {
-        return state
-    }
-
+class D1pjobWorker(job: Pijob, val readUtil: ReadUtil, val mtp: MactoipService)
+    : DWK(job), Runnable {
     override fun run() {
-        startrun = Date()
+        startRun = Date()
         isRun = true
-        var v:PressureValue?=null
-        Thread.currentThread().name = "JOBID:${pijob.id} D1P ${pijob.name} ${startrun}"
+        var v: PressureValue? = null
+        Thread.currentThread().name = "JOBID:${pijob.id} D1P ${pijob.name} ${startRun}"
         try {
             v = readUtil.readPressureByjob(pijob)
             logger.debug("D1 Found pressure : ${v}")
-            state = "D1 Found pressure : ${v}"
+            status = "D1 Found pressure : ${v}"
             if (v != null) {
                 var value = v.pressurevalue?.toFloat()
                 var h = pijob.hhigh?.toFloat()
                 var l = pijob.hlow?.toFloat()
                 logger.debug("D1 pressure  ${l} < ${value} > ${h}")
                 if (checkH(l!!, h!!, value!!)) {
-                    go()
+//                    go()
+                    goII()
                     isRun = false
                 } else {
                     logger.error("D1 pressure job Value not in rang ${l} < ${value} > ${h}")
-                    state = "D1 pressure job Value not in rang ${l} < ${value} > ${h}"
+                    status = "D1 pressure job Value not in rang ${l} < ${value} > ${h}"
                     isRun = false
                 }
             } else {
-                state = "Not found pressure value"
+                status = "Not found pressure value"
                 isRun = false
             }
         } catch (e: Exception) {
             isRun = false
             logger.error("ERROR ${e.message}  HLOW:${pijob.hlow} HHIGH:${pijob.hhigh}  ${v}")
-            state = "ERROR ${e.message} HLOW:${pijob.hlow} HHIGH:${pijob.hhigh} ${v}"
+            status = "ERROR ${e.message} HLOW:${pijob.hlow} HHIGH:${pijob.hhigh} ${v}"
             throw e
         }
 
@@ -95,94 +50,97 @@ class D1pjobWorker(var pijob: Pijob, val readUtil: ReadUtil)
 
 
     fun checkH(l: Float, h: Float, v: Float): Boolean {
-        state = "Check value ${l} < ${v} > ${h}"
+        status = "Check value ${l} < ${v} > ${h}"
         if (v >= l && v <= h) {
             return true
         }
         return false
     }
 
-    fun go() {//Run
-        state = "Run set port "
-        var ports = pijob.ports
-        logger.debug("Ports ${ports}")
-        if (ports != null)
-            for (port in ports) {
+    fun goII() {
+        if (pijob.ports != null) {
+            var ports = pijob.ports!!.filter { it.enable == true }
 
-
-                var pw = port.waittime
-                var pr = port.runtime
-                var pn = port.portname!!.name
-                var tg = port.device
-                var v = port.status
-
-                var portname = pn
-                var runtime = 0L
-                if (pr != null) {
-                    runtime = pr.toLong()
-                } else if (pijob.runtime != null) {
-                    runtime = pijob.runtime!!
-                }
-
-                var waittime = 0L
-                if (pw != null) {
-                    waittime = pw.toLong()
-                } else if (pijob.waittime != null) {
-                    waittime = pijob.waittime!!
-                }
-                var value = 0
-                if (v != null) {
-                    if (v.name.equals("high")) {
-                        value = 1
-                    } else value = 0
-                }
-                var ee = Executors.newSingleThreadExecutor()
+            ports.forEach {
                 try {
-                    var url = findUrl(tg!!, portname!!, runtime, waittime, value)
-                    logger.debug("URL ${url}")
-                    state = "Set port ${url}"
-                    var get = HttpGetTask(url)
-
-                    var f = ee.submit(get)
-                    var value = f.get(5, TimeUnit.SECONDS)
-                    state = "Delay  ${runtime} + ${waittime}"
-                    logger.debug("Value ${value}")
-                    TimeUnit.SECONDS.sleep(runtime)
-                    TimeUnit.SECONDS.sleep(waittime)
+                    var re = mtp.setport(it)
+                    status = "Setport ${it.device?.name} port:${it.portname?.name} to ${it.status?.name}"
                 } catch (e: Exception) {
-                    logger.error("Error ${e.message}")
-                    state = " Error ${e.message}"
-                    ee.shutdownNow()
+                    mtp.lgs.createERROR("${e.message}", Date(),
+                            "D1pjobWorker", Thread.currentThread().name, "69", "goII()",
+                            "${it.device?.mac}", pijob.refid, pijob.pidevice_id)
                 }
-
             }
-
-        state = "Set port ok "
-
-    }
-
-    fun findUrl(tg: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
-        if (pijob.desdevice != null) {
-            var ip = readUtil.findIp(tg)
-            if (ip != null) {
-                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
-                return url
-            }
+            status = "End set port"
         }
-
-        throw Exception("Error Can not find url")
     }
 
-    override fun setP(pijob: Pijob) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+//    fun go() {//Run
+//        status = "Run set port "
+//        var ports = pijob.ports
+//        logger.debug("Ports ${ports}")
+//        if (ports != null)
+//            for (port in ports) {
+//
+//
+//                var pw = port.waittime
+//                var pr = port.runtime
+//                var pn = port.portname!!.name
+//                var tg = port.device
+//                var v = port.status
+//
+//                var portname = pn
+//                var runtime = 0L
+//                if (pr != null) {
+//                    runtime = pr.toLong()
+//                } else if (pijob.runtime != null) {
+//                    runtime = pijob.runtime!!
+//                }
+//
+//                var waittime = 0L
+//                if (pw != null) {
+//                    waittime = pw.toLong()
+//                } else if (pijob.waittime != null) {
+//                    waittime = pijob.waittime!!
+//                }
+//                var value = 0
+//                if (v != null) {
+//                    if (v.name.equals("high")) {
+//                        value = 1
+//                    } else value = 0
+//                }
+//                var ee = Executors.newSingleThreadExecutor()
+//                try {
+//                    var url = findUrl(tg!!, portname!!, runtime, waittime, value)
+//                    logger.debug("URL ${url}")
+//                    status = "Set port ${url}"
+//                    var get = HttpGetTask(url)
+//
+//                    var f = ee.submit(get)
+//                    var value = f.get(5, TimeUnit.SECONDS)
+//                    status = "Delay  ${runtime} + ${waittime}"
+//                    logger.debug("Value ${value}")
+//                    TimeUnit.SECONDS.sleep(runtime)
+//                    TimeUnit.SECONDS.sleep(waittime)
+//                } catch (e: Exception) {
+//                    logger.error("Error ${e.message}")
+//                    status = " Error ${e.message}"
+//                    ee.shutdownNow()
+//                }
+//
+//            }
+//
+//        status = "Set port ok "
+//
+//    }
+
 
     override fun toString(): String {
         return "${pijob.name}"
     }
-    companion object {
-        internal var logger = LoggerFactory.getLogger(D1pjobWorker::class.java)
-    }
+
+
+    var logger = LoggerFactory.getLogger(D1pjobWorker::class.java)
 
 
 }

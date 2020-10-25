@@ -4,16 +4,20 @@ import io.mockk.every
 import io.mockk.mockk
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.run.DustWorker
 import me.pixka.log.d.LogService
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
 import java.util.*
 
 
 class TestRunDust {
 
+    @Autowired
+    lateinit var mtp:MactoipService
     @Test
     fun testRunDust() {
         val lgs = mockk<LogService>(relaxed = true)
@@ -38,7 +42,7 @@ class TestRunDust {
         psij.device = p
         var worker = DustWorker(job, arrayListOf(
 
-        psij), ips, httpService,lgs)
+        psij),mtp )
 
         worker.run()
 

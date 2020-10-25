@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable {
-
-
     var waitstatus: Boolean = false
     override fun run() {
 

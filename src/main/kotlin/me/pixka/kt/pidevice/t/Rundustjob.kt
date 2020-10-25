@@ -2,23 +2,24 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Pm
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.FindJob
-import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.DustWorker
 import me.pixka.log.d.LogService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.concurrent.CompletableFuture
 
 
 @Component
-class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: IptableServicekt,
-                 val task: TaskService, val ps: PortstatusinjobService, val lgs: LogService) {
+class Rundustjob(val findJob: FindJob, val mtp: MactoipService,
+                 val task: TaskService, val ps: PortstatusinjobService,
+                 val lgs: LogService) {
 
     val om = ObjectMapper()
 
@@ -29,17 +30,20 @@ class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: Ip
 
         if (jobs != null) {
             jobs.forEach {
-                if (!task.checkrun(it)) {
-                    runThread(it)
+                CompletableFuture.supplyAsync {
+                    if (!task.checkrun(it)) {
+                        runThread(it)
+                    }
                 }
+
             }
         }
     }
 
     fun readPm(job: Pijob): Pm? {
-        var ip = ips.findByMac(job.desdevice?.mac!!)
+        var ip = mtp.mactoip(job.desdevice?.mac!!)
         if (ip != null) {
-            val re = httpService.get("http://${ip.ip}",10000)
+            val re = mtp.http.get("http://${ip}", 10000)
             var dustobj = om.readValue<Pm>(re)
             return dustobj
         }
@@ -62,9 +66,9 @@ class Rundustjob(val findJob: FindJob, val httpService: HttpService, val ips: Ip
     fun runThread(job: Pijob) {
         var it = readPm(job)
         var canrun = checkCanrun(job, it!!)
-        if(canrun) {
+        if (canrun) {
             var ports = ps.findByPijobid(job.id) as ArrayList<Portstatusinjob>
-            var t = DustWorker(job, ports, ips, httpService, lgs)
+            var t = DustWorker(job, ports, mtp)
             task.run(t)
         }
     }

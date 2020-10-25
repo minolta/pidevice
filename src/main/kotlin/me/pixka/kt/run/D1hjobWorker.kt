@@ -4,95 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Logistate
-import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.s.HttpService
-import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.kt.pidevice.u.Dhtutil
-import me.pixka.log.d.LogService
-import me.pixka.log.d.Logsevent
+import me.pixka.kt.pidevice.s.MactoipService
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-class D1hjobWorker(var pijob: Pijob,
-                   val dhts: Dhtutil, val httpService: HttpService,
-                   val task: TaskService, val ntfs: NotifyService, val lgs: LogService)
-    : PijobrunInterface, Runnable {
-    var isRun = false
-    var state = "Init"
-    var startrun: Date? = null
+class D1hjobWorker(var job: Pijob,
+                   val mtp: MactoipService, val ntfs: NotifyService)
+    : DWK(job), Runnable {
+    var om = ObjectMapper()
     var waitstatus = false
-    var haveerror = false
-    var errormessage = ""
-    var exitdate: Date? = null
-    var om=ObjectMapper()
 
-    override fun setG(gpios: GpioService) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun setrun(p: Boolean) {
-        isRun = p
-    }
-
-    override fun exitdate(): Date? {
-        return exitdate
-    }
-
-    override fun runStatus(): Boolean {
-        return isRun
-    }
-
-    override fun getPijobid(): Long {
-        if (pijob != null) {
-            return this.pijob.id
-        }
-        throw Exception("Pijob is null")
-    }
-
-    override fun getPJ(): Pijob {
-        if (pijob != null) {
-            return pijob
-        }
-        throw Exception("Pi job is null from getPJ")
-    }
-
-    override fun startRun(): Date? {
-        return startrun
-    }
-
-    override fun state(): String? {
-        return state
-    }
-
-
-
-    /*
-    * เป็นการ จบ Thread แต่ยังไม่เอาออกจาก list เพราะต้องคืน Core ให้กับระบบ แต่ run อยู่
-    * */
-    fun setEnddate() {
-        var t = 0L
-
-        if (pijob.waittime != null)
-            t = pijob.waittime!!
-        if (pijob.runtime != null)
-            t += pijob.runtime!!
-        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-        calendar.add(Calendar.SECOND, t.toInt())
-        exitdate = calendar.time
-        if (t == 0L)
-            isRun = false//ออกเลย
-    }
 
     override fun run() {
-        startrun = Date()
+        startRun = Date()
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
-        Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} ${startrun}"
+        Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
         try {
             if (pijob.tlow != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
@@ -101,25 +32,22 @@ class D1hjobWorker(var pijob: Pijob,
             waitstatus = false //ใช้น้ำ
             go()
             waitstatus = true //หยุดใช้น้ำแล้ว
-            exitdate = task.findExitdate(pijob)
+            exitdate = findExitdate(pijob)
             if (exitdate == null)
                 isRun = false
-            state = "End normal"
+            status = "End normal"
             return
         } catch (e: Exception) {
             isRun = false
-            exitdate = task.findExitdate(pijob)
+            exitdate = findExitdate(pijob)
             logger.error("ERROR 1 ${e.message}")
-            state = "ERROR 1 ${e.message}"
-            lgs.createERROR("ERROR 1 ${e.message}",Date(),"D1hjobWorker",
-            "","","","",pijob.refid)
+            status = "ERROR 1 ${e.message}"
+            mtp.lgs.createERROR("ERROR 1 ${e.message}", Date(), "D1hjobWorker",
+                    "", "", "", "", pijob.refid)
             waitstatus = true
             throw e
         }
 
-//        waitstatus = true
-//        isRun = false
-//        state = "End job"
     }
 
 
@@ -132,9 +60,9 @@ class D1hjobWorker(var pijob: Pijob,
                 value = 0
         } else {
             if (v != null)
-                state = "Value to set ERROR ${v.name}"
+                status = "Value to set ERROR ${v.name}"
             else
-                state = "Port state Error is Null"
+                status = "Port state Error is Null"
 
         }
 
@@ -142,92 +70,76 @@ class D1hjobWorker(var pijob: Pijob,
     }
 
     fun go() {//Run
-//        var ee = Executors.newSingleThreadExecutor()
+
         var token = pijob.token
-        state = "Run set port "
+        status = "Run set port "
         var ports = pijob.ports
+        if (ports == null)
+            return
         logger.debug("Ports ${ports}")
-        if (ports != null)
-            for (port in ports) {
-                if (port.enable == null || !port.enable!!) {
-                    logger.debug("Port disable ${port}")
-                    continue //ข้ามไปเลย
-                }
-                var pw = port.waittime
-                var pr = port.runtime
-                var pn = port.portname!!.name
-                var v = port.status
+        ports = ports.filter { it.enable == true }
 
-                var portname = pn
-                var runtime = 0L
-                if (pr != null) {
-                    runtime = pr.toLong()
-                } else if (pijob.runtime != null) {
-                    runtime = pijob.runtime!!
-                }
-                var waittime = 0L
-                if (pw != null) {
-                    waittime = pw.toLong()
-                } else if (pijob.waittime != null) {
-                    waittime = pijob.waittime!!
-                }
-                var value = getLogic(v)
+        for (port in ports) {
+            if (port.enable == null || !port.enable!!) {
+                logger.debug("Port disable ${port}")
+                continue //ข้ามไปเลย
+            }
+            var pw = port.waittime
+            var pr = port.runtime
+            var pn = port.portname!!.name
+            var v = port.status
+
+            var portname = pn
+            var runtime = 0L
+            if (pr != null) {
+                runtime = pr.toLong()
+            } else if (pijob.runtime != null) {
+                runtime = pijob.runtime!!
+            }
+            var waittime = 0L
+            if (pw != null) {
+                waittime = pw.toLong()
+            } else if (pijob.waittime != null) {
+                waittime = pijob.waittime!!
+            }
+            var value = getLogic(v)
+            try {
+                startRun = Date()
                 try {
-                    var url = ""
-                    try {
-                        if (port.device != null)
-                            url = findUrl(port.device!!, portname!!, runtime, waittime, value)
-                        else
-                            url = findUrl(portname!!, runtime, waittime, value)
-                    } catch (e: Exception) {
-                        logger.error("Find URL ERROR ${e.message} port: ${port} portname ${portname}")
-                        lgs.createERROR("${e.message}",Date(),"D1hjobWorker",
-                        "","","go()",port.device?.mac,pijob.refid)
-                        state = "Find URL ERROR ${e.message} port: ${port} portname ${portname}"
+                    //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
+                    var v = mtp.setport(port)
+                    status = "Delay  ${runtime} + ${waittime}"
+                    var s = om.readValue<Status>(v)
+                    logger.debug("D1h Value ${status}")
+                    status = "Set ${portname} to ${value}  ${s.status} and run ${runtime}"
+                    TimeUnit.SECONDS.sleep(runtime)
+                    if (waittime != null) {
+                        status = "Wait time of port ${waittime}"
+                        TimeUnit.SECONDS.sleep(waittime)
                     }
-                    startrun = Date()
-                    logger.debug("URL ${url}")
-                    state = "Set port ${url}"
-                    try {
-                        //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-                        var v = httpService.get(url,12000)
-                        state = "Delay  ${runtime} + ${waittime}"
-                        var status = om.readValue<Status>(v)
-                        logger.debug("D1h Value ${status}")
-                        state = "Set ${portname} to ${value}  ${status.status} and run ${runtime}"
-                        TimeUnit.SECONDS.sleep(runtime)
-
-                        if (waittime != null) {
-                            state = "Wait time of port ${waittime}"
-                            TimeUnit.SECONDS.sleep(waittime)
-                        }
-                    } catch (e: ConnectException) {
-                        haveError(token, e)
-                    } catch (e: TimeoutException) {
-                        haveError(token, e)
-                    }
-                } catch (e: Exception) {
-                    logger.error("Error 2 ${e.message}")
-                    state = " Error 2 ${e.message}"
-                    lgs.createERROR(" Error 2 ${e.message}",Date(),"D1hjobWorker",
-                    "","","go()",pijob.desdevice?.mac,pijob.refid)
-                    isRun = false
-                    waitstatus = true //หยุดใช้น้ำแล้ว
-                    break //ออกเลย
-
+                } catch (e: ConnectException) {
+                    haveError(token, e)
+                } catch (e: TimeoutException) {
+                    haveError(token, e)
                 }
-            } //end for
+            } catch (e: Exception) {
+                logger.error("Error 2 ${e.message}")
+                status = " Error 2 ${e.message}"
+                mtp.lgs.createERROR(" Error 2 ${e.message}", Date(), "D1hjobWorker",
+                        "", "", "go()", pijob.desdevice?.mac, pijob.refid)
+                isRun = false
+                waitstatus = true //หยุดใช้น้ำแล้ว
+                break //ออกเลย
 
-        if (!haveerror)
-            state = "Set port ok "
-        else
-            state = "Set port error "
+            }
+        } //end for
+
     }
 
     fun haveError(token: String?, e: Exception) {
         logger.error("Set port error  ${e.message}")
-        state = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
-        lgs.createERROR("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}",Date())
+        status = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
+        mtp.lgs.createERROR("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}", Date())
         if (token != null)
             ntfs.message("Set port ERROR ${pijob.desdevice?.name} ${pijob.name} ", token)
         else
@@ -241,46 +153,41 @@ class D1hjobWorker(var pijob: Pijob,
         else
             ntfs.message("End job  ${pijob.name}   Can not connect to target ")
 
-        state = "End job  ${pijob.name}  Can not connect to target "
+        status = "End job  ${pijob.name}  Can not connect to target "
 
         TimeUnit.SECONDS.sleep(5)
-        haveerror = true
-        errormessage = "End job  ${pijob.name}  Can not connect to target"
+//        haveerror = true
+//        errormessage = "End job  ${pijob.name}  Can not connect to target"
         //                        continue// setport ต่อ ไป
 
         //ไม่ทำอะไรข้ามไปเลยแล้วก็จบ job เลยถ้ามีปัญหารอรอบหน้าเลย
     }
 
-    fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
-        if (pijob.desdevice != null) {
-            var ip = dhts.mactoip(pijob.desdevice!!.mac!!)
-            if (ip != null) {
-                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
-                return url
-            }
-        }
-        throw Exception("Error Can not find url")
-    }
+//    fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
+//        if (pijob.desdevice != null) {
+//            var ip = dhts.mactoip(pijob.desdevice!!.mac!!)
+//            if (ip != null) {
+//                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
+//                return url
+//            }
+//        }
+//        throw Exception("Error Can not find url")
+//    }
 
-    fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
-        if (pijob.desdevice != null) {
-            var ip = dhts.mactoip(target.mac!!)
-            if (ip != null) {
-                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
-                return url
-            }
-        }
-        throw Exception("Error Can not find url")
-    }
+//    fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
+//        if (pijob.desdevice != null) {
+//            var ip = dhts.mactoip(target.mac!!)
+//            if (ip != null) {
+//                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
+//                return url
+//            }
+//        }
+//        throw Exception("Error Can not find url")
+//    }
+//
 
 
-    override fun setP(pijob: Pijob) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    companion object {
-        internal var logger = LoggerFactory.getLogger(D1hjobWorker::class.java)
-    }
+    var logger = LoggerFactory.getLogger(D1hjobWorker::class.java)
 
     override fun toString(): String {
 

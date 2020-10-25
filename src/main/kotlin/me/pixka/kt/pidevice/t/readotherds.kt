@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.s.*
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.s.Tmpobj
 import me.pixka.kt.run.ReadTmpTask
@@ -21,7 +22,7 @@ import org.springframework.stereotype.Component
 class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
               val dvs: Ds18valueService, val ss: SensorService, val dss: DS18sensorService,
               val pideviceService: PideviceService, val findJob: FindJob, val httpService: HttpService,
-              val ips: IptableServicekt, val taskService: TaskService) {
+              val ips: IptableServicekt, val taskService: TaskService, val mtp: MactoipService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 5000)
@@ -31,11 +32,12 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
             var jobs = findJob.loadjob("readtemp")
             logger.debug("Found job ${jobs}")
             if (jobs != null)
+
                 for (i in jobs) {
                     logger.debug("Run job ${i}")
                     if (i.tlow != null) {
                         var ip = ips.findByMac(i.desdevice?.mac!!)
-                        var re = httpService.get("http://${ip?.ip}",2000)
+                        var re = httpService.get("http://${ip?.ip}", 2000)
                         var o = om.readValue<Tmpobj>(re)
                         var t = o.tmp?.toDouble()
                         if (i.tlow?.toDouble()!! <= t!!
@@ -43,17 +45,22 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
                                     it.getPijobid() == i.id
                                             && it.runStatus()
                                 } == null) {
-                            var t = ReadTmpTask(i, null, ips, o, pideviceService, httpService, dvs)
-                            taskService.run(t)
+
+                            if (!taskService.checkrun(i)) {
+                                var t = ReadTmpTask(i, null, pideviceService, dvs, mtp)
+                                taskService.run(t)
+                            }
                         }
                     } else {
-                        if(taskService.runinglist.find { it.getPijobid()==i.id && it.runStatus() }==null) {
-                            var t = ReadTmpTask(i, null, ips, null, pideviceService, httpService, dvs)
+
+                        if (!taskService.checkrun(i)) {
+                            var t = ReadTmpTask(i, null, pideviceService, dvs, mtp)
                             var r = taskService.run(t)
                             logger.debug("Run ${r}")
                         }
                     }
                 }
+
         } catch (e: Exception) {
             logger.error("Read OTher ds ERROR ${e.message}")
         }
@@ -61,7 +68,5 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
     }
 
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(ReadTmp::class.java)
-    }
+         var logger = LoggerFactory.getLogger(ReadTmp::class.java)
 }

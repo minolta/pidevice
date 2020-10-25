@@ -4,7 +4,9 @@ import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
+import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pibase.s.RequestCache
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.PijobrunInterface
@@ -17,7 +19,7 @@ import java.util.concurrent.ThreadPoolExecutor
 
 @RestController
 class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
-               val ips: IptableServicekt, val context: ApplicationContext) {
+               val ips: IptableServicekt, val context: ApplicationContext, val httpService: HttpService) {
 
 
     @CrossOrigin
@@ -126,6 +128,13 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     fun threadcore(): Int {
         var runs = taskService.pool as ThreadPoolExecutor
         return runs.corePoolSize
+    }
+
+    @CrossOrigin
+    @RequestMapping(value = ["/showcaches"], method = arrayOf(RequestMethod.GET))
+    @ResponseBody
+    fun showcache(): ArrayList<RequestCache> {
+        return httpService.caches
     }
 
     @CrossOrigin
