@@ -8,6 +8,7 @@ import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.ReadDhtService
+import me.pixka.kt.pidevice.s.ReadTmpService
 import me.pixka.log.d.LogService
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -37,7 +38,8 @@ class TestSetport {
         every { pit.status } returns lg
 
         var mtp = MactoipService(ips,mockk<LogService>(relaxed = true),
-                spyk<HttpService>(),mockk<ReadDhtService>(relaxed = true),mockk<PortstatusinjobService>())
+                spyk<HttpService>(),mockk<ReadDhtService>(relaxed = true),mockk<PortstatusinjobService>(),
+            mockk<ReadTmpService>(relaxed = true))
 
 
         mtp.setport(pit)

@@ -9,11 +9,13 @@ import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.log.d.LogService
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.util.*
 
 @Service
 class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: HttpService,
-                     val dhts: ReadDhtService,val psis:PortstatusinjobService) {
+                     val dhts: ReadDhtService, val psis: PortstatusinjobService,
+                     val readTmpService: ReadTmpService) {
     val om = ObjectMapper()
     fun mactoip(mac: String): String? {
 
@@ -33,9 +35,30 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
 
 
     }
-    fun getPortstatus(job:Pijob): List<Portstatusinjob>? {
+
+    fun readTmp(pijob: Pijob): BigDecimal? {
+        try {
+            val ip = mactoip(pijob.desdevice?.mac!!)
+            if (ip != null) {
+                val to = readTmpService.readTmp(ip)
+                if (to.tmp != null)
+                    return to.tmp
+
+                if (to.t != null)
+                    return to.t
+
+                return BigDecimal(-127)
+            }
+            throw Exception("Not found ip")
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    fun getPortstatus(job: Pijob): List<Portstatusinjob>? {
         return psis.findByPijobid(job.id) as List<Portstatusinjob>?
     }
+
     fun findUrl(target: PiDevice, portname: String, runtime: Long,
                 waittime: Long, value: Int): String {
         try {
@@ -57,7 +80,7 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             var url = findUrl(portstatusinjob.device!!, portstatusinjob.portname!!.name!!,
                     portstatusinjob.runtime!!.toLong(), portstatusinjob.waittime!!.toLong(),
                     portstatusinjob.status!!.toInt())
-          return  http.getNoCache(url, 5000)
+            return http.getNoCache(url, 5000)
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),
                     "MactoipService", Thread.currentThread().name, "51",

@@ -13,10 +13,10 @@ class TestESP32Sensor {
     fun TestCall() {
         val http = HttpService()
 //        for (k in 0..10) {
-            for (i in 0..100) {
+            for (i in 0..400) {
                 CompletableFuture.supplyAsync {
 
-                    var re = http.get("http://192.168.89.14", 4000)
+                    var re = http.getNoCache("http://192.168.89.47", 4000)
 //
 //                println(re)
                     i
@@ -28,7 +28,7 @@ class TestESP32Sensor {
                 }
             }
             println(http.caches.size)
-            TimeUnit.SECONDS.sleep(10)
+            TimeUnit.SECONDS.sleep(60)
 //        }
 
 

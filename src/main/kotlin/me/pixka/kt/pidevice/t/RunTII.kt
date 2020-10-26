@@ -31,7 +31,6 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
                         }
 
                     }.exceptionally {
-
                         logger.error(it.message)
                         null
                     }
@@ -45,18 +44,17 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
 
     fun readTmp(pijob: Pijob): Boolean {
         try {
-            var ip = mtp.mactoip(pijob.desdevice?.mac!!)
-            var t = readTmpService.readTmp(ip!!)
+
+            var t = mtp.readTmp(pijob)
             var tl = pijob.tlow!!.toDouble()
             var th = pijob.thigh!!.toDouble()
-            var value = t.getTmp()
-//            status = "${tl} <= ${value} <= ${th}"
+            var value = t?.toDouble()
             if (tl <= value!! && value <= th)
                 return true
             return false
         } catch (e: Exception) {
-            logger.error(e.message)
-            mtp.lgs.createERROR("${e.message}", Date(),
+            logger.error("ERROR ${e.message} ${pijob.name}  ${pijob.desdevice?.name}")
+            mtp.lgs.createERROR("${e.message} ${pijob.name}  ${pijob.desdevice?.name}", Date(),
                     "D1TWorkerII", Thread.currentThread().name, "59", "readTmp()",
                     pijob.desdevice?.mac, pijob.refid)
             throw e

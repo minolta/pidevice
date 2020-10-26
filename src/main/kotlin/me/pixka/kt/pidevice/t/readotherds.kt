@@ -20,9 +20,9 @@ import org.springframework.stereotype.Component
  */
 @Component
 class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
-              val dvs: Ds18valueService, val ss: SensorService, val dss: DS18sensorService,
-              val pideviceService: PideviceService, val findJob: FindJob, val httpService: HttpService,
-              val ips: IptableServicekt, val taskService: TaskService, val mtp: MactoipService) {
+              val dvs: Ds18valueService,
+              val pideviceService: PideviceService, val findJob: FindJob,
+              val taskService: TaskService, val mtp: MactoipService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 5000)
@@ -36,10 +36,7 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
                 for (i in jobs) {
                     logger.debug("Run job ${i}")
                     if (i.tlow != null) {
-                        var ip = ips.findByMac(i.desdevice?.mac!!)
-                        var re = httpService.get("http://${ip?.ip}", 2000)
-                        var o = om.readValue<Tmpobj>(re)
-                        var t = o.tmp?.toDouble()
+                        var t= mtp.readTmp(i)?.toDouble()
                         if (i.tlow?.toDouble()!! <= t!!
                                 && taskService.runinglist.find {
                                     it.getPijobid() == i.id
