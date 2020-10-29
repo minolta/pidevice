@@ -17,7 +17,7 @@ class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadT
         try {
 
                 setPort()
-                exitdate = findExitdate(pijob)
+                exitdate = findExitdate(pijob,(maxruntime+maxwaittime).toLong())
                 status = "Job end ok."
 
 

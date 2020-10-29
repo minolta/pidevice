@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture
 class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val taskService: TaskService,
              val readTmpService: ReadTmpService, val mtp: MactoipService) {
 
-    @Scheduled(fixedDelay = 500)
+    @Scheduled(fixedDelay = 2000)
     fun getToRun() {
         var jobs = findJob.loadjob("runtbyd1")
 
