@@ -53,6 +53,8 @@ class TaskService(val context: ApplicationContext) {
 
         try {
 
+            if(runinglist.size < 1)
+                return false //ถ้าไม่มี job เลย ส่ง
             var run = runinglist.find {
                 it.getPijobid() == w.id && it.runStatus()
             }
@@ -88,7 +90,7 @@ class TaskService(val context: ApplicationContext) {
             }
 
         } catch (e: Exception) {
-            logger.error("Error check run ${e.message}")
+            logger.error("Error check run ${e.message} ${w.getPJ()}")
         }
         return false
     }

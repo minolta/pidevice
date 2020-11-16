@@ -118,7 +118,7 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
 
                 try {
                     val url = "http://${ip?.ip}/run?port=${portname}&value=${value?.toInt()}&delay=${rt}&waittime=${wt}"
-                    var re = httpService.get(url,2000)
+                    var re = httpService.get(url,30000)
                     var statusobj = om.readValue<Status>(re)
                     status = "Set Device :${it.device?.name} port ${portname} to ${value?.toInt()} runtime ${rt}  uptime ${statusobj.uptime} ok"
 

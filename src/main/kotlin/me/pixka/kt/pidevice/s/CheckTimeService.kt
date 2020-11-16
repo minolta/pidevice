@@ -99,7 +99,7 @@ class CheckTimeService(val lgs: LogService) {
         return false
     }
 
-    companion object {
+//    companion object {
         internal var logger = LoggerFactory.getLogger(CheckTimeService::class.java)
-    }
+//    }
 }

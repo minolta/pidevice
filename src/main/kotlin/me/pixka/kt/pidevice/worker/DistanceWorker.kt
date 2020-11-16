@@ -129,7 +129,6 @@ class DistanceWorker(job: Pijob, var mtp: MactoipService,
         }
     }
 
-    companion object {
+
         internal var logger = LoggerFactory.getLogger(DistanceWorker::class.java)
-    }
 }

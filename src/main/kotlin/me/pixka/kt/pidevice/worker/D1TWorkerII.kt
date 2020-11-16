@@ -23,7 +23,7 @@ class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadT
 
         } catch (e: Exception) {
             isRun = false
-            logger.error(e.message)
+            logger.error("D1WorkerII ${e.message} ${pijob.name}")
             status = "Error ${e.message}"
             mtp.lgs.createERROR("${e.message}", Date(),
                     "D1TWorkerII", Thread.currentThread().name, "17", "run()",
@@ -49,7 +49,7 @@ class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadT
             }
         } catch (e: Exception) {
             status = "ERROR ${e.message}"
-            logger.error(e.message)
+            logger.error("Set port : ${e.message}  ${pijob.name}")
             mtp.lgs.createERROR("${e.message}", Date(),
                     "D1TWorkerII", Thread.currentThread().name, "33", "setPort()",
                     pijob.desdevice?.mac, pijob.refid)
@@ -60,7 +60,5 @@ class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadT
 
 
 
-    companion object {
         internal var logger = LoggerFactory.getLogger(D1TWorkerII::class.java)
-    }
 }

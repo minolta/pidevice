@@ -10,6 +10,7 @@ import me.pixka.kt.pidevice.worker.D1TWorkerII
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.math.BigDecimal
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
@@ -25,9 +26,14 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
             jobs.forEach {
                 if (checkTimeService.checkTime(it, Date()) && !taskService.checkrun(it)) {
                     CompletableFuture.supplyAsync {
-                        if (readTmp(it)) {
-                            var t = D1TWorkerII(it, mtp, readTmpService)
-                            taskService.run(t)
+                        try {
+                            if (readTmp(it) && !taskService.checkrun(it)) {
+                                var t = D1TWorkerII(it, mtp, readTmpService)
+                                taskService.run(t)
+                            }
+                        }catch (e:Exception)
+                        {
+                            logger.error("ERROR ${e.message} ${it.name}")
                         }
 
                     }.exceptionally {
@@ -45,7 +51,13 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
     fun readTmp(pijob: Pijob): Boolean {
         try {
 
-            var t = mtp.readTmp(pijob)
+            var t: BigDecimal? = null
+            try {
+                t = mtp.readTmp(pijob)
+            } catch (e: Exception) {
+                logger.error("Read Tmp ERROR ${e.message}")
+                throw e
+            }
             var tl = pijob.tlow!!.toDouble()
             var th = pijob.thigh!!.toDouble()
             var value = t?.toDouble()
@@ -53,7 +65,7 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
                 return true
             return false
         } catch (e: Exception) {
-            logger.error("ERROR ${e.message} ${pijob.name}  ${pijob.desdevice?.name}")
+            logger.error(" Read Tmp: ERROR ${e.message} ${pijob.name}  ${pijob.desdevice?.name}")
             mtp.lgs.createERROR("${e.message} ${pijob.name}  ${pijob.desdevice?.name}", Date(),
                     "D1TWorkerII", Thread.currentThread().name, "59", "readTmp()",
                     pijob.desdevice?.mac, pijob.refid)

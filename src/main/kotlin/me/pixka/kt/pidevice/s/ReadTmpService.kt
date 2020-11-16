@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.log.d.LogService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -26,9 +27,12 @@ class ReadTmpService(val httpService: HttpService,val lgs:LogService) {
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),"ReadTmpService",
                     "","21","readTmp()","",null)
+            logger.error("Read tmp Service Read TMP ${e.message} IP:${ip}")
             throw e
         }
     }
+
+    internal var logger = LoggerFactory.getLogger(ReadTmpService::class.java)
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,7 +44,6 @@ class Tmpobj(var t: BigDecimal? = null, var tmp: BigDecimal? = null,
             return tmp!!.toDouble()
         if(t!=null)
             return t!!.toDouble()
-
         return null
     }
 }

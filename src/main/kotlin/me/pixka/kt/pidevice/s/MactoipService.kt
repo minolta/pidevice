@@ -7,7 +7,9 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
+import me.pixka.kt.pidevice.worker.D1TWorkerII
 import me.pixka.log.d.LogService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*
@@ -18,10 +20,8 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
                      val readTmpService: ReadTmpService) {
     val om = ObjectMapper()
     fun mactoip(mac: String): String? {
-
         try {
             var ip = ips.findByMac(mac)
-
             if (ip != null)
                 return ip.ip
             lgs.createERROR("IP Not found for ${mac}", Date(), "MacToip", "",
@@ -30,9 +30,11 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(), "MacToip", "",
                     "14", "mactoip", "${mac}")
-            throw e
+            logger.error("Mac to ip:${e.message} ")
+//            throw e
         }
 
+        return null
 
     }
 
@@ -43,7 +45,6 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
                 val to = readTmpService.readTmp(ip)
                 if (to.tmp != null)
                     return to.tmp
-
                 if (to.t != null)
                     return to.t
 
@@ -51,6 +52,7 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             }
             throw Exception("Not found ip")
         } catch (e: Exception) {
+            logger.error("Read Tmp ${e.message}")
             throw e
         }
     }
@@ -69,7 +71,7 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             }
             throw Exception("Ip not found")
         } catch (e: Exception) {
-
+            logger.error("Find URL"+e.message)
             throw e
         }
     }
@@ -80,13 +82,17 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             var url = findUrl(portstatusinjob.device!!, portstatusinjob.portname!!.name!!,
                     portstatusinjob.runtime!!.toLong(), portstatusinjob.waittime!!.toLong(),
                     portstatusinjob.status!!.toInt())
-            return http.getNoCache(url, 5000)
+            return http.getNoCache(url, 15000)
         } catch (e: Exception) {
             lgs.createERROR("${e.message}", Date(),
                     "MactoipService", Thread.currentThread().name, "51",
                     "setport()", portstatusinjob.device!!.mac, portstatusinjob.pijob!!.refid,
                     portstatusinjob.pijob!!.pidevice?.refid)
+            logger.error("Set port :"+e.message)
             throw  e
         }
     }
+
+
+    internal var logger = LoggerFactory.getLogger(MactoipService::class.java)
 }
