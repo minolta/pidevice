@@ -34,7 +34,7 @@ class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmServi
                     if (i != null) {
                         if (!ts.checkrun(it)) {
                             var r = ReaddustWorker(it, i, pmService, pideviceService, mtp)
-                            ts.run(r)
+//                            ts.run(r)
                             logger.debug("Run read dust (${it.name}): " + ts.run(r))
                         }
                     } else {

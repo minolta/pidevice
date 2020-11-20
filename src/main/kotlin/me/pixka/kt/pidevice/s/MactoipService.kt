@@ -28,9 +28,10 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
                     "14", "mactoip", "${mac}")
             throw Exception("IP Not found for ${mac}")
         } catch (e: Exception) {
+            logger.error("Mac to ip:${e.message} ")
             lgs.createERROR("${e.message}", Date(), "MacToip", "",
                     "14", "mactoip", "${mac}")
-            logger.error("Mac to ip:${e.message} ")
+
 //            throw e
         }
 
@@ -42,7 +43,14 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
         try {
             val ip = mactoip(pijob.desdevice?.mac!!)
             if (ip != null) {
-                val to = readTmpService.readTmp(ip)
+                val to:Tmpobj
+                try {
+                    to = readTmpService.readTmp(ip)
+                }catch (e:Exception)
+                {
+                    logger.error("Read tmp service ERROR ${e.message}")
+                    throw e
+                }
                 if (to.tmp != null)
                     return to.tmp
                 if (to.t != null)
@@ -52,13 +60,30 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             }
             throw Exception("Not found ip")
         } catch (e: Exception) {
-            logger.error("Read Tmp ${e.message}")
+            logger.error("Read Tmp ${e.message} MAC:${pijob.desdevice?.mac}")
             throw e
         }
     }
 
     fun getPortstatus(job: Pijob): List<Portstatusinjob>? {
         return psis.findByPijobid(job.id) as List<Portstatusinjob>?
+    }
+
+    fun readStatus(job: Pijob): String {
+        var ip: String? = null
+        try {
+            ip = mactoip(job.desdevice?.mac!!)
+        } catch (e: Exception) {
+            logger.error("Read status ERROR ${e.message}")
+            throw e
+        }
+        try {
+            var result = http.get(ip!!,5000)
+            return result
+        } catch (e: Exception) {
+            logger.error("Get Status ERROR ${e.message}")
+            throw e
+        }
     }
 
     fun findUrl(target: PiDevice, portname: String, runtime: Long,
@@ -71,7 +96,7 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             }
             throw Exception("Ip not found")
         } catch (e: Exception) {
-            logger.error("Find URL"+e.message)
+            logger.error("Find URL" + e.message)
             throw e
         }
     }
@@ -88,11 +113,11 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
                     "MactoipService", Thread.currentThread().name, "51",
                     "setport()", portstatusinjob.device!!.mac, portstatusinjob.pijob!!.refid,
                     portstatusinjob.pijob!!.pidevice?.refid)
-            logger.error("Set port :"+e.message)
+            logger.error("Set port :" + e.message)
             throw  e
         }
     }
 
 
-    internal var logger = LoggerFactory.getLogger(MactoipService::class.java)
+    var logger = LoggerFactory.getLogger(MactoipService::class.java)
 }

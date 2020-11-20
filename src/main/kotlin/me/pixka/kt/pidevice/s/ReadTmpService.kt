@@ -25,9 +25,12 @@ class ReadTmpService(val httpService: HttpService,val lgs:LogService) {
             var t = om.readValue<Tmpobj>(re)
             return t
         } catch (e: Exception) {
-            lgs.createERROR("${e.message}", Date(),"ReadTmpService",
-                    "","21","readTmp()","",null)
             logger.error("Read tmp Service Read TMP ${e.message} IP:${ip}")
+            lgs.createERROR("${e.message}",Date(),"ReadTmpService",
+            Thread.currentThread().name,"23","readTmp()",
+            "",null,null)
+//            lgs.createERROR("${e.message}", Date(),"ReadTmpService",
+//                    "","21","readTmp()","",null)
             throw e
         }
     }

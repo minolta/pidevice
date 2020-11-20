@@ -207,7 +207,5 @@ class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: Pi
         }
     }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(LoadPiJob::class.java)
-    }
+         var logger = LoggerFactory.getLogger(LoadPiJob::class.java)
 }
