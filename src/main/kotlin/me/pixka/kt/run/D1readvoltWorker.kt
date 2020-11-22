@@ -14,8 +14,6 @@ import java.util.*
 
 class D1readvoltWorker(job: Pijob,
                        val pss: VbattService, var mtp: MactoipService) : DWK(job), Runnable {
-    //    val om = ObjectMapper()
-//    val token = System.getProperty("errortoken")
     override fun run() {
         isRun = true
         startRun = Date()
@@ -34,66 +32,27 @@ class D1readvoltWorker(job: Pijob,
                 status = "Wait ${pijob.waittime?.toLong()}"
                 exitdate = findExitdate(pijob)
             } else {
+                logger.error("Mac not have")
                 status = "Noht have mac "
                 isRun = false
-                mtp.lgs.createERROR("Not have mac",Date(),
-                "D1readvoltWorker",Thread.currentThread().name,"24","run()",
-                "")
+                mtp.lgs.createERROR("Not have mac", Date(),
+                        "D1readvoltWorker", Thread.currentThread().name, "24", "run()",
+                        "")
             }
 
         } catch (e: Exception) {
             isRun = false
             logger.error(e.message)
             status = e.message.toString()
-            mtp.lgs.createERROR(e.message!!,Date(),"D1readvoltWorker",Thread.currentThread().name,
-            "23","Run")
+            mtp.lgs.createERROR(e.message!!, Date(), "D1readvoltWorker", Thread.currentThread().name,
+                    "23", "Run")
             throw e
         }
         status = "End job and wait"
     }
 
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(D1readvoltWorker::class.java)
-    }
-
-    override fun setP(pijob: Pijob) {
-        TODO("Not yet implemented")
-    }
-
-    override fun setG(gpios: GpioService) {
-        TODO("Not yet implemented")
-    }
-
-    override fun runStatus(): Boolean {
-        return isRun
-    }
-
-    override fun getPijobid(): Long {
-
-        return pijob.id
-    }
-
-    override fun getPJ(): Pijob {
-        return pijob
-    }
-
-    override fun startRun(): Date? {
-        return startRun
-    }
-
-    override fun state(): String? {
-        return status
-    }
-
-    override fun setrun(p: Boolean) {
-
-        isRun = p
-    }
-
-    override fun exitdate(): Date? {
-        return exitdate
-    }
+    var logger = LoggerFactory.getLogger(D1readvoltWorker::class.java)
 
 
 }

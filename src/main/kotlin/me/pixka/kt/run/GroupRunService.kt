@@ -15,7 +15,6 @@ class GroupRunService(val task: TaskService) {
         var pijobid = job.getPijobid().toInt()
         var groupid = job.getPJ().pijobgroup_id
         var grouprun = task.runinglist
-//        logger.debug("Groups ${grouprun}")
         for (r in grouprun) {
             if (r is D1hjobWorker) {
                 logger.debug("checkgroup D1Hworker [${job.getPJ().name}] check to  r:[${r.getPJ().name}] Run ? ${r.isRun} wait ${r.waitstatus}")
@@ -68,6 +67,7 @@ class GroupRunService(val task: TaskService) {
             return found
 
         } catch (e: Exception) {
+            logger.error(e.message)
             e.printStackTrace()
         }
         return false
@@ -95,9 +95,7 @@ class GroupRunService(val task: TaskService) {
         }
         return true
     }
-    companion object {
-        internal var logger = LoggerFactory.getLogger(GroupRunService::class.java)
-    }
+         var logger = LoggerFactory.getLogger(GroupRunService::class.java)
 }
 
 

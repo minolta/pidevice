@@ -140,12 +140,11 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                     q.addDate = Date()
                     removeJobFromQ(q.pijob!!)
                 }
-            }
-            else
-            {
+            } else {
                 removeJobFromQ(q.pijob!!)
             }
         } catch (e: Exception) {
+            logger.error("${e.message}")
             lgs.createERROR("${e.message}", Date(),
                     "Runhjobbyd1", Thread.currentThread().name, "140", "runfromQ",
                     q.pijob?.desdevice?.mac,
@@ -158,10 +157,11 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
             var removed = queue.remove(job)
             logger.debug("Remove ${job.name} from queue is ${removed}")
         } catch (e: Exception) {
+            logger.error("Remove Q ${job.name} ERROR ${e.message}")
             lgs.createERROR("${e.message}", Date(),
                     "Runhjobd1", Thread.currentThread().name, "156", "removeJobFromQ",
                     job.desdevice?.mac, job.refid)
-            logger.error("Remove Q ${job.name} ERROR ${e.message}")
+
         }
     }
 
@@ -212,9 +212,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
 
     }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(Runhjobbyd1::class.java)
-    }
+    var logger = LoggerFactory.getLogger(Runhjobbyd1::class.java)
 }
 
 @Service
@@ -237,7 +235,7 @@ class QueueService {
     fun remove(p: Pijob): Boolean {
         var toremove: Qobject? = null
         try {
-            toremove = queue.find { it.pijob?.id == p.id }
+            toremove = queue.find { it.pijob?.id?.equals(p.id)!! }
             if (toremove != null)
                 return queue.remove(toremove)
             return false
@@ -281,9 +279,7 @@ class QueueService {
         }
     }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(QueueService::class.java)
-    }
+    var logger = LoggerFactory.getLogger(QueueService::class.java)
 }
 
 class Qobject(var pijob: Pijob? = null, var addDate: Date? = null, var message: String? = null)

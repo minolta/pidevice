@@ -16,8 +16,6 @@ import java.util.TimeZone
 import javax.annotation.PostConstruct
 
 
-
-
 @SpringBootApplication
 @EnableAsync
 @EnableScheduling
@@ -61,33 +59,25 @@ class PideviceApplication {
                 ArrayBlockingQueue(100),
                 AbortPolicy() // <-- It will abort if timeout exceeds
         )
-
-
-
     }
-
-
     @Bean(name = arrayOf("pool"))
     fun pool(): ExecutorService? {
         var coresize = 50
         var maxpool = 200
         var sc = System.getProperty("coresize")
-        if(sc!=null)
+        if (sc != null)
             coresize = sc.toInt()
         var mp = System.getProperty("maxpoolsize")
-        if(mp!=null)
+        if (mp != null)
             maxpool = mp.toInt()
         return Executors.newFixedThreadPool(coresize)
-//
-//        val threadpool = ThreadPoolExecutor(coresize, maxpool, 1,
-//                TimeUnit.SECONDS, LinkedBlockingDeque<Runnable>(400),
-//                ThreadPoolExecutor.CallerRunsPolicy())
-//        return threadpool
     }
+
     @Bean(name = arrayOf("pool2"))
     fun p(): ExecutorService? {
         return Executors.newFixedThreadPool(20)
     }
+
     @PostConstruct
     fun init() {
         // Setting Spring Boot SetTimeZone

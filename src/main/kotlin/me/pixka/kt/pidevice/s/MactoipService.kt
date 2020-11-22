@@ -78,7 +78,7 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
             throw e
         }
         try {
-            var result = http.get(ip!!,5000)
+            var result = http.get("http://${ip}",5000)
             return result
         } catch (e: Exception) {
             logger.error("Get Status ERROR ${e.message}")

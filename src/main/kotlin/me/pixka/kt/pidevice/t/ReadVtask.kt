@@ -21,12 +21,13 @@ import java.util.concurrent.CompletableFuture
 class ReadVtask(val pjs: PijobService,
                 val js: JobService,
                 val task: TaskService,
-               val mtp:MactoipService,
+                val mtp: MactoipService,
                 val pss: VbattService, val ntf: NotifyService, val findJob: FindJob,
                 val httpService: HttpService) {
     var exitdate: Date? = null
     var om = ObjectMapper()
-    @Scheduled(fixedDelay = 5000)
+
+    @Scheduled(fixedDelay = 1000)
     fun run() {
         try {
             var list = findJob.loadjob("runreadvolt")
@@ -35,15 +36,9 @@ class ReadVtask(val pjs: PijobService,
 
             if (list != null) {
                 list.forEach {
-                    var id = it.id
-                    if (task.runinglist.find { it.getPijobid() == id && it.runStatus() } == null) {
-                        var ip = mtp.mactoip(it.desdevice?.mac!!)
-                        var run = task.run(D1readvoltWorker(it,pss,mtp))
+                    if (!task.checkrun(it)) {
+                        var run = task.run(D1readvoltWorker(it, pss, mtp))
                         logger.debug("Run ? ${run}")
-                    }
-                    else
-                    {
-                        logger.debug("Run")
                     }
                 }
 
@@ -52,7 +47,6 @@ class ReadVtask(val pjs: PijobService,
             logger.error("ERROR READ V ${e.message}")
         }
     }
-    companion object {
-        internal var logger = LoggerFactory.getLogger(ReadVtask::class.java)
-    }
+
+    var logger = LoggerFactory.getLogger(ReadVtask::class.java)
 }
