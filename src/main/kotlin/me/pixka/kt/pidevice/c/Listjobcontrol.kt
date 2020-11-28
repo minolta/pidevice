@@ -99,13 +99,15 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         var runs = taskService.runinglist
         for (run in runs) {
             try {
-                var pj = run.getPJ()
-                var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
-                        run.runStatus(), pj.ports, run.getPJ().job?.name, run.exitdate(), run.getPJ().refid)
-                list.add(t)
+                if(run!=null) {
+                    var pj = run.getPJ()
+                    var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
+                            run.runStatus(), pj.ports, run.getPJ().job?.name, run.exitdate(), run.getPJ().refid)
+                    list.add(t)
+                }
             } catch (e: Exception) {
                 logger.error("List task error ${e.message}")
-                throw e
+//                throw e
             }
         }
 

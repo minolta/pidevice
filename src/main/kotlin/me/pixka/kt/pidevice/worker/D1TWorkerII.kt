@@ -6,6 +6,7 @@ import me.pixka.kt.pidevice.s.ReadTmpService
 import me.pixka.kt.run.DWK
 import org.slf4j.LoggerFactory
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadTmpService) : DWK(job), Runnable {
 
@@ -16,12 +17,15 @@ class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadT
         isRun = true
         try {
 
-                setPort()
-                exitdate = findExitdate(pijob,(maxruntime+maxwaittime).toLong())
-                status = "Job end ok."
+            setPort()
+            exitdate = findExitdate(pijob, (maxruntime + maxwaittime).toLong())
+            status = "Job end ok."
 
 
         } catch (e: Exception) {
+            if (pijob.hlow != null) {
+                TimeUnit.SECONDS.sleep(pijob.hlow?.toLong()!!)
+            }
             isRun = false
             logger.error("D1WorkerII ${e.message} ${pijob.name}")
             status = "Error ${e.message}"
@@ -58,7 +62,5 @@ class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadT
     }
 
 
-
-
-        internal var logger = LoggerFactory.getLogger(D1TWorkerII::class.java)
+    internal var logger = LoggerFactory.getLogger(D1TWorkerII::class.java)
 }

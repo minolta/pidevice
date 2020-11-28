@@ -78,7 +78,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                                 }
                             }
                         } catch (e: Exception) {
-                            logger.error("ERROR ${e.message}")
+                            logger.error("ERROR ${e.message} JOB:${it.name}")
                         }
 
                     }
@@ -114,12 +114,14 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                 var h = om.readValue<HObject>(re)
                 return h
             }
+            logger.error("getHobj IP is Null ")
             lgs.createERROR("IP is null ", Date(),
                     "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
                     job.refid)
             throw Exception("Ip is null")
 
         } catch (e: Exception) {
+            logger.error("getHobj : ERROR: ${e.message} ")
             lgs.createERROR("${e.message}", Date(),
                     "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
                     job.refid)
@@ -144,7 +146,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                 removeJobFromQ(q.pijob!!)
             }
         } catch (e: Exception) {
-            logger.error("${e.message}")
+            logger.error("RUN From Q : ${e.message}")
             lgs.createERROR("${e.message}", Date(),
                     "Runhjobbyd1", Thread.currentThread().name, "140", "runfromQ",
                     q.pijob?.desdevice?.mac,
@@ -181,6 +183,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                             refid = q.pijob?.refid
                         }
                     } catch (e: Exception) {
+                        logger.error("runQueue : ${e.message}")
                         lgs.createERROR("${e.message}", Date(), "Runhjobbyd1",
                                 Thread.currentThread().name, "178", "runQueue()",
                                 "${mac}", q.pijob?.refid)
@@ -205,7 +208,7 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                     }
                 }
         } catch (e: Exception) {
-            logger.error("ERROR ${e.message}")
+            logger.error("runQueue : ERROR ${e.message}")
             lgs.createERROR("${e.message}", Date(), "Runhjobbyd1",
                     "", "173", "runQueue()", mac, refid)
         }

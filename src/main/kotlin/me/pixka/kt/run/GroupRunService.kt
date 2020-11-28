@@ -58,7 +58,7 @@ class GroupRunService(val task: TaskService) {
             var found = false
             //หาว่า มี Job ไหนยังไม่หยุดใช้น้ำ
             task.runinglist.forEach {
-                if(it is D1hjobWorker) {
+                if (it is D1hjobWorker) {
                     if (it.getPJ().pijobgroup_id == job.pijobgroup_id && it.waitstatus == false)
                         found = true
                 }
@@ -68,7 +68,6 @@ class GroupRunService(val task: TaskService) {
 
         } catch (e: Exception) {
             logger.error(e.message)
-            e.printStackTrace()
         }
         return false
     }
@@ -82,7 +81,7 @@ class GroupRunService(val task: TaskService) {
         try {
             var samerun = task.checkrun(j)
             if (samerun) {
-                logger.error("This job already run  from JOB ${j.name}")
+                logger.warn("This job already run  from JOB ${j.name}")
                 return false //ไม่สามารถ run job นี้ได้
             }
             //หาว่าobject ตัวไหนจะยัง run อยู่แต่อยู่ใน status run
@@ -91,11 +90,13 @@ class GroupRunService(val task: TaskService) {
                 return false //ไม่สามารถ run job นี้ได้
             }
         } catch (e: Exception) {
+            logger.error(e.message)
             return false
         }
         return true
     }
-         var logger = LoggerFactory.getLogger(GroupRunService::class.java)
+
+    var logger = LoggerFactory.getLogger(GroupRunService::class.java)
 }
 
 

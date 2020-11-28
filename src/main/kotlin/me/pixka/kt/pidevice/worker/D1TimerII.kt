@@ -17,7 +17,20 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
         isRun = true
         startRun = Date()
         var t = mtp.readTmp(pijob)
+        try {
+            //ถ้า ตอนนี้ มันสูงกว่า ให้ออกเลยไม่ทำงานแล้ว
+            if (t == null || t.toDouble() > pijob.tlow!!.toDouble()) {
+                status = "Low tmp is high then tlow exit job"
+                isRun = false
+                throw Exception("Low tmp is high then tlow exit job")
+            }
+        }catch (e:Exception)
+        {
+            logger.error(e.message)
+            isRun = false
+            throw e
 
+        }
 
         try {
             if (waitlowtmp()) {
