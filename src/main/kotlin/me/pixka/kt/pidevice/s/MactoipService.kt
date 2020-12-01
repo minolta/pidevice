@@ -43,11 +43,10 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
         try {
             val ip = mactoip(pijob.desdevice?.mac!!)
             if (ip != null) {
-                val to:Tmpobj
+                val to: Tmpobj
                 try {
                     to = readTmpService.readTmp(ip)
-                }catch (e:Exception)
-                {
+                } catch (e: Exception) {
                     logger.error("Read tmp service ERROR ${e.message}")
                     throw e
                 }
@@ -66,7 +65,12 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
     }
 
     fun getPortstatus(job: Pijob): List<Portstatusinjob>? {
-        return psis.findByPijobid(job.id) as List<Portstatusinjob>?
+        try {
+            return psis.findByPijobid(job.id) as List<Portstatusinjob>?
+        } catch (e: Exception) {
+            logger.error("Get portStatus ERROR ${e.message}")
+            throw e
+        }
     }
 
     fun readStatus(job: Pijob): String {
@@ -74,14 +78,14 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
         try {
             ip = mactoip(job.desdevice?.mac!!)
         } catch (e: Exception) {
-            logger.error("Read status ERROR ${e.message}")
+            logger.error("Read status ERROR ${e.message} ${job.name}")
             throw e
         }
         try {
-            var result = http.get("http://${ip}",5000)
+            var result = http.get("http://${ip}", 5000)
             return result
         } catch (e: Exception) {
-            logger.error("Get Status ERROR ${e.message}")
+            logger.error("Get Status ERROR ${e.message} ${job.name}")
             throw e
         }
     }
