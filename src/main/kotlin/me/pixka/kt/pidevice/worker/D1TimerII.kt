@@ -33,9 +33,9 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
         }
 
         try {
-            if (waitlowtmp()) {
+            if (waitlowtmp(pijob)) {
                 //ถ้าถึงแล้ว
-                if (waithightmp()) {
+                if (waithightmp(pijob)) {
                     setPort()
                     exitdate = findExitdate(pijob, (maxrun + maxwait).toLong())
                 } else {
@@ -90,22 +90,22 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
     }
 
     //รจนกว่าจะถึงข้างบนถ้าถึงให้ทำการตั้งเวลาเลย
-    fun waithightmp(): Boolean {
+    fun waithightmp(p: Pijob): Boolean {
         try {
             var waittime = 10
-            if (pijob.hlow != null) {
-                waittime = pijob.hlow!!.toInt()
+            if (p.hlow != null) {
+                waittime = p.hlow!!.toInt()
             }
             for (i in 0..waittime) {
 
-                var t = mtp.readTmp(pijob)
-                if (t != null && t.toDouble() >= pijob.thigh!!.toDouble()) {
+                var t = mtp.readTmp(p)
+                if (t != null && t.toDouble() >= p.thigh!!.toDouble()) {
                     return true
                 }
 
                 TimeUnit.SECONDS.sleep(1)
             }
-            return false
+            throw Exception("Wait high timeout ${waittime}")
         } catch (e: Exception) {
             logger.error("waithightmp ERROR ${e.message}")
             throw e
@@ -113,29 +113,31 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
 
     }
 
-    //รอขันตำก่อนถ้าไม่ถึง 10 วิ หรือ ตาม hlow ถ้าถึงออกเลยแต่ถ้าไม่ถึงออก
-    fun waitlowtmp(): Boolean {
-        try {
 
+    //รอขันตำก่อนถ้าไม่ถึง 10 วิ หรือ ตาม hlow ถ้าถึงออกเลยแต่ถ้าไม่ถึงออก
+    fun waitlowtmp(p: Pijob): Boolean {
+        try {
             var waittime = 10
-            if (pijob.hlow != null) {
-                waittime = pijob.hlow!!.toInt()
+            if (p.hlow != null) {
+                waittime = p.hlow!!.toInt()
             }
             for (i in 0..waittime) {
-                var t = mtp.readTmp(pijob)
-                if (t != null && (t.toDouble() >= pijob.tlow!!.toDouble())) {
+                var t = mtp.readTmp(p)
+                //จะต้องอยู่ในช่วงตำสุดของระบบแต่ไม่เกินสูงของระบบ
+                if (t != null && (t.toDouble() >= p.tlow!!.toDouble()  && t.toDouble() < pijob.thigh!!.toDouble()  )) {
                     return true
                 }
-
                 TimeUnit.SECONDS.sleep(1)
             }
-            return false
+            throw Exception("Wait low timeout ${waittime}")
+
         } catch (e: Exception) {
             logger.error("waitlowtmp ERROR ${e.message}")
             throw e
         }
 
     }
+
 
     internal var logger = LoggerFactory.getLogger(D1TimerII::class.java)
 }

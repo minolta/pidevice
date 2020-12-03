@@ -97,7 +97,6 @@ class DustcheckWorker(job: Pijob, var mtp: MactoipService, val ntfs: NotifyServi
         try {
             var t = mtp.readStatus(pijob)
             return mtp.om.readValue<Dustobj>(t)
-
         } catch (e: Exception) {
             logger.error("Get dustinfo ${e.message}")
             throw e

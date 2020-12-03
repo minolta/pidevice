@@ -113,11 +113,12 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
                     portstatusinjob.status!!.toInt())
             return http.getNoCache(url, 15000)
         } catch (e: Exception) {
+            logger.error("Set port :" + e.message)
             lgs.createERROR("${e.message}", Date(),
                     "MactoipService", Thread.currentThread().name, "51",
                     "setport()", portstatusinjob.device!!.mac, portstatusinjob.pijob!!.refid,
                     portstatusinjob.pijob!!.pidevice?.refid)
-            logger.error("Set port :" + e.message)
+
             throw  e
         }
     }

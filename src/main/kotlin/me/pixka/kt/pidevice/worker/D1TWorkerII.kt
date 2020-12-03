@@ -24,6 +24,7 @@ class D1TWorkerII(job: Pijob, var mtp: MactoipService, var readTmpService: ReadT
 
         } catch (e: Exception) {
             if (pijob.hlow != null) {
+                //ถ้ามีการผิดพลาดอะไรจะรอก่อนยังไมออกจากtaskทันที
                 TimeUnit.SECONDS.sleep(pijob.hlow?.toLong()!!)
             }
             isRun = false

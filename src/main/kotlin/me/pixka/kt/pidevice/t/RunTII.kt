@@ -18,10 +18,9 @@ import java.util.concurrent.CompletableFuture
 class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val taskService: TaskService,
              val readTmpService: ReadTmpService, val mtp: MactoipService) {
 
-    @Scheduled(fixedDelay = 2000)
+    @Scheduled(fixedDelay = 1000)
     fun getToRun() {
         var jobs = findJob.loadjob("runtbyd1")
-
         if (jobs != null) {
             jobs.forEach {
                 if (checkTimeService.checkTime(it, Date()) && !taskService.checkrun(it)) {
@@ -31,8 +30,7 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
                                 var t = D1TWorkerII(it, mtp, readTmpService)
                                 taskService.run(t)
                             }
-                        }catch (e:Exception)
-                        {
+                        } catch (e: Exception) {
                             logger.error("ERROR ${e.message} ${it.name}")
                         }
 
