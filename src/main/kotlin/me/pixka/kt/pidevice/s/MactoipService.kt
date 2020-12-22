@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
+import me.pixka.kt.pidevice.c.Statusobj
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -42,11 +43,13 @@ class MactoipService(
 
     }
 
-    fun openpump(pijob: Pijob, timetoopen: Int) {
+    fun openpump(pijob: Pijob, timetoopen: Int): String {
+        var ok = true
+        var error = ""
         try {
             var id = pijob.pijobgroup?.id
 
-            if(id!=null) {
+            if (id != null) {
                 var devices = dizs.deviceinszone(id!!)
 
                 if (devices != null) {
@@ -54,20 +57,29 @@ class MactoipService(
                         var ip = mactoip(it.pidevice?.mac!!)
                         try {
                             var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 15000)
-
+                            var status = om.readValue<Statusobj>(re)
                         } catch (e: Exception) {
-                            logger.error("ERROR ON PUMP ${e.message}")
+                            logger.error("openpump ERROR ON PUMP ${e.message}")
+                            error = "openpump ERROR ON PUMP ${e.message}"
+                            ok = false
                         }
                     }
+                    if (ok)
+                        return "Open pump ok"
+                    else
+                        return error
                 } else {
-                    logger.warn("Not pump in this zone to open")
+                    logger.warn("openpump Not pump in this zone to open")
+                    return "openpump Not pump in this zone to open"
+
                 }
-            }else
-            {
-                logger.error("Zone id is null")
+            } else {
+                logger.error("openpump Zone id is null")
+                return "openpump Zone id is null"
             }
         } catch (e: Exception) {
-            logger.error("ERROR ${e.message}")
+            logger.error("openpump ERROR ${e.message}")
+            return "openpump ERROR ${e.message}"
         }
     }
 
@@ -88,9 +100,10 @@ class MactoipService(
             }
             return w + r
         } catch (e: Exception) {
-            logger.error("ERROR ${e.message}")
+            logger.error("findtimeofjob ERROR ${e.message}")
             throw e
         }
+
 
     }
 

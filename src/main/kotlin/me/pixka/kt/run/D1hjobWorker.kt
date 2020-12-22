@@ -28,7 +28,11 @@ class D1hjobWorker(
 
         try {
             var openpumptime = mtp.findTimeofjob(pijob)
-            mtp.openpump(pijob,openpumptime)
+            status = "Time of job : ${openpumptime}"
+            var o = mtp.openpump(pijob,openpumptime)
+            status = "${o} Open Pump Delay 10"
+            TimeUnit.SECONDS.sleep(10)
+
             if (pijob.tlow != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
                 logger.debug("Slow start ${pijob.tlow}")
