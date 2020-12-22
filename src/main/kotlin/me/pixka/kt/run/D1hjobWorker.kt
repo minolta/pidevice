@@ -12,9 +12,10 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-class D1hjobWorker(var job: Pijob,
-                   val mtp: MactoipService, val ntfs: NotifyService)
-    : DWK(job), Runnable {
+class D1hjobWorker(
+    var job: Pijob,
+    val mtp: MactoipService, val ntfs: NotifyService
+) : DWK(job), Runnable {
     var om = ObjectMapper()
     var waitstatus = false
 
@@ -24,7 +25,10 @@ class D1hjobWorker(var job: Pijob,
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
         Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
+
         try {
+            var openpumptime = mtp.findTimeofjob(pijob)
+            mtp.openpump(pijob,openpumptime)
             if (pijob.tlow != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
                 logger.debug("Slow start ${pijob.tlow}")
@@ -42,8 +46,10 @@ class D1hjobWorker(var job: Pijob,
             exitdate = findExitdate(pijob)
             logger.error("ERROR 1 ${e.message}")
             status = "ERROR 1 ${e.message}"
-            mtp.lgs.createERROR("ERROR 1 ${e.message}", Date(), "D1hjobWorker",
-                    "", "", "", "", pijob.refid)
+            mtp.lgs.createERROR(
+                "ERROR 1 ${e.message}", Date(), "D1hjobWorker",
+                "", "", "", "", pijob.refid
+            )
             waitstatus = true
             throw e
         }
@@ -125,8 +131,10 @@ class D1hjobWorker(var job: Pijob,
             } catch (e: Exception) {
                 logger.error("Error 2 ${e.message}")
                 status = " Error 2 ${e.message}"
-                mtp.lgs.createERROR(" Error 2 ${e.message}", Date(), "D1hjobWorker",
-                        "", "", "go()", pijob.desdevice?.mac, pijob.refid)
+                mtp.lgs.createERROR(
+                    " Error 2 ${e.message}", Date(), "D1hjobWorker",
+                    "", "", "go()", pijob.desdevice?.mac, pijob.refid
+                )
                 isRun = false
                 waitstatus = true //หยุดใช้น้ำแล้ว
                 break //ออกเลย
@@ -156,35 +164,8 @@ class D1hjobWorker(var job: Pijob,
         status = "End job  ${pijob.name}  Can not connect to target "
 
         TimeUnit.SECONDS.sleep(5)
-//        haveerror = true
-//        errormessage = "End job  ${pijob.name}  Can not connect to target"
-        //                        continue// setport ต่อ ไป
-
         //ไม่ทำอะไรข้ามไปเลยแล้วก็จบ job เลยถ้ามีปัญหารอรอบหน้าเลย
     }
-
-//    fun findUrl(portname: String, runtime: Long, waittime: Long, value: Int): String {
-//        if (pijob.desdevice != null) {
-//            var ip = dhts.mactoip(pijob.desdevice!!.mac!!)
-//            if (ip != null) {
-//                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
-//                return url
-//            }
-//        }
-//        throw Exception("Error Can not find url")
-//    }
-
-//    fun findUrl(target: PiDevice, portname: String, runtime: Long, waittime: Long, value: Int): String {
-//        if (pijob.desdevice != null) {
-//            var ip = dhts.mactoip(target.mac!!)
-//            if (ip != null) {
-//                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
-//                return url
-//            }
-//        }
-//        throw Exception("Error Can not find url")
-//    }
-//
 
 
     var logger = LoggerFactory.getLogger(D1hjobWorker::class.java)

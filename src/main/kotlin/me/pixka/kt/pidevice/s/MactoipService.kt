@@ -1,13 +1,10 @@
 package me.pixka.kt.pidevice.s
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import me.pixka.kt.pibase.d.IptableServicekt
-import me.pixka.kt.pibase.d.PiDevice
-import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.d.Portstatusinjob
+import com.fasterxml.jackson.module.kotlin.readValue
+import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PortstatusinjobService
-import me.pixka.kt.pidevice.worker.D1TWorkerII
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -15,22 +12,28 @@ import java.math.BigDecimal
 import java.util.*
 
 @Service
-class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: HttpService,
-                     val dhts: ReadDhtService, val psis: PortstatusinjobService,
-                     val readTmpService: ReadTmpService) {
+class MactoipService(
+    val ips: IptableServicekt, val lgs: LogService, val http: HttpService,
+    val dhts: ReadDhtService, val psis: PortstatusinjobService,
+    val dizs: DeviceinzoneService
+) {
     val om = ObjectMapper()
     fun mactoip(mac: String): String? {
         try {
             var ip = ips.findByMac(mac)
             if (ip != null)
                 return ip.ip
-            lgs.createERROR("IP Not found for ${mac}", Date(), "MacToip", "",
-                    "14", "mactoip", "${mac}")
+            lgs.createERROR(
+                "IP Not found for ${mac}", Date(), "MacToip", "",
+                "14", "mactoip", "${mac}"
+            )
             throw Exception("IP Not found for ${mac}")
         } catch (e: Exception) {
             logger.error("Mac to ip:${e.message} ")
-            lgs.createERROR("${e.message}", Date(), "MacToip", "",
-                    "14", "mactoip", "${mac}")
+            lgs.createERROR(
+                "${e.message}", Date(), "MacToip", "",
+                "14", "mactoip", "${mac}"
+            )
 
 //            throw e
         }
@@ -39,23 +42,78 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
 
     }
 
-    fun readTmp(pijob: Pijob): BigDecimal? {
+    fun openpump(pijob: Pijob, timetoopen: Int) {
+        try {
+            var id = pijob.pijobgroup?.id
+
+            if(id!=null) {
+                var devices = dizs.deviceinszone(id!!)
+
+                if (devices != null) {
+                    devices.forEach {
+                        var ip = mactoip(it.pidevice?.mac!!)
+                        try {
+                            var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 15000)
+
+                        } catch (e: Exception) {
+                            logger.error("ERROR ON PUMP ${e.message}")
+                        }
+                    }
+                } else {
+                    logger.warn("Not pump in this zone to open")
+                }
+            }else
+            {
+                logger.error("Zone id is null")
+            }
+        } catch (e: Exception) {
+            logger.error("ERROR ${e.message}")
+        }
+    }
+
+    //สำหรับค้นหาว่าใช้เวลาเท่าไหร่
+    fun findTimeofjob(pijob: Pijob): Int {
+
+        try {
+            var ports = getPortstatus(pijob)
+            var r = 0
+            var w = 0
+            ports?.forEach {
+
+                if (it.waittime != null)
+                    w += it.waittime!!
+                if (it.runtime != null)
+                    r += it.runtime!!
+
+            }
+            return w + r
+        } catch (e: Exception) {
+            logger.error("ERROR ${e.message}")
+            throw e
+        }
+
+    }
+
+    fun readTmp(pijob: Pijob, timeout: Int = 2000): BigDecimal? {
         try {
             val ip = mactoip(pijob.desdevice?.mac!!)
             if (ip != null) {
                 val to: Tmpobj
                 try {
-                    to = readTmpService.readTmp(ip)
+                    var re = http.getNoCache("http://${ip}", timeout)
+                    var t = om.readValue<Tmpobj>(re)
+                    if (t.tmp != null)
+                        return t.tmp
+
+                    if (t.t != null)
+                        return t.t
+
+                    return BigDecimal(-127)
                 } catch (e: Exception) {
                     logger.error("Read tmp service ERROR ${e.message}")
                     throw e
                 }
-                if (to.tmp != null)
-                    return to.tmp
-                if (to.t != null)
-                    return to.t
 
-                return BigDecimal(-127)
             }
             throw Exception("Not found ip")
         } catch (e: Exception) {
@@ -90,8 +148,10 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
         }
     }
 
-    fun findUrl(target: PiDevice, portname: String, runtime: Long,
-                waittime: Long, value: Int): String {
+    fun findUrl(
+        target: PiDevice, portname: String, runtime: Long,
+        waittime: Long, value: Int
+    ): String {
         try {
             var ip = ips.findByMac(target.mac!!)
             if (ip != null) {
@@ -108,16 +168,20 @@ class MactoipService(val ips: IptableServicekt, val lgs: LogService, val http: H
     //สำหรับ setport
     fun setport(portstatusinjob: Portstatusinjob): String {
         try {
-            var url = findUrl(portstatusinjob.device!!, portstatusinjob.portname!!.name!!,
-                    portstatusinjob.runtime!!.toLong(), portstatusinjob.waittime!!.toLong(),
-                    portstatusinjob.status!!.toInt())
+            var url = findUrl(
+                portstatusinjob.device!!, portstatusinjob.portname!!.name!!,
+                portstatusinjob.runtime!!.toLong(), portstatusinjob.waittime!!.toLong(),
+                portstatusinjob.status!!.toInt()
+            )
             return http.getNoCache(url, 15000)
         } catch (e: Exception) {
             logger.error("Set port :" + e.message)
-            lgs.createERROR("${e.message}", Date(),
-                    "MactoipService", Thread.currentThread().name, "51",
-                    "setport()", portstatusinjob.device!!.mac, portstatusinjob.pijob!!.refid,
-                    portstatusinjob.pijob!!.pidevice?.refid)
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "MactoipService", Thread.currentThread().name, "51",
+                "setport()", portstatusinjob.device!!.mac, portstatusinjob.pijob!!.refid,
+                portstatusinjob.pijob!!.pidevice?.refid
+            )
 
             throw  e
         }

@@ -39,7 +39,7 @@ class TestSetport {
 
         var mtp = MactoipService(ips,mockk<LogService>(relaxed = true),
                 spyk<HttpService>(),mockk<ReadDhtService>(relaxed = true),mockk<PortstatusinjobService>(),
-            mockk<ReadTmpService>(relaxed = true))
+        mockk<DeviceinzoneService>(relaxed = true))
 
 
         mtp.setport(pit)

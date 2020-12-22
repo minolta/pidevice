@@ -14,12 +14,14 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class runD1Timer(val pjs: PijobService,
-                 val js: JobService, val findJob: FindJob,
-                 val task: TaskService, val ips: IptableServicekt,
-                 val line: NotifyService, val mtps: MactoipService,
-                 val dhs: Dhtutil, val httpService: HttpService, val psij: PortstatusinjobService,
-                 val readUtil: ReadUtil) {
+class runD1Timer(
+    val pjs: PijobService,
+    val js: JobService, val findJob: FindJob,
+    val task: TaskService, val ips: IptableServicekt,
+    val line: NotifyService, val mtps: MactoipService,
+    val dhs: Dhtutil, val httpService: HttpService, val psij: PortstatusinjobService,
+    val readUtil: ReadUtil
+) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 5000)
@@ -28,15 +30,22 @@ class runD1Timer(val pjs: PijobService,
         try {
             var list = findJob.loadjob("runtimerbyd1")
 
-            if(list!=null) {
-                list!!.forEach {
-                    if (!!task.checkrun(it)) {
-                        var t = D1TimerII(it, mtps, line)
-                        if (task.run(t)) {
+            if (list != null) {
+                list.forEach {
 
-                        } else {
+                    if (!task.checkrun(it)) {
+                        try {
+//                            var tc = mtps.readTmp(it)?.toDouble()
+//                            var tt = it.tlow?.toDouble()
 
-                        }
+                            var t = D1TimerII(it, mtps, line)
+                            if (task.run(t)) {
+
+                            } else {
+
+                            }
+                        }catch (e:Exception)
+                        {}
 
                     }
                 }

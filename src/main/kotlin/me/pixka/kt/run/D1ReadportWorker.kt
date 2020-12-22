@@ -36,7 +36,7 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
         }
 
         waitstatus = true
-        exitdate = findExitdate(pijob)
+        exitdate = findExitdate(pijob,(wt+rt).toLong())
     }
 
     var rt = 0

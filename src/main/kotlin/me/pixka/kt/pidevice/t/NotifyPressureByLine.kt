@@ -14,21 +14,26 @@ import org.springframework.stereotype.Component
  * ใช้สำหรับ job ที่บอกว่า pressure อยู่ในช่วงที่กำหนดหรือเปล่า
  */
 @Component
-class NotifyPressureByLine(val readStatusService: ReadStatusService, val notifyService: NotifyService,
-                           val findjob: FindJob, val iptableService: IptableServicekt,
-                           val task: TaskService) {
+class NotifyPressureByLine(
+    val readStatusService: ReadStatusService, val notifyService: NotifyService,
+    val findjob: FindJob, val iptableService: IptableServicekt,
+    val task: TaskService
+) {
     @Scheduled(fixedDelay = 1000)
     fun run() {
         try {
             var jobs = findjob.loadjob("notifypressure")
             if (jobs != null) {
                 jobs.map {
-                    if (it.desdevice != null) {
-                        var ip = iptableService.findByMac(it.desdevice?.mac!!)
-                        if (ip != null) {
-                            var t = "http://${ip.ip}"
-                            var n = NotifyPressureWorker(it, readStatusService, t,notifyService)
-                            task.run(n)
+                    if (!task.checkrun(it)) {
+                        if (it.desdevice != null) {
+                            var ip = iptableService.findByMac(it.desdevice?.mac!!)
+                            if (ip != null) {
+                                var t = "http://${ip.ip}"
+                                var n = NotifyPressureWorker(it, readStatusService, t, notifyService)
+
+                                task.run(n)
+                            }
                         }
                     }
                 }
