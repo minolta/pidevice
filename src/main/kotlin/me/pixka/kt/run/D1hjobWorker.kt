@@ -28,6 +28,8 @@ class D1hjobWorker(
 
         try {
             var openpumptime = mtp.findTimeofjob(pijob)
+
+            openpumptime  = openpumptime+120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
             var o = mtp.openpump(pijob,openpumptime)
             status = "${o} Open Pump Delay 10"
