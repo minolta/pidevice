@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.log.d.LogService
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -16,21 +17,36 @@ import java.util.*
 
 @Service
 class ReadTmpService(val httpService: HttpService,val lgs:LogService) {
+
     var om = ObjectMapper()
     fun readTmp(ip: String): Tmpobj {
         try {
-            var re = httpService.get("http://${ip}",5000)
+            var re = httpService.get("http://${ip}",2000)
             var t = om.readValue<Tmpobj>(re)
             return t
         } catch (e: Exception) {
-//            e.printStackTrace()
-            lgs.createERROR("${e.message}", Date(),"ReadTmpService",
-                    "","21","readTmp()","",null)
+            logger.error("Read tmp Service Read TMP ${e.message} IP:${ip}")
+            lgs.createERROR("${e.message}",Date(),"ReadTmpService",
+            Thread.currentThread().name,"23","readTmp()",
+            "",null,null)
+//            lgs.createERROR("${e.message}", Date(),"ReadTmpService",
+//                    "","21","readTmp()","",null)
             throw e
         }
     }
+
+    internal var logger = LoggerFactory.getLogger(ReadTmpService::class.java)
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Tmpobj(var t: BigDecimal? = null, var tmp: BigDecimal? = null,
              val ip: String? = null, val mac: String? = null)
+{
+    fun getTmp(): Double? {
+        if(tmp!=null)
+            return tmp!!.toDouble()
+        if(t!=null)
+            return t!!.toDouble()
+        return null
+    }
+}

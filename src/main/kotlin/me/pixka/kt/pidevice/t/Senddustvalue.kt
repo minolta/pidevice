@@ -18,7 +18,7 @@ class Senddustvalue(val server: PmService, val httpService: HttpService,val lgs:
     val om = ObjectMapper()
     var mac = System.getProperty("mac")
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
         var host = System.getProperty("piserver")
         var datas = server.findByToServer(false)
@@ -29,9 +29,10 @@ class Senddustvalue(val server: PmService, val httpService: HttpService,val lgs:
                     var r = om.readValue<Status>(h)
                     server.delete(it)
                 } catch (e: Exception) {
-                    lgs.createERROR("${e.message}", Date(),
-                    "Senddustvalue","","26","run",mac)
+//                    lgs.createERROR("${e.message}", Date(),
+//                    "Senddustvalue","","26","run",mac)
                     logger.error(e.message)
+
                 }
 
             }

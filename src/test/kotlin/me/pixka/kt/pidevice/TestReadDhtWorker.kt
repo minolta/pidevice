@@ -11,6 +11,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.run.ReadDhtWorker
 import me.pixka.log.d.LogService
 import org.junit.jupiter.api.Assertions
@@ -27,7 +28,7 @@ class TestReadDhtWorker {
         var httpservice = spyk<HttpService>()
         var lgs = mockk<LogService>(relaxed = true)
         var dhts = mockk<DhtvalueService>()
-
+        var mtp  = mockk<MactoipService>()
         var dht = Dhtvalue()
         dht.t = BigDecimal(10)
         dht.h = BigDecimal(99)
@@ -45,7 +46,7 @@ class TestReadDhtWorker {
         job.runtime=10
 
 
-        var readDhtWorker = ReadDhtWorker(job, pds, httpservice, "192.168.89.26",lgs,dhts)
+        var readDhtWorker = ReadDhtWorker(job, pds,mtp, dhts)
         readDhtWorker.run()
         Assertions.assertTrue(readDhtWorker.isRun)
     }

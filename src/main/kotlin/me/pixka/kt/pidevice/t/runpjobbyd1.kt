@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1pjobWorker
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class Runpjobbyd1(val pjs: PijobService,
-                  val js: JobService,val findJob: FindJob,
+                  val js: JobService,val findJob: FindJob,val mtp:MactoipService,
                   val task: TaskService, val readUtil: ReadUtil
 ) {
     val om = ObjectMapper()
@@ -30,7 +31,7 @@ class Runpjobbyd1(val pjs: PijobService,
                     var c = checkrunwith(job)
                     logger.debug("Run with ${c}")
                     if (c != null && c) {
-                        var t = D1pjobWorker(job, readUtil)
+                        var t = D1pjobWorker(job, readUtil,mtp)
                         if (task.checktime(job)) {
                             var run = task.run(t)
                             logger.debug("RunJOB ${run}")

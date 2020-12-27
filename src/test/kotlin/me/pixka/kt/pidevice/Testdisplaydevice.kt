@@ -6,11 +6,13 @@ import io.mockk.spyk
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pidevice.s.CheckTimeService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.DisplaytmpWorker
 import me.pixka.log.d.LogService
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -21,6 +23,8 @@ class Testdisplaydevice {
         var http = spyk<HttpService>()
 
     }
+    @Autowired
+    lateinit var mtp:MactoipService
 
     @Test
     fun testSenddisplay() {
@@ -63,7 +67,7 @@ class Testdisplaydevice {
         var pij = Portstatusinjob()
         pij.device = d
         var ports = listOf<Portstatusinjob>(pij)
-        var w = DisplaytmpWorker(pj, lgs, http, ips, ports,ct)
+        var w = DisplaytmpWorker(pj,mtp)
         w.run()
         println("StartDATE: ${w.startRun} Exitdate:${w.exitdate}")
 //        println(w.exitdate)

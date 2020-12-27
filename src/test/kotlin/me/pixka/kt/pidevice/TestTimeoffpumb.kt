@@ -4,6 +4,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pidevice.s.TaskService
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -17,36 +18,36 @@ class TestTimeoffpumb {
         try {
             var n = df.format(now)
             var now = df.parse(n)
-            TaskService.logger.debug("checktime  ${job.name} : N:${n} now ${now} now time ${now.time}")
-            TaskService.logger.debug("checktime  ${job.name} : s: ${job.stimes} ${now} e:${job.etimes}")
+            logger.debug("checktime  ${job.name} : N:${n} now ${now} now time ${now.time}")
+            logger.debug("checktime  ${job.name} : s: ${job.stimes} ${now} e:${job.etimes}")
             if (job.stimes != null && job.etimes != null) {
                 var st = df.parse(job.stimes).time
                 var et = df.parse(job.etimes).time
                 if (st <= now.time && now.time <= et)
                     can = true
-                TaskService.logger.debug("checktime  ${job.name} : ${st} <= ${now} <= ${et} can:${can}")
+                logger.debug("checktime  ${job.name} : ${st} <= ${now} <= ${et} can:${can}")
 
             } else if (job.stimes != null && job.etimes == null) {
                 var st = df.parse(job.stimes).time
                 if (st <= now.time)
                     can = true
-                TaskService.logger.debug("checktime ${job.name} : ${st} <= ${now} Can:${can}")
+                logger.debug("checktime ${job.name} : ${st} <= ${now} Can:${can}")
             } else if (job.stimes == null && job.etimes != null) {
                 var st = df.parse(job.etimes).time
                 if (st <= now.time)
                     can = true
-                TaskService.logger.debug("checktime ${job.name} : ${st} >= ${now} can:${can}")
+                logger.debug("checktime ${job.name} : ${st} >= ${now} can:${can}")
             } else {
-                TaskService.logger.debug("${job.name} checktime not set ")
+                logger.debug("${job.name} checktime not set ")
                 can = true
             }
         } catch (e: Exception) {
-            TaskService.logger.error("checktime  ${job.name} : ${e.message}")
+            logger.error("checktime  ${job.name} : ${e.message}")
         }
 
         return can
     }
-
+     var logger = LoggerFactory.getLogger(TestTimeoffpumb::class.java)
     fun checkTime(job: Pijob, now: Date): Boolean {
         //set ช่วงเวลา
         if (job.stimes != null && job.etimes != null) {

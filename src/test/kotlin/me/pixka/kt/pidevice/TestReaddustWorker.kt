@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.Pmdata
 import me.pixka.kt.run.ReaddustWorker
@@ -47,6 +48,8 @@ class TestReaddustWorker {
     @Autowired
     lateinit var httpService: HttpService
 
+    @Autowired
+    lateinit var mtp:MactoipService
     @Test
     fun testReaddustWorker() {
         var http = HttpGetTask("http://192.168.89.243")
@@ -93,7 +96,7 @@ class TestReaddustWorker {
         if (jobs != null) {
             jobs.forEach {
 
-                var t = ReaddustWorker(it, "192.168.89.243", service, httpService, om, pideviceService, lgs)
+                var t = ReaddustWorker(it, "192.168.89.243", service, pideviceService,mtp)
                 Assertions.assertEquals(true, ts.run(t))
 
             }
@@ -113,7 +116,7 @@ class TestReaddustWorker {
         if (jobs != null) {
             jobs.forEach {
 
-                var t = ReaddustWorker(it, "192.168.89.243", service, httpService, om, pideviceService,lgs)
+                var t = ReaddustWorker(it, "192.168.89.243", service, pideviceService,mtp)
                 var ee = Executors.newSingleThreadExecutor()
                 var f = ee.submit(t)
                 var rr = f.get()

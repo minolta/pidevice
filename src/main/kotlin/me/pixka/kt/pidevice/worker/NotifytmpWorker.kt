@@ -106,7 +106,5 @@ class NotifytmpWorker(var pijob: Pijob, var readStatusService: ReadStatusService
     fun tmp(): Double? {
         return tmp
     }
-    companion object {
-        internal var logger = LoggerFactory.getLogger(NotifytmpWorker::class.java)
-    }
+         var logger = LoggerFactory.getLogger(NotifytmpWorker::class.java)
 }

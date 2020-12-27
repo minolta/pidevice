@@ -24,11 +24,11 @@ open class DWK(var pijob: Pijob, var status: String = "",
     }
 
     override fun getPijobid(): Long {
-        return pijob?.id!!
+        return pijob.id
     }
 
     override fun getPJ(): Pijob {
-        return pijob!!
+        return pijob
     }
 
     override fun startRun(): Date? {
@@ -40,7 +40,6 @@ open class DWK(var pijob: Pijob, var status: String = "",
     }
 
     override fun setrun(p: Boolean) {
-
         isRun = p
     }
 
@@ -57,6 +56,20 @@ open class DWK(var pijob: Pijob, var status: String = "",
             if (job.runtime != null)
                 tvalue += job.runtime!!
         }
+        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, tvalue!!.toInt())
+        return calendar.time
+    }
+
+    fun findExitdate(job: Pijob, add: Long): Date? {
+        var tvalue: Long? = 0L
+        if (job.waittime != null)
+            tvalue = job.waittime!!
+        if (tvalue != null) {
+            if (job.runtime != null)
+                tvalue += job.runtime!!
+        }
+        tvalue = tvalue?.plus(add)
         val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, tvalue!!.toInt())
         return calendar.time

@@ -15,7 +15,6 @@ class GroupRunService(val task: TaskService) {
         var pijobid = job.getPijobid().toInt()
         var groupid = job.getPJ().pijobgroup_id
         var grouprun = task.runinglist
-//        logger.debug("Groups ${grouprun}")
         for (r in grouprun) {
             if (r is D1hjobWorker) {
                 logger.debug("checkgroup D1Hworker [${job.getPJ().name}] check to  r:[${r.getPJ().name}] Run ? ${r.isRun} wait ${r.waitstatus}")
@@ -59,7 +58,7 @@ class GroupRunService(val task: TaskService) {
             var found = false
             //หาว่า มี Job ไหนยังไม่หยุดใช้น้ำ
             task.runinglist.forEach {
-                if(it is D1hjobWorker) {
+                if (it is D1hjobWorker) {
                     if (it.getPJ().pijobgroup_id == job.pijobgroup_id && it.waitstatus == false)
                         found = true
                 }
@@ -68,7 +67,7 @@ class GroupRunService(val task: TaskService) {
             return found
 
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.error(e.message)
         }
         return false
     }
@@ -82,27 +81,22 @@ class GroupRunService(val task: TaskService) {
         try {
             var samerun = task.checkrun(j)
             if (samerun) {
-                logger.error("This job already run  from JOB ${j.name}")
+                logger.warn("This job already run  from JOB ${j.name}")
                 return false //ไม่สามารถ run job นี้ได้
             }
-
             //หาว่าobject ตัวไหนจะยัง run อยู่แต่อยู่ใน status run
-
             if (findOtherUserwater(j)) {
-                logger.error("Some one use water ${j.name}")
+                logger.warn("Some one use water ${j.name}")
                 return false //ไม่สามารถ run job นี้ได้
             }
         } catch (e: Exception) {
+            logger.error(e.message)
             return false
         }
         return true
-
-
     }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(GroupRunService::class.java)
-    }
+    var logger = LoggerFactory.getLogger(GroupRunService::class.java)
 }
 
 

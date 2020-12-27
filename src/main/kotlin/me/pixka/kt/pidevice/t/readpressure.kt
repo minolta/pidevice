@@ -8,6 +8,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.PressurevalueService
 import me.pixka.kt.pibase.o.PSIObject
 import me.pixka.kt.pibase.s.*
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.ReadPressureTask
 import org.slf4j.LoggerFactory
@@ -18,7 +19,7 @@ import java.util.concurrent.CompletableFuture
 @Component
 //@Profile("pi")
 class Findreadpressure(val pideviceService: PideviceService, val ps: PressurevalueService,
-                       val js: JobService, val pjs: PijobService, val findJob: FindJob,
+                       val js: JobService, val pjs: PijobService, val findJob: FindJob,val mtp:MactoipService,
                        val httpService: HttpService, val ips: IptableServicekt, val ts: TaskService,
                        val ntf: NotifyService
 ) {
@@ -35,7 +36,7 @@ class Findreadpressure(val pideviceService: PideviceService, val ps: Pressureval
                 logger.debug("Found job  ${jobtorun.size}")
                 for (j in jobtorun) {
                     if (!ts.checkrun(j)) {
-                        var t = ReadPressureTask(j, ips, httpService, ps, pideviceService, ntf)
+                        var t = ReadPressureTask(j,mtp,ps,pideviceService,ntf)
                         var run = ts.run(t)
                         logger.debug("Run ${j.name} == ${run}")
                     }

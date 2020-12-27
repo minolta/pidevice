@@ -8,6 +8,7 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.s.CheckTimeService
 import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.run.DWK
 import me.pixka.kt.run.PijobrunInterface
 import me.pixka.kt.run.Status
 import me.pixka.log.d.LogService
@@ -56,81 +57,19 @@ class RunonPump(val pjs: PijobService, val checkTimeService: CheckTimeService,
 }
 
 
-class OnpumbWorker(var pijob: Pijob, val httpService: HttpService, var ip: Iptableskt?,var lgs:LogService)
-    : PijobrunInterface, Runnable {
+class OnpumbWorker(var job: Pijob, val httpService: HttpService, var ip: Iptableskt?,var lgs:LogService)
+    : DWK(job), Runnable {
 
     val om = ObjectMapper()
-    var status: String? = null
-    var isRun = true
-    var startdate: Date? = null
-    var exitdate: Date? = null
-    override fun setP(pijob: Pijob) {
-        this.pijob = pijob
-    }
-
-    fun setEnddate() {
-        try {
-            var t = 0L
-
-            if (pijob.waittime != null)
-                t = pijob.waittime!!
-            if (pijob.runtime != null)
-                t += pijob.runtime!!
-            val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-
-            calendar.add(Calendar.SECOND, t.toInt())
-            exitdate = calendar.time
-            if (t == 0L)
-                isRun = false//ออกเลย
-        }catch (e:Exception)
-        {
-            isRun=false
-            exitdate = Date()
-            lgs.createERROR("${e.message}",Date(),"OnpumbWorker","",
-            "","setEnddate()",pijob.desdevice?.mac)
-        }
-    }
-
-    override fun setG(gpios: GpioService) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun runStatus(): Boolean {
-        return isRun
-    }
-
-    override fun getPijobid(): Long {
-        return pijob.id
-    }
-
-    override fun getPJ(): Pijob {
-        return pijob
-    }
-
-    override fun startRun(): Date? {
-        return startdate
-    }
-
-    override fun state(): String? {
-        return status
-    }
-
-    override fun setrun(p: Boolean) {
-        isRun = p
-    }
-
-    override fun exitdate(): Date? {
-        return exitdate
-    }
 
 
     override fun run() {
         try {
-            startdate = Date()
+            startRun = Date()
             var ip = ip?.ip
             status = "call url http://${ip}/on"
             try {
-                var re = httpService.get("http://${ip}/on",2000)
+                var re = httpService.getNoCache("http://${ip}/on",2000)
                 var s = om.readValue<Status>(re)
                 status = "on pumb is ok ${s.status} Uptime ${s.uptime}"
             } catch (e: Exception) {
@@ -148,13 +87,9 @@ class OnpumbWorker(var pijob: Pijob, val httpService: HttpService, var ip: Iptab
             status = "offpump ${e.message} ${pijob.name}"
             isRun = false //ออกเลยที่มีปัญฆา
         }
-        setEnddate()
+        exitdate = findExitdate(pijob)
     }
-
-
-    companion object {
-        internal var logger = LoggerFactory.getLogger(OnpumbWorker::class.java)
-    }
+      var logger = LoggerFactory.getLogger(OnpumbWorker::class.java)
 
 
 }

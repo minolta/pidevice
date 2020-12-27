@@ -24,8 +24,13 @@ class CheckTimeService(val lgs: LogService) {
         return calendar.time
     }
 
+    /**
+     * สำหรับตรวจสอบ เวลาที่ส่งเข้ามา job นี้สามารถทำงานได้หรือเปล่า
+     */
     fun checkTime(job: Pijob, now: Date): Boolean {
         try {
+            if(job.stimes == null && job.etimes == null)
+                return true // not set time rang
             var n = df.parse(df.format(now))
             var nl = n.time
 
@@ -94,7 +99,7 @@ class CheckTimeService(val lgs: LogService) {
         return false
     }
 
-    companion object {
+//    companion object {
         internal var logger = LoggerFactory.getLogger(CheckTimeService::class.java)
-    }
+//    }
 }

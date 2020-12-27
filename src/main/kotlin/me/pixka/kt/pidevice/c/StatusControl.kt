@@ -1,5 +1,6 @@
 package me.pixka.kt.pidevice.c
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import me.pixka.kt.pidevice.t.UptimeTask
 import org.springframework.web.bind.annotation.*
 
@@ -14,5 +15,5 @@ class StatusControl (val uptime:UptimeTask)
         return Statusobj(uptime.uptime)
     }
 }
-
-class Statusobj(var uptime:Long?=0)
+@JsonIgnoreProperties(ignoreUnknown = true)
+class Statusobj(var uptime:Long?=0,var status:String?=null)

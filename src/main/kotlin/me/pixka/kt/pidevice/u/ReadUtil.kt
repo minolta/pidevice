@@ -2,7 +2,6 @@ package me.pixka.kt.pidevice.u
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.pibase.c.HttpControl
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.DS18sensorService
 import me.pixka.kt.pibase.s.PideviceService
@@ -18,7 +17,7 @@ import java.util.concurrent.TimeUnit
 @Service
 //@Profile("pi")
 class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServicekt: IptableServicekt,
-               val dss: DS18sensorService, val io: Piio, val ps: PideviceService,
+               val dss: DS18sensorService, val ps: PideviceService,
                val pideviceService: PideviceService, val ss: SensorService) {
     val om = ObjectMapper()
 
@@ -250,32 +249,32 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
 //        throw Exception("Pressure not set localpressure")
 //
 //    }
-
-    fun readLocal(job: Pijob): DS18value? {
-        var localsensor = dss.find(job.ds18sensor_id!!)
-        logger.debug("4 Found local sensor ? ${localsensor} #readtmpbyjob")
-        var value: DS18value? = null
-        if (localsensor != null && value == null) {
-            logger.debug("5 Read Temp from ${localsensor} ")
-            var v = null
-            try {
-                var v = io.readDs18()
-            } catch (e: Exception) {
-                logger.error("6 ${e.message}")
-                throw e
-            }
-            value = DS18value()
-            value.t = v
-            logger.debug("7 Read Temp from ${localsensor}  get ${v} return ${value} #readtmpbyjob")
-            if (v != null)
-                return value
-        }
-        if (value != null) {
-            return value
-        }
-        throw Exception("Read local not found")
-
-    }
+//
+//    fun readLocal(job: Pijob): DS18value? {
+//        var localsensor = dss.find(job.ds18sensor_id!!)
+//        logger.debug("4 Found local sensor ? ${localsensor} #readtmpbyjob")
+//        var value: DS18value? = null
+//        if (localsensor != null && value == null) {
+//            logger.debug("5 Read Temp from ${localsensor} ")
+//            var v = null
+//            try {
+//                var v = io.readDs18()
+//            } catch (e: Exception) {
+//                logger.error("6 ${e.message}")
+//                throw e
+//            }
+//            value = DS18value()
+//            value.t = v
+//            logger.debug("7 Read Temp from ${localsensor}  get ${v} return ${value} #readtmpbyjob")
+//            if (v != null)
+//                return value
+//        }
+//        if (value != null) {
+//            return value
+//        }
+//        throw Exception("Read local not found")
+//
+//    }
 
     fun checktmp(p: Pijob): Boolean {
 
@@ -360,22 +359,22 @@ class ReadUtil(val ips: IptableServicekt, val http: HttpControl, val iptableServ
             }
 
 
-            try {
-                value = readLocal(job)
-                if (value != null) {
-                    savebuffer(job, value.t!!)
-                    return value.t
-                }
-            } catch (e: Exception) {
-                logger.error("readtmpbyjob readlocal error ${e.message}")
-                try {
-                    var p = readBuffer(job)
-                    return p
-                } catch (e: Exception) {
-                    logger.error("readtmpbyjob Read buffer error ${e.message}")
-                    throw Exception("readtmpbyjob Read buffer error ${e.message}")
-                }
-            }
+//            try {
+//                value = readLocal(job)
+//                if (value != null) {
+//                    savebuffer(job, value.t!!)
+//                    return value.t
+//                }
+//            } catch (e: Exception) {
+//                logger.error("readtmpbyjob readlocal error ${e.message}")
+//                try {
+//                    var p = readBuffer(job)
+//                    return p
+//                } catch (e: Exception) {
+//                    logger.error("readtmpbyjob Read buffer error ${e.message}")
+//                    throw Exception("readtmpbyjob Read buffer error ${e.message}")
+//                }
+//            }
 
 
         } catch (e: Exception) {

@@ -2,6 +2,7 @@ package me.pixka.kt.pidevice.t
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
@@ -9,6 +10,7 @@ import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.run.D1portjobWorker
@@ -24,7 +26,7 @@ import java.util.*
 class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                   val js: JobService,
                   val task: TaskService, val ips: IptableServicekt,
-                  val dhs: Dhtutil,
+                  val dhs: Dhtutil,val mtp:MactoipService,
                   val httpService: HttpService, val lgs: LogService) {
     val om = ObjectMapper()
 
@@ -51,7 +53,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                         }
                         if (r && !task.checkrun(it)) {
 
-                            var t = D1portjobWorker(it, pjs, httpService, task, ips, lgs)
+                            var t = D1portjobWorker(it,mtp)
                             var run = task.run(t)
                             logger.debug("Can run ${run}")
                         }
@@ -111,8 +113,8 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
             logger.debug("Check Port start")
             val ip = ips.findByMac(p.desdevice?.mac!!)
             url = "http://${ip?.ip}"
-            val re: String? = httpService.get(url,10000)
-            val dp = om.readValue(re, DPortstatus::class.java)
+            val re: String? = httpService.get(url,20000)
+            val dp = om.readValue<DPortstatus>(re!!)
             return dp
 
         } catch (e: Exception) {

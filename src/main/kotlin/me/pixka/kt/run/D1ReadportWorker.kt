@@ -2,105 +2,41 @@ package me.pixka.kt.run
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.pibase.d.IptableServicekt
-import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pibase.s.GpioService
-import me.pixka.kt.pibase.s.HttpService
-import me.pixka.kt.pibase.s.PijobService
-import me.pixka.kt.pidevice.s.TaskService
-import me.pixka.log.d.LogService
+import me.pixka.kt.pidevice.s.MactoipService
 import org.slf4j.LoggerFactory
 import java.util.*
 
-class D1portjobWorker(var pijob: Pijob, val service: PijobService,
-                      val httpService: HttpService,
-                      val task: TaskService, val ips: IptableServicekt, val lgs: LogService)
-    : PijobrunInterface, Runnable {
-    var isRun = false
-    var state = "Init"
-    var startrun: Date? = null
-    var waitstatus = false
-    val mapper = ObjectMapper()
-    var exitdate: Date? = null
-    val om = ObjectMapper()
-
-    override fun setG(gpios: GpioService) {
-    }
-
-    override fun setrun(p: Boolean) {
-        isRun = p
-    }
-
-    override fun exitdate(): Date? {
-        return exitdate
-    }
-
-    override fun runStatus(): Boolean {
-        return isRun
-    }
-
-    override fun getPijobid(): Long {
-        return this.pijob.id
-    }
-
-    override fun getPJ(): Pijob {
-        return pijob
-    }
-
-    override fun startRun(): Date? {
-        return startrun
-    }
-
-    override fun state(): String? {
-        return state
-    }
-
-    fun findExitdate(pijob: Pijob): Date? {
-        var t = 0L
-        if (pijob.waittime != null)
-            t = pijob.waittime!!
-        if (pijob.runtime != null)
-            t += pijob.runtime!!
-
-        t += (rt + wt) //เวลานานสุดของ runport
-        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-        calendar.add(Calendar.SECOND, t.toInt())
-        exitdate = calendar.time
-        if (t == 0L)
-            return null
-
-        return exitdate
-    }
-
+class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable {
+    var waitstatus: Boolean = false
     override fun run() {
 
-        startrun = Date()
+        startRun = Date()
         isRun = true
+        status = "Start run ${startRun}"
         waitstatus = false //เริ่มมาก็ทำงาน
-        Thread.currentThread().name = "JOBID:${pijob.id} D1PORT : ${pijob.name} ${startrun}"
+        Thread.currentThread().name = "JOBID:${pijob.id} D1PORT : ${pijob.name} ${startRun}"
         try {
             waitstatus = false
             goII()
             waitstatus = true
-//            exitdate = findExitdate(pijob)
-//            state = "End job and wait"
+            status = "End job ${Date()}"
         } catch (e: Exception) {
-            this.state = "Run By port is ERROR ${e.message}"
-            logger.error("Run By port is ERROR ${e.message}")
-            lgs.createERROR("${e.message}", Date(),
-                    "D1readportWorker", "", "",
-                    "run", pijob.desdevice?.mac)
             waitstatus = true
             isRun = false
+            status = "Run By port is ERROR ${e.message}"
+            logger.error("Run By port is ERROR ${e.message}")
+            mtp.lgs.createERROR("${e.message}", Date(),
+                    "D1readportWorker", Thread.currentThread().name, "22",
+                    "run", pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
+
+
+
         }
 
         waitstatus = true
-        findExitdate(pijob)
-//        isRun = false
-//        state = "End job"
+        exitdate = findExitdate(pijob,(wt+rt).toLong())
     }
 
     var rt = 0
@@ -120,23 +56,18 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
                 if (pr!! > rt) {
                     rt = pr
                 }
-                var pn = it.portname!!.name
-                var v = it.status //สำหรับบอก port ว่าจะเป็น logic อะไร
-                var value = getLogic(v?.name!!)
                 try {
-                    var url = findUrl(it.device!!, pn!!, pr.toLong(), pw.toLong(), value)
-                    startrun = Date()
-                    logger.debug("URL ${url}")
-                    state = "Set port ${url}"
-                    var setportreturn = httpService.get(url, 4000)
-                    var status = om.readValue<Status>(setportreturn)
-                    state = "Set port:${pn}  to ${pr}  value : ${value} ok "
+                    status = "Set port ${it.portname?.name}"
+                    var re = mtp.setport(it)
+                    var st = mtp.om.readValue<Status>(re)
+                    status = "Set port ${it.portname!!.name} ${st.uptime}"
                 } catch (e: Exception) {
-                    lgs.createERROR("${e.message}", Date(),
+                    mtp.lgs.createERROR("${e.message}", Date(),
                             "D1ReadportWorker",
-                            "", "", "", it.device?.mac,
+                            Thread.currentThread().name, "61", "goII()", it.device?.mac,
                             it.pijob?.refid
                     )
+                    status = "ERROR ${e.message}"
                 }
             }
         }
@@ -150,26 +81,6 @@ class D1portjobWorker(var pijob: Pijob, val service: PijobService,
             value = 0
         return value
     }
-
-
-    fun findUrl(target: PiDevice, portname: String, runtime: Long,
-                waittime: Long, value: Int): String {
-        if (pijob.desdevice != null) {
-            var ip = ips.findByMac(target.mac!!)
-            if (ip != null) {
-                var url = "http://${ip.ip}/run?port=${portname}&delay=${runtime}&value=${value}&wait=${waittime}"
-                return url
-            }
-        }
-
-        throw Exception("Error Can not find url")
-    }
-
-
-    override fun setP(pijob: Pijob) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
 
     override fun toString(): String {
         return "name ${pijob.name}"

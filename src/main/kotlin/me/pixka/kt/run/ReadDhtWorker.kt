@@ -8,16 +8,13 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.DhtvalueService
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
 import java.util.*
 
-class ReadDhtWorker(pijob: Pijob, val pds: PideviceService,
-                    val httpService: HttpService, var ip: String, val lgs: LogService,
-                    val dhtvalueService: DhtvalueService)
-    : DefaultWorker(pijob, null, null, null, logger) {
-    var exitdate: Date? = null
-    val om = ObjectMapper()
+class ReadDhtWorker(pijob: Pijob, val pds: PideviceService, var mtp: MactoipService,var dhts:DhtvalueService)
+    : DWK(pijob), Runnable {
     override fun run() {
         var t = 0.0
         var h = 0.0
@@ -26,9 +23,9 @@ class ReadDhtWorker(pijob: Pijob, val pds: PideviceService,
             startRun = Date()
             logger.debug("Start run ${startRun}")
             Thread.currentThread().name = "JOBID:${pijob.id} ReadDHT ${pijob.name} ${startRun}"
-//            var ip = ips.findByMac(pijob.desdevice?.mac!!)
-            var re = httpService.get("http://${ip}",10000)
-            var dht = om.readValue<DHTObject>(re)
+            var ip = mtp.mactoip(pijob.desdevice?.mac!!)
+            var re = mtp.http.get("http://${ip}", 10000)
+            var dht = mtp.om.readValue<DHTObject>(re)
             var dhtvalue = Dhtvalue()
             dhtvalue.valuedate = Date()
             dhtvalue.pidevice = pijob.desdevice
@@ -38,16 +35,15 @@ class ReadDhtWorker(pijob: Pijob, val pds: PideviceService,
                 t = dht.t?.toDouble()!!
             if (dht.h != null)
                 h = dht.h?.toDouble()!!
-            var r = dhtvalueService.save(dhtvalue)
+            var r = dhts.save(dhtvalue)
             logger.debug("Save ${r}")
             status = "Save ${r}"
 
         } catch (e: Exception) {
             logger.error("Read DHT task Error ${e.message}")
-            lgs.createERROR("Read DHT task Error ${e.message}",
+            mtp.lgs.createERROR("Read DHT task Error ${e.message}",
                     Date(), "ReadDhtWorker", Thread.currentThread().name, "run",
-                    "", pijob.desdevice?.mac
-                    ,pijob.refid)
+                    "", pijob.desdevice?.mac, pijob.refid)
             status = "ERROR ${e.message}"
             isRun = false
         }
@@ -59,34 +55,8 @@ class ReadDhtWorker(pijob: Pijob, val pds: PideviceService,
         logger.debug("End Read DHT task")
     }
 
-    fun findExitdate(pijob: Pijob): Date? {
-        var t = 0L
 
-        if (pijob.waittime != null)
-            t = pijob.waittime!!
-        if (pijob.runtime != null)
-            t += pijob.runtime!!
-        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
+    var logger = LoggerFactory.getLogger(ReadDhtWorker::class.java)
 
-        calendar.add(Calendar.SECOND, t.toInt())
-        var exitdate = calendar.time
-        if (t == 0L) {
-            isRun = false
-            return null
-        }
-        return exitdate
-    }
-
-    companion object {
-        internal var logger = LoggerFactory.getLogger(ReadDhtWorker::class.java)
-    }
-
-    override fun exitdate(): Date? {
-        return exitdate
-    }
-
-    override fun toString(): String {
-        return "READ DHT name: ${getPJ().name} Start ${startRun()}"
-    }
 
 }

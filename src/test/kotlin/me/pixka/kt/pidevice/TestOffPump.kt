@@ -6,6 +6,7 @@ import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.PiDevice
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.run.OffpumpWorker
 import me.pixka.log.d.LogService
 import org.junit.jupiter.api.Assertions
@@ -47,8 +48,8 @@ class TestOffPump {
         job.name = "Test off"
         job.desdevice = p
         job.runtime = 10
-
-        var off = OffpumpWorker(job, httpService, ips, lgs)
+        val mtp = spyk<MactoipService>()
+        var off = OffpumpWorker(job,mtp)
         off.run()
         Assertions.assertTrue(off.isRun)
 

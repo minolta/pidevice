@@ -15,8 +15,8 @@ import java.net.SocketException
 import java.util.*
 
 
-@Component
-@Profile("!test")
+//@Component
+//@Profile("!test")
 class Findip(val service: IptableServicekt, val ntfs: NotifyService) {
     companion object {
         internal var logger = LoggerFactory.getLogger(Findip::class.java)

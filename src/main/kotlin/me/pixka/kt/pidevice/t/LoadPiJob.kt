@@ -2,7 +2,6 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.*
 import org.slf4j.LoggerFactory
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Component
  */
 @Component
 @Profile("!test")
-class LoadPiJob(val httpService: HttpService, val io: Piio, val pjs: PijobService, val pds: PideviceService,
+class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: PideviceService,
                 val ptijs: PortstatusinjobService, val js: JobService, val pgs: PijobgroupService,
                 val pns: PortnameService, val ls: LogistateService, val ips: IptableServicekt) {
     var host = System.getProperty("piserver")
@@ -26,8 +25,8 @@ class LoadPiJob(val httpService: HttpService, val io: Piio, val pjs: PijobServic
     @Scheduled(fixedDelay = 2000)
     fun load() {
         var mac = System.getProperty("mac")
-        if (mac == null)
-            mac = io.wifiMacAddress()
+//        if (mac == null)
+//            mac = io.wifiMacAddress()
         var re: String? = httpService.get(target + "/${mac}",500)
         var alljobs = om.readValue<List<Pijob>>(re!!)
         if (alljobs != null) {
@@ -208,7 +207,5 @@ class LoadPiJob(val httpService: HttpService, val io: Piio, val pjs: PijobServic
         }
     }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(LoadPiJob::class.java)
-    }
+         var logger = LoggerFactory.getLogger(LoadPiJob::class.java)
 }

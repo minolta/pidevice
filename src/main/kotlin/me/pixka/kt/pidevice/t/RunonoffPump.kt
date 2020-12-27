@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.CheckTimeService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.OffpumpWorker
 import me.pixka.log.d.LogService
@@ -19,7 +20,7 @@ import java.util.concurrent.CompletableFuture
 
 @Component
 class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: HttpService,
-                 val js: JobService, val checkTimeService: CheckTimeService,
+                 val js: JobService, val checkTimeService: CheckTimeService,val mtp:MactoipService,
                  val task: TaskService, val ips: IptableServicekt, val lgs: LogService
 ) {
 
@@ -35,7 +36,7 @@ class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: H
                 for (job in jobs) {
                     mac = job.desdevice?.mac
                     if (checkTimeService.checkTime(job, Date()) && !task.checkrun(job)) {
-                        var offpumpWorker = OffpumpWorker(job, httpService, ips, lgs)
+                        var offpumpWorker = OffpumpWorker(job,mtp)
                         if (!task.run(offpumpWorker)) {
                             logger.error("Can not Run ${job.name}")
                         }
@@ -54,24 +55,7 @@ class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: H
     }
 
 
-    fun Checktime(job: Pijob) {
-        CompletableFuture.supplyAsync {
-            var intime = checkTimeService.checkTime(job, Date())
-            intime
-        }.thenApply {
-            if (it) {
-                var haverun = task.runinglist.find {
-                    it.getPijobid() == job.id && it.runStatus()
-                }
-                if (haverun == null) {
-                    var offpumpWorker = OffpumpWorker(job, httpService, ips, lgs)
-                    task.run(offpumpWorker)
-                }
-            }
-        }
-    }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(RunoffPump::class.java)
-    }
+
+         var logger = LoggerFactory.getLogger(RunoffPump::class.java)
 }

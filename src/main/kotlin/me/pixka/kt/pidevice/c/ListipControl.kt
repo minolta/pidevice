@@ -12,7 +12,7 @@ class ListipControl(val iptableServicekt: IptableServicekt) {
     @Throws(Exception::class)
     fun value(): List<Iptableskt>? {
 
-        return iptableServicekt.search("",0,1000)
+        return iptableServicekt.all()
     }
 
     @CrossOrigin

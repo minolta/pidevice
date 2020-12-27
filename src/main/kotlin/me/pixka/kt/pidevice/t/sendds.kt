@@ -2,7 +2,6 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.pibase.c.HttpControl
-import me.pixka.kt.pibase.c.Piio
 import me.pixka.kt.pibase.d.DS18value
 import me.pixka.kt.pibase.s.Ds18valueService
 import me.pixka.kt.pibase.t.HttpPostTask
@@ -18,10 +17,10 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
-class Sendds(val service: Ds18valueService, val io: Piio) {
+class Sendds(val service: Ds18valueService) {
 
 
-    @Scheduled(initialDelay = 1000, fixedDelay = 5000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 1000)
     fun sendtask() {
 
 
@@ -34,7 +33,8 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
                 try {
                     val info = Infoobj()
                     info.token = System.getProperty("token")
-                    info.mac = io.wifiMacAddress()
+//                    info.mac = io.wifiMacAddress()
+                   info.mac = System.getProperty("mac")
                     info.ds18value = item
                     var task = HttpPostTask(target, info)
                     var f = t.submit(task)
@@ -72,7 +72,7 @@ class Sendds(val service: Ds18valueService, val io: Piio) {
 
 @Component
 //@Profile("pi", "lite")
-class SenddsTask(val io: Piio, val service: Ds18valueService,
+class SenddsTask( val service: Ds18valueService,
                  val http: HttpControl
 ) {
 
@@ -103,8 +103,6 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
         try {
             val mapper = ObjectMapper()
             val list = service.notInserver()
-
-
             logger.debug("Values for send ${list!!.size}")
             for (item in list) {
                 logger.debug("[sendds18b20]  " + item)
@@ -113,7 +111,9 @@ class SenddsTask(val io: Piio, val service: Ds18valueService,
                     val info = Infoobj()
                     info.token = System.getProperty("token")
                     // info.ip = io.wifiIpAddress()
-                    info.mac = io.wifiMacAddress()
+
+                    //info.mac = io.wifiMacAddress()
+                    info.mac = System.getProperty("mac")
                     info.ds18value = item
 
                     re = http.postJson(target, info)

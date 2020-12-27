@@ -9,6 +9,7 @@ import me.pixka.kt.pibase.o.PSIObject
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.t.HttpGetTask
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.u.ReadUtil
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
@@ -16,25 +17,12 @@ import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: HttpService,
+class ReadPressureTask(p: Pijob, var mtp:MactoipService,
                        var rps: PressurevalueService, var pideviceService: PideviceService,
                        var ntf: NotifyService) :
-        DefaultWorker(p, null, null, null, logger) {
+        DWK(p),Runnable {
     val om = ObjectMapper()
     var token = System.getProperty("errortoekn")
-    var exitdate:Date?=null
-    fun setEnddate() {
-        var t = 0L
-        if (pijob.waittime != null)
-            t = pijob.waittime!!
-        if (pijob.runtime != null)
-            t += pijob.runtime!!
-        val calendar = Calendar.getInstance() // gets a calendar using the default time zone and locale.
-        calendar.add(Calendar.SECOND, t.toInt())
-        exitdate = calendar.time
-        if (t == 0L || !isRun)
-            isRun = false//ออกเลย
-    }
     override fun run() {
         var p = 0.0
         try {
@@ -42,16 +30,16 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
             status = "Start run : ${Date()}"
             isRun = true
             Thread.currentThread().name = "JOBID:${pijob.id}  ReadPressure:${pijob.name} ${startRun}"
-            var ip: Iptableskt? = null
+            var ip:String?=null
             try {
-                ip = ips.findByMac(pijob.desdevice?.mac!!)
+                  ip = mtp.mactoip(pijob.desdevice?.mac!!)
             } catch (e: Exception) {
                 logger.error("Find device error ${pijob.desdevice?.mac!!} ${e.message}")
             }
             if (ip != null) {
-                var ipstring = ip.ip
+
                 try {
-                    var re = httpService.get("http://${ipstring}",2000)
+                    var re = mtp.http.get("http://${ip}",10000)
                     var o = om.readValue<PSIObject>(re)
                     logger.debug("${pijob.name} Get pressure ${o}")
                     status = "${pijob.name} Get pressure ${o}"
@@ -60,7 +48,6 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
                         pv.device = pideviceService.findByMac(pijob.desdevice?.mac!!)
                     } catch (e: Exception) {
                         logger.error("Other device not found ${e.message}")
-//                        pv.device = pideviceService.create(ip.mac!!,ip.mac!!)
                     }
                     pv.valuedate = Date()
                     pv.pressurevalue = o.psi
@@ -101,24 +88,19 @@ class ReadPressureTask(p: Pijob, var ips: IptableServicekt,val httpService: Http
 
 
 
-        setEnddate()
+        exitdate = findExitdate(pijob)
         status = "${pijob.name} Run Readpressure job  end  PSI:${p}"
         logger.debug("${pijob.name} Run Readpressure job  end ")
 
 
     }
 
-    override fun exitdate(): Date? {
-        return exitdate
-    }
 
     override fun toString(): String {
         return "${pijob.name}"
     }
 
-    companion object {
-        internal var logger = LoggerFactory.getLogger(ReadPressureTask::class.java)
-    }
+    var logger = LoggerFactory.getLogger(ReadPressureTask::class.java)
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)

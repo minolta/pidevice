@@ -33,8 +33,8 @@ class SendLog(val service: LogService, val httpService: HttpService) {
 
 
         } catch (e: Exception) {
-            service.createERROR("ERROR ${e.message}", Date(), "Sendlog", "",
-                    "38", "send")
+//            service.createERROR("ERROR ${e.message}", Date(), "Sendlog", "",
+//                    "38", "send")
             logger.error(e.message)
         }
     }

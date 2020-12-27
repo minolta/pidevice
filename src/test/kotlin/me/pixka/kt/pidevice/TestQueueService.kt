@@ -51,9 +51,9 @@ class TestQueueService {
 //        Assertions.assertEquals(20,qs.queue.size)
 
 
-        qs.peek()
+//        qs.peek()
         Assertions.assertEquals(10,qs.queue.size)
-        qs.poll()
+//        qs.poll()
         Assertions.assertEquals(9,qs.queue.size)
 
         println(qs.queue.size)

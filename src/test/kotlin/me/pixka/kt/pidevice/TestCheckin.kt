@@ -20,7 +20,7 @@ class TestCheckin {
         try {
 
             val i = Infoobj()
-            i.ip = System.getProperty("fixip")
+            i.ip = "192.168.88.255"
             i.mac = System.getProperty("mac")
             i.password = UUID.randomUUID().toString() // สร้าง ยฟหหไนพก
             var re = httpService.post(url,i,2000)
