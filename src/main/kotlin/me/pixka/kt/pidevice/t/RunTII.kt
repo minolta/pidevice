@@ -18,28 +18,45 @@ import java.util.concurrent.CompletableFuture
 class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val taskService: TaskService,
              val readTmpService: ReadTmpService, val mtp: MactoipService) {
 
+    var buffer = ArrayList<Pijob>()
     @Scheduled(fixedDelay = 1000)
     fun getToRun() {
         var jobs = findJob.loadjob("runtbyd1")
+
         if (jobs != null) {
             jobs.forEach {
-                if (checkTimeService.checkTime(it, Date()) && !taskService.checkrun(it)) {
-                    CompletableFuture.supplyAsync {
-                        try {
-                            if (readTmp(it) && !taskService.checkrun(it)) {
-                                var t = D1TWorkerII(it, mtp, readTmpService)
-                                taskService.run(t)
+                var id = it.id
+
+                //ตรวจสอบว่ามีการทำงานอยู่เปล่า
+                if(buffer.find { it.id == id }==null) {
+
+                    if (checkTimeService.checkTime(it, Date()) && !taskService.checkrun(it)) {
+                        CompletableFuture.supplyAsync {
+
+                            try {
+                                buffer.add(it) //เพิ่มเข้าไปว่า run แล้ว
+                                if (readTmp(it) && !taskService.checkrun(it)) {
+                                    var t = D1TWorkerII(it, mtp, readTmpService)
+                                    taskService.run(t)
+                                }
+                            } catch (e: Exception) {
+                                logger.error("ERROR ${e.message} ${it.name}")
                             }
-                        } catch (e: Exception) {
-                            logger.error("ERROR ${e.message} ${it.name}")
+
+                            it
+                        }.thenAccept {
+                            buffer.remove(it) //ถ้า run แล้วก็เอาออกจะระบบซะ
+                        }.exceptionally {
+                            logger.error(it.message)
+                            null
                         }
 
-                    }.exceptionally {
-                        logger.error(it.message)
-                        null
+
                     }
-
-
+                }
+                else
+                {
+                    //ยัง run ไม่จบไม่ run
                 }
             }
         }
@@ -51,7 +68,7 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
 
             var t: BigDecimal? = null
             try {
-                t = mtp.readTmp(pijob)
+                t = mtp.readTmp(pijob,10000)
             } catch (e: Exception) {
                 logger.error("Read Tmp ERROR ${e.message}")
                 throw e
@@ -65,7 +82,7 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
         } catch (e: Exception) {
             logger.error(" Read Tmp: ERROR ${e.message} ${pijob.name}  ${pijob.desdevice?.name}")
             mtp.lgs.createERROR("${e.message} ${pijob.name}  ${pijob.desdevice?.name}", Date(),
-                    "D1TWorkerII", Thread.currentThread().name, "59", "readTmp()",
+                    "RUNTII", Thread.currentThread().name, "54", "readTmp()",
                     pijob.desdevice?.mac, pijob.refid)
             throw e
         }

@@ -32,7 +32,6 @@ class ReadPressureTask(p: Pijob, var mtp:MactoipService,
             Thread.currentThread().name = "JOBID:${pijob.id}  ReadPressure:${pijob.name} ${startRun}"
             var ip:String?=null
             try {
-//                ip = ips.findByMac(pijob.desdevice?.mac!!)
                   ip = mtp.mactoip(pijob.desdevice?.mac!!)
             } catch (e: Exception) {
                 logger.error("Find device error ${pijob.desdevice?.mac!!} ${e.message}")
@@ -40,7 +39,7 @@ class ReadPressureTask(p: Pijob, var mtp:MactoipService,
             if (ip != null) {
 
                 try {
-                    var re = mtp.http.get("http://${ip}",2000)
+                    var re = mtp.http.get("http://${ip}",10000)
                     var o = om.readValue<PSIObject>(re)
                     logger.debug("${pijob.name} Get pressure ${o}")
                     status = "${pijob.name} Get pressure ${o}"

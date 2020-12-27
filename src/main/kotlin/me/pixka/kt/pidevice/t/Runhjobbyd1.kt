@@ -22,11 +22,13 @@ import java.util.*
  * เป็น การ run แบบเรียงลำดับ
  */
 @Component
-class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
-                  val task: TaskService,
-                  val mtp: MactoipService,
-                  val groups: GroupRunService, val lgs: LogService,
-                  val ntfs: NotifyService, val queue: QueueService) {
+class Runhjobbyd1(
+    val pjs: PijobService, val findJob: FindJob,
+    val task: TaskService,
+    val mtp: MactoipService,
+    val groups: GroupRunService, val lgs: LogService,
+    val ntfs: NotifyService, val queue: QueueService
+) {
     val om = ObjectMapper()
 
     fun rQ() {
@@ -38,16 +40,20 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
             }
         } catch (e: Exception) {
             logger.error("ERROR ${e.message}")
-            lgs.createERROR("${e.message}", Date(),
-                    "Runhjobbyd1", "", "", "rQ()",
-                    System.getProperty("mac"))
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "Runhjobbyd1", "", "", "rQ()",
+                System.getProperty("mac")
+            )
         }
     }
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
-        rQ()
+//        rQ()
+
         try {
+            runQ2()
             //Run ปกติ
             var list = findJob.loadjob("runhbyd1")
             list?.forEach {
@@ -115,16 +121,20 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                 return h
             }
             logger.error("getHobj IP is Null ")
-            lgs.createERROR("IP is null ", Date(),
-                    "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
-                    job.refid)
+            lgs.createERROR(
+                "IP is null ", Date(),
+                "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
+                job.refid
+            )
             throw Exception("Ip is null")
 
         } catch (e: Exception) {
             logger.error("getHobj : ERROR: ${e.message} ")
-            lgs.createERROR("${e.message}", Date(),
-                    "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
-                    job.refid)
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "Runhjobbyd1", "", "114", "getHobj", job.desdevice?.mac,
+                job.refid
+            )
             throw e
         }
 
@@ -147,10 +157,12 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
             }
         } catch (e: Exception) {
             logger.error("RUN From Q : ${e.message}")
-            lgs.createERROR("${e.message}", Date(),
-                    "Runhjobbyd1", Thread.currentThread().name, "140", "runfromQ",
-                    q.pijob?.desdevice?.mac,
-                    q.pijob?.desdevice?.refid)
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "Runhjobbyd1", Thread.currentThread().name, "140", "runfromQ",
+                q.pijob?.desdevice?.mac,
+                q.pijob?.desdevice?.refid
+            )
         }
     }
 
@@ -160,11 +172,87 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
             logger.debug("Remove ${job.name} from queue is ${removed}")
         } catch (e: Exception) {
             logger.error("Remove Q ${job.name} ERROR ${e.message}")
-            lgs.createERROR("${e.message}", Date(),
-                    "Runhjobd1", Thread.currentThread().name, "156", "removeJobFromQ",
-                    job.desdevice?.mac, job.refid)
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "Runhjobd1", Thread.currentThread().name, "156", "removeJobFromQ",
+                job.desdevice?.mac, job.refid
+            )
 
         }
+    }
+
+    /**
+    //ใช้สำหรับตรวจสอบว่าอันไหนมีใน task บ้างถ้ามีแล้วเอาออกเลย
+     */
+    fun maskCurrentrun() {
+        try {
+            queue.queue.forEach {
+                if (task.checkrun(it.pijob!!)) {
+                    it.toremove = true
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("ERROR maskCurrentrun ${e.message}")
+            throw e
+        }
+    }
+
+    /**
+    //ใช้หาว่า หมดเวลายัง
+     */
+    fun maskbyTime() {
+        try {
+            queue.queue.forEach {
+                if (!task.checktime(it.pijob!!)) {
+                    it.toremove = true
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("MakeByTime eRROR ${e.message}")
+            throw e
+        }
+    }
+
+    /**
+     * เอาที่ toremove = true ออกให้หมด
+     */
+    fun remove() {
+        try {
+            queue.queue = queue.queue.filter { it.toremove == false } as ArrayList<Qobject>
+        } catch (e: Exception) {
+            logger.error("Error remove all ${e.message}")
+            throw e
+        }
+    }
+
+    /**
+     * Run ใน คิวก่อน
+     */
+    fun runQ2() {
+        try {
+            maskCurrentrun()
+            maskbyTime()
+            remove()
+
+            queue.queue.forEach {
+                if (groups.c(it.pijob!!)) {//ไม่มีใครใช้น้ำ
+                    var t = D1hjobWorker(it.pijob!!, mtp, ntfs)
+                    if (task.run(t)) {
+                        it.toremove = true //เพราะ run แล้ว
+                        logger.debug("Run ${it.pijob?.name}")
+                    }
+                    //มีปัญหาไม่ run รอต่อไป
+                }
+                //else มีคนใช้น้ำอยู่ก็รอต่อไป
+
+
+            }
+        } catch (e: Exception) {
+            logger.error("RunQ2 ${e.message}")
+
+        }
+
+
     }
 
     /**
@@ -184,9 +272,11 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                         }
                     } catch (e: Exception) {
                         logger.error("runQueue : ${e.message}")
-                        lgs.createERROR("${e.message}", Date(), "Runhjobbyd1",
-                                Thread.currentThread().name, "178", "runQueue()",
-                                "${mac}", q.pijob?.refid)
+                        lgs.createERROR(
+                            "${e.message}", Date(), "Runhjobbyd1",
+                            Thread.currentThread().name, "178", "runQueue()",
+                            "${mac}", q.pijob?.refid
+                        )
                     }
 
                     if (q.pijob != null) {
@@ -209,19 +299,19 @@ class Runhjobbyd1(val pjs: PijobService, val findJob: FindJob,
                 }
         } catch (e: Exception) {
             logger.error("runQueue : ERROR ${e.message}")
-            lgs.createERROR("${e.message}", Date(), "Runhjobbyd1",
-                    "", "173", "runQueue()", mac, refid)
+            lgs.createERROR(
+                "${e.message}", Date(), "Runhjobbyd1",
+                "", "173", "runQueue()", mac, refid
+            )
         }
-
     }
-
     var logger = LoggerFactory.getLogger(Runhjobbyd1::class.java)
 }
 
 @Service
 class QueueService {
     //สำหรับจัดคิวให้ทุก job ได้ทำงานไม่ต้องแยงกัน
-    var queue = LinkedList<Qobject>()
+    var queue = ArrayList<Qobject>()
     fun inqueue(j: Pijob): Boolean {
         var ii = queue.find { it.pijob?.id?.toInt() == j.id.toInt() }
         logger.debug("inqueue have ${ii} in queue")
@@ -231,9 +321,6 @@ class QueueService {
         return false
     }
 
-    fun peek(): Qobject? {
-        return queue.peek()
-    }
 
     fun remove(p: Pijob): Boolean {
         var toremove: Qobject? = null
@@ -273,7 +360,7 @@ class QueueService {
         return false
     }
 
-    fun poll() = queue.poll()
+    //    fun poll() = queue.poll()
     fun printqueue() {
         logger.debug("queue size : ${queue.size} ${Date()}")
         queue.map {
@@ -285,6 +372,21 @@ class QueueService {
     var logger = LoggerFactory.getLogger(QueueService::class.java)
 }
 
-class Qobject(var pijob: Pijob? = null, var addDate: Date? = null, var message: String? = null)
+class Qobject(
+    var pijob: Pijob? = null,
+    var addDate: Date? = null,
+    var message: String? = null,
+    var toremove: Boolean = false
+) {
+    override fun equals(other: Any?): Boolean {
+
+        if (other is Pijob) {
+            if (other.id == this.pijob?.id)
+                return true
+        }
+
+        return false
+    }
+}
 
 

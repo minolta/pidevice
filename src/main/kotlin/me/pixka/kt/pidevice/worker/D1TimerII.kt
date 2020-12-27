@@ -28,7 +28,8 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
             if (t == null || t.toDouble() > pijob.thigh!!.toDouble()) {
                 status = "Low tmp is high then thigh exit job"
                 isRun = false
-                throw Exception("Low tmp is high then thigh exit job")
+                return //ออกเลย
+//                throw Exception("Low tmp is high then thigh exit job")
             }
         } catch (e: Exception) {
             status = "Have error ${e.message}"

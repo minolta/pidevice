@@ -107,7 +107,7 @@ class MactoipService(
 
     }
 
-    fun readTmp(pijob: Pijob, timeout: Int = 2000): BigDecimal? {
+    fun readTmp(pijob: Pijob, timeout: Int = 20000): BigDecimal? {
         try {
             val ip = mactoip(pijob.desdevice?.mac!!)
             if (ip != null) {
