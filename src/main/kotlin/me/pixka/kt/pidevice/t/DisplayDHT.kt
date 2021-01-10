@@ -5,6 +5,7 @@ import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.DisplaydhtWorker
+import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -24,17 +25,16 @@ class DisplayDHT(val findJob: FindJob,val task:TaskService,val mtp: MactoipServi
 
                     if(!task.checkrun(it))
                     {
-
-                        var ports = portstatusinjobService.findByPijobid(it.id)
-                        var t = DisplaydhtWorker(it,mtp,ports)
+                        var t = DisplaydhtWorker(it,mtp)
                         task.run(t)
-
-
                     }
                 }
             }
         } catch (e: Exception) {
-
+            logger.error("ERROR DISPLAY DHT ${e.message}")
         }
     }
+
+    var logger = LoggerFactory.getLogger(DisplayDHT::class.java)
+
 }

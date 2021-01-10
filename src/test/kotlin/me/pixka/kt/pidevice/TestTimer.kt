@@ -2,22 +2,16 @@ package me.pixka.kt.pidevice
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.verify
-import javafx.concurrent.Worker
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
-import me.pixka.kt.pidevice.s.Checkinrang
 import me.pixka.kt.pidevice.s.MactoipService
-import me.pixka.kt.pidevice.t.RunDisplaydusttoTm1
 import me.pixka.kt.pidevice.worker.D1TimerII
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
-import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -95,7 +89,7 @@ class TestTimer {
             }
             for (i in 0..waittime) {
                 var t = mtp.readTmp(pijob)
-                if (t != null && (t.toDouble() >= pijob.tlow!!.toDouble() && t.toDouble() < pijob.thigh!!.toDouble()  )) {
+                if (t != null && (t.toDouble() >= pijob.tlow!!.toDouble() && t.toDouble() < pijob.thigh!!.toDouble())) {
                     return true
                 }
                 TimeUnit.SECONDS.sleep(1)
