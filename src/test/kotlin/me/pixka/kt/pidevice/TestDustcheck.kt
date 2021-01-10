@@ -10,7 +10,6 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.worker.DustcheckWorker
 import org.junit.jupiter.api.Test
-import org.omg.CORBA.Object
 import java.math.BigDecimal
 
 class TestDustcheck {

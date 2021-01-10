@@ -14,17 +14,17 @@ class DisplaytmpWorker(p: Pijob, val mtp: MactoipService) : DWK(p), Runnable {
         startRun = Date()
         isRun = true
         status = "Start run"
-        var display = true;
+        var display = true
         var mac: String? = null
         var refid: Long? = 0L
 
         try {
-            var t = mtp.readTmp(pijob,15000)
+            var t = mtp.readTmp(pijob, 15000)
             if (pijob.tlow != null && t != null) //แสดงว่ามีการกำหนดอุณหภูมิขั้นตำสำหรับแสดงผล
             {
                 val low = pijob.tlow?.toDouble()
                 if (t.toDouble() < low!!) //ตำกว่ากำหนด
-                    display=false
+                    display = false
             }
             var name = pijob.desdevice?.name
             var ports = mtp.getPortstatus(pijob)
@@ -35,7 +35,7 @@ class DisplaytmpWorker(p: Pijob, val mtp: MactoipService) : DWK(p), Runnable {
                 throw Exception("Ports is null")
 //            if (t != null && ports != null) {
 
-            if(display) {
+            if (display) {
                 ports.filter { it.enable == true }.forEach {
                     val displayip = mtp.mactoip(it.device?.mac!!)
                     mac = it.device?.mac
@@ -54,29 +54,33 @@ class DisplaytmpWorker(p: Pijob, val mtp: MactoipService) : DWK(p), Runnable {
                         status = "set Tmp ${name} ${t} ${re}"
                         exitdate = findExitdate(pijob)
                     } else {
+                        isRun = false
+                        status = "Can not connect to display device"
                         mtp.lgs.createERROR(
                             "display ip no found", Date(), "DisplaytmpWorker",
                             "", "79", "run()", it.device?.mac
                         )
                         logger.error("Display ip not found")
                         status = "Display ip not found"
-                        isRun = false
+
                     }
                 }
+            } else {
+                //ถ้าไม่มี display ก็จบระบบ
+                status = "No display"
+                isRun = false
             }
 
-//            } else {
-//                logger.error(" T:${t}   POST${ports}   ${pijob.name} ${pijob.desdevice?.mac}")
-//                isRun = false
-//            }
+
         } catch (e: Exception) {
+            isRun = false
             logger.error("Run() ${e.message}")
             status = "${e.message}"
             mtp.lgs.createERROR(
                 "${e.message}", Date(),
                 "DisplaytmpWork", "", "63", "run()", mac, refid
             )
-            isRun = false
+
         }
 
 
