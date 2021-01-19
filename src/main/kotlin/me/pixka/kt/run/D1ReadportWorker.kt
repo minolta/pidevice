@@ -27,16 +27,17 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
             isRun = false
             status = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
-            mtp.lgs.createERROR("${e.message}", Date(),
-                    "D1readportWorker", Thread.currentThread().name, "22",
-                    "run", pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id)
-
+            mtp.lgs.createERROR(
+                "${e.message}", Date(),
+                "D1readportWorker", Thread.currentThread().name, "22",
+                "run", pijob.desdevice?.mac, pijob.refid, pijob.pidevice_id
+            )
 
 
         }
 
         waitstatus = true
-        exitdate = findExitdate(pijob,(wt+rt).toLong())
+        exitdate = findExitdate(pijob, (wt + rt).toLong())
     }
 
     var rt = 0
@@ -61,13 +62,17 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
                     var re = mtp.setport(it)
                     var st = mtp.om.readValue<Status>(re)
                     status = "Set port ${it.portname!!.name} ${st.uptime}"
+
                 } catch (e: Exception) {
-                    mtp.lgs.createERROR("${e.message}", Date(),
-                            "D1ReadportWorker",
-                            Thread.currentThread().name, "61", "goII()", it.device?.mac,
-                            it.pijob?.refid
-                    )
                     status = "ERROR ${e.message}"
+                    mtp.lgs.createERROR(
+                        "${e.message}", Date(),
+                        "D1ReadportWorker",
+                        Thread.currentThread().name, "61", "goII()", it.device?.mac,
+                        it.pijob?.refid
+                    )
+                    isRun = false
+                    throw e
                 }
             }
         }
@@ -100,11 +105,13 @@ class PorttoCheck(var name: String? = null, var check: Int? = null) {
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class DPortstatus(var version: Int? = null,
-                  var d1: Int? = null, var d2: Int? = 0, var d3: Int? = 0,
-                  var d4: Int? = 0, var d5: Int? = 0, var d6: Int? = 0,
-                  var d7: Int? = 0, var d8: Int? = 0, var name: String? = null,
-                  var value: Int? = null, var mac: String? = null) {
+class DPortstatus(
+    var version: Int? = null,
+    var d1: Int? = null, var d2: Int? = 0, var d3: Int? = 0,
+    var d4: Int? = 0, var d5: Int? = 0, var d6: Int? = 0,
+    var d7: Int? = 0, var d8: Int? = 0, var name: String? = null,
+    var value: Int? = null, var mac: String? = null
+) {
     override fun toString(): String {
         return "D1:${d1} D2:${d2} D3:${d3} D4:${d4} D5:${d5} D6:${d6} D7:${d7} D8:${d8}"
     }
