@@ -8,7 +8,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Service
-class CheckTimeService(val lgs: LogService) {
+class CheckTimeService(var lgs: LogService?=null) {
 
     var df = SimpleDateFormat("HH:mm")
     fun findExitdate(job: Pijob): Date? {
@@ -62,7 +62,8 @@ class CheckTimeService(val lgs: LogService) {
                             return true
                     }
         } catch (e: Exception) {
-            lgs.createERROR("${e.message}", Date(),
+           if(lgs!=null)
+            lgs?.createERROR("${e.message}", Date(),
                     "CheckTimeService", "", "", "",
                     job.desdevice?.mac, job.refid)
             logger.error("ERROR  ${e.message} JOB: ${job.name}")

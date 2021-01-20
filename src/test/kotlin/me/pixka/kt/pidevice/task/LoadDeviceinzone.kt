@@ -19,9 +19,5 @@ class LoadDeviceinzone {
     @Test
     fun testload() {
 
-//       var re =  mts.http.get("http://localhost:8080/deviceinzone/list")
-//
-//        println(re)
-//        Assertions.assertNotNull(re)
     }
 }

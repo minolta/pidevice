@@ -1,9 +1,7 @@
 package me.pixka.kt.pidevice.s
 
 import me.pixka.kt.pibase.d.Pijob
-import me.pixka.kt.pidevice.t.OnpumbWorker
-import me.pixka.kt.pidevice.worker.NotifyPressureWorker
-import me.pixka.kt.run.*
+import me.pixka.kt.run.PijobrunInterface
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Scheduled
@@ -17,7 +15,7 @@ import kotlin.collections.ArrayList
  * ใช้สำหรับ run task ต่างๆ
  */
 @Service
-class TaskService(val context: ApplicationContext) {
+class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
 
     val pool = context.getBean("pool") as ExecutorService
@@ -51,7 +49,7 @@ class TaskService(val context: ApplicationContext) {
 
     fun checkrun(w: Pijob): Boolean {
         try {
-            if(runinglist.size < 1)
+            if (runinglist.size < 1)
                 return false //ถ้าไม่มี job เลย ส่ง
             var run = runinglist.find {
                 it.getPijobid() == w.id && it.runStatus()
@@ -125,8 +123,10 @@ class TaskService(val context: ApplicationContext) {
         return exitdate
     }
 
-    @Scheduled(initialDelay = 120000,
-            fixedDelay = 120000)
+    @Scheduled(
+        initialDelay = 120000,
+        fixedDelay = 120000
+    )
     fun removeEndjob(): List<PijobrunInterface> {
         var notrun = runinglist.filter { it.runStatus() == false }
         runinglist.removeAll(notrun)
@@ -137,41 +137,45 @@ class TaskService(val context: ApplicationContext) {
 
     /**
      * ตรวจสอบว่าอยู่ในช่วงเวลาหรือเปล่า
+     * ใช้ checktimeservice
      */
-    fun checktime(job: Pijob): Boolean {
-        var can = false
-        try {
-            var n = df.format(Date())
-            var now = df.parse(n)
-            logger.debug("checktime  ${job.name} : N:${n} now ${now} now time ${now.time}")
-            logger.debug("checktime  ${job.name} : s: ${job.stimes} ${now} e:${job.etimes}")
-            if (job.stimes != null && job.etimes != null) {
-                var st = df.parse(job.stimes).time
-                var et = df.parse(job.etimes).time
-                if (st <= now.time && now.time <= et)
-                    can = true
-                logger.debug("checktime  ${job.name} : ${st} <= ${now} <= ${et} can:${can}")
+    fun checktime(job: Pijob) = cts.checkTime(job, Date())
 
-            } else if (job.stimes != null && job.etimes == null) {
-                var st = df.parse(job.stimes).time
-                if (st <= now.time)
-                    can = true
-                logger.debug("checktime ${job.name} : ${st} <= ${now} Can:${can}")
-            } else if (job.stimes == null && job.etimes != null) {
-                var st = df.parse(job.etimes).time
-                if (st <= now.time)
-                    can = true
-                logger.debug("checktime ${job.name} : ${st} >= ${now} can:${can}")
-            } else {
-                logger.debug("${job.name} checktime not set ")
-                can = true
-            }
-        } catch (e: Exception) {
-            logger.error("checktime  ${job.name} : ${e.message}")
-        }
 
-        return can
-    }
+//    fun checktime(job: Pijob): Boolean {
+//        var can = false
+//        try {
+//            var n = df.format(Date())
+//            var now = df.parse(n)
+//            logger.debug("checktime  ${job.name} : N:${n} now ${now} now time ${now.time}")
+//            logger.debug("checktime  ${job.name} : s: ${job.stimes} ${now} e:${job.etimes}")
+//            if (job.stimes != null && job.etimes != null) {
+//                var st = df.parse(job.stimes).time
+//                var et = df.parse(job.etimes).time
+//                if (st <= now.time && now.time <= et)
+//                    can = true
+//                logger.debug("checktime  ${job.name} : ${st} <= ${now} <= ${et} can:${can}")
+//
+//            } else if (job.stimes != null && job.etimes == null) {
+//                var st = df.parse(job.stimes).time
+//                if (st <= now.time)
+//                    can = true
+//                logger.debug("checktime ${job.name} : ${st} <= ${now} Can:${can}")
+//            } else if (job.stimes == null && job.etimes != null) {
+//                var st = df.parse(job.etimes).time
+//                if (st <= now.time)
+//                    can = true
+//                logger.debug("checktime ${job.name} : ${st} >= ${now} can:${can}")
+//            } else {
+//                logger.debug("${job.name} checktime not set ")
+//                can = true
+//            }
+//        } catch (e: Exception) {
+//            logger.error("checktime  ${job.name} : ${e.message}")
+//        }
+//
+//        return can
+//    }
 
     companion object {
         internal var logger = LoggerFactory.getLogger(TaskService::class.java)
