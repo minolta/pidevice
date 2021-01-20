@@ -11,7 +11,11 @@ import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
-class RundistanceJob(val findJob: FindJob, val mtp: MactoipService, val task: TaskService, var ps: PortstatusinjobService) {
+class RundistanceJob(
+    val findJob: FindJob,
+    val mtp: MactoipService, val task: TaskService,
+    var ps: PortstatusinjobService
+) {
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
@@ -19,22 +23,26 @@ class RundistanceJob(val findJob: FindJob, val mtp: MactoipService, val task: Ta
             var jobs = findJob.loadjob("distancejob")
             if (jobs != null) {
                 jobs.forEach {
-
                     if (!task.checkrun(it)) {
-                        var t = DistanceWorker(it, mtp, ps)
-
-                        if (!task.run(t)) {
-                            mtp.lgs.createERROR("Not run job ${it.name}", Date(),
+                        if (task.checktime(it)) {
+                            var t = DistanceWorker(it, mtp, ps)
+                            if (!task.run(t)) {
+                                mtp.lgs.createERROR(
+                                    "Not run job ${it.name}", Date(),
                                     "RundistanceJob", Thread.currentThread().name, "31",
-                                    "run()", it.desdevice?.mac, it.refid, it.pidevice?.refid)
-                            logger.error("Not run job ${it.name}")
+                                    "run()", it.desdevice?.mac, it.refid, it.pidevice?.refid
+                                )
+                                logger.error("Not run job ${it.name}")
+                            }
                         }
                     }
                 }
             }
         } catch (e: Exception) {
-            mtp.lgs.createERROR("${e.message}", Date(),
-                    "RundistanceJob", Thread.currentThread().name, "16", "run()")
+            mtp.lgs.createERROR(
+                "${e.message}", Date(),
+                "RundistanceJob", Thread.currentThread().name, "16", "run()"
+            )
             logger.error("${e.message}")
         }
     }

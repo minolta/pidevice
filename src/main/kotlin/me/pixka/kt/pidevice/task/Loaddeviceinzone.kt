@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class Loaddeviceinzone(
+class Loaddiz(
     val mtp: MactoipService, val ds: PideviceService, val pgs: PijobgroupService,
     val dizs: DeviceinzoneService
 ) {
@@ -55,5 +55,5 @@ class Loaddeviceinzone(
         }
     }
 
-    var logger = LoggerFactory.getLogger(Loaddeviceinzone::class.java)
+    var logger = LoggerFactory.getLogger(Loaddiz::class.java)
 }

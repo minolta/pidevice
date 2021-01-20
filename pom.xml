@@ -11,7 +11,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.7.RELEASE</version>
+        <version>2.3.8.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.11.1</version>
+<!--            <version>2.11.1</version>-->
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -90,7 +90,7 @@
         <dependency>
             <groupId>me.pixka.kt</groupId>
             <artifactId>pibasekt</artifactId>
-            <version>1.0.5-stable</version>
+            <version>1.0.6-stable</version>
         </dependency>
 
         <dependency>
