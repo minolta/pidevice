@@ -28,35 +28,38 @@ class RunTII(val findJob: FindJob, val checkTimeService: CheckTimeService, val t
                 var id = it.id
 
                 //ตรวจสอบว่ามีการทำงานอยู่เปล่า
-                if(buffer.find { it.id == id }==null) {
+                try {
+                    if (buffer.find { it.id == id } == null) {
 
-                    if (checkTimeService.checkTime(it, Date()) && !taskService.checkrun(it)) {
-                        CompletableFuture.supplyAsync {
+                        if (checkTimeService.checkTime(it, Date()) && !taskService.checkrun(it)) {
+                            CompletableFuture.supplyAsync {
 
-                            try {
-                                buffer.add(it) //เพิ่มเข้าไปว่า run แล้ว
-                                if (readTmp(it) && !taskService.checkrun(it)) {
-                                    var t = D1TWorkerII(it, mtp, readTmpService)
-                                    taskService.run(t)
+                                try {
+                                    buffer.add(it) //เพิ่มเข้าไปว่า run แล้ว
+                                    if (readTmp(it) && !taskService.checkrun(it)) {
+                                        var t = D1TWorkerII(it, mtp, readTmpService)
+                                        taskService.run(t)
+                                    }
+                                } catch (e: Exception) {
+                                    logger.error("ERROR ${e.message} ${it.name}")
                                 }
-                            } catch (e: Exception) {
-                                logger.error("ERROR ${e.message} ${it.name}")
+
+                                it
+                            }.thenAccept {
+                                buffer.remove(it) //ถ้า run แล้วก็เอาออกจะระบบซะ
+                            }.exceptionally {
+                                logger.error(it.message)
+                                null
                             }
 
-                            it
-                        }.thenAccept {
-                            buffer.remove(it) //ถ้า run แล้วก็เอาออกจะระบบซะ
-                        }.exceptionally {
-                            logger.error(it.message)
-                            null
+
                         }
-
-
+                    } else {
+                        //ยัง run ไม่จบไม่ run
                     }
-                }
-                else
+                }catch (e:Exception)
                 {
-                    //ยัง run ไม่จบไม่ run
+                    logger.error(e.message)
                 }
             }
         }
