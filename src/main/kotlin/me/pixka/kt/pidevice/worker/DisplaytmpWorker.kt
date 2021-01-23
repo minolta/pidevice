@@ -57,10 +57,10 @@ class DisplaytmpWorker(p: Pijob, val mtp: MactoipService) : DWK(p), Runnable {
                         isRun = false
                         status = "Can not connect to display device"
                         mtp.lgs.createERROR(
-                            "display ip no found", Date(), "DisplaytmpWorker",
-                            "", "79", "run()", it.device?.mac
+                            "JOB:${pijob.name} display ip no found", Date(), "DisplaytmpWorker",
+                            Thread.currentThread().name, "79", "run()", it.device?.mac
                         )
-                        logger.error("Display ip not found")
+                        logger.error("JOB:${pijob.name} : Display ip not found")
                         status = "Display ip not found"
 
                     }
@@ -74,19 +74,13 @@ class DisplaytmpWorker(p: Pijob, val mtp: MactoipService) : DWK(p), Runnable {
 
         } catch (e: Exception) {
             isRun = false
-            logger.error("Run() ${e.message}")
+            logger.error("Run()  JOB ${pijob.name}  : ${e.message}")
             status = "${e.message}"
             mtp.lgs.createERROR(
-                "${e.message}", Date(),
-                "DisplaytmpWork", "", "63", "run()", mac, refid
+                "JOB: ${pijob.name} ${e.message}", Date(),
+                "DisplaytmpWork", Thread.currentThread().name, "63", "run()", mac, refid
             )
-
         }
-
-
-        println("StartDATE: ${startRun} exitdate:${exitdate}")
-
-//        status = "Job end wait for exit ${exitdate}"
         //ถ้าทุกอย่างปกติกให้ taskserver เป็น คน end เอง
     }
 

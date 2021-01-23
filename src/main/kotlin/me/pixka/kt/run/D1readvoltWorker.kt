@@ -6,14 +6,16 @@ import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Vbatt
 import me.pixka.kt.pibase.d.VbattService
 import me.pixka.kt.pibase.o.VbattObject
-import me.pixka.kt.pibase.s.GpioService
 import me.pixka.kt.pidevice.s.MactoipService
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 import java.util.*
 
-class D1readvoltWorker(job: Pijob,
-                       val pss: VbattService, var mtp: MactoipService) : DWK(job), Runnable {
+class D1readvoltWorker(
+    job: Pijob,
+    val pss: VbattService,
+    var mtp: MactoipService
+) : DWK(job), Runnable {
     override fun run() {
         isRun = true
         startRun = Date()
@@ -32,20 +34,24 @@ class D1readvoltWorker(job: Pijob,
                 status = "Wait ${pijob.waittime?.toLong()}"
                 exitdate = findExitdate(pijob)
             } else {
-                logger.error("Mac not have")
+                logger.error("${pijob.name} : Mac not have")
                 status = "Noht have mac "
                 isRun = false
-                mtp.lgs.createERROR("Not have mac", Date(),
-                        "D1readvoltWorker", Thread.currentThread().name, "24", "run()",
-                        "")
+                mtp.lgs.createERROR(
+                    "Not have mac", Date(),
+                    "D1readvoltWorker", Thread.currentThread().name, "24", "run()",
+                    ""
+                )
             }
 
         } catch (e: Exception) {
             isRun = false
-            logger.error(e.message)
+            logger.error("${pijob.name} ${e.message}")
             status = e.message.toString()
-            mtp.lgs.createERROR(e.message!!, Date(), "D1readvoltWorker", Thread.currentThread().name,
-                    "23", "Run")
+            mtp.lgs.createERROR(
+                e.message!!, Date(), "D1readvoltWorker", Thread.currentThread().name,
+                "23", "Run"
+            )
             throw e
         }
         status = "End job and wait"

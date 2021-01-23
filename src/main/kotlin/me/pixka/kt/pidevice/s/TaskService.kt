@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 /**
@@ -17,7 +18,7 @@ import kotlin.collections.ArrayList
 @Service
 class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
     var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
-
+    var removeStatus = false //สำหรับบอกว่าเอา job ที่ run เสร็จแล้วออกก่อน
     val pool = context.getBean("pool") as ExecutorService
     fun run(work: PijobrunInterface): Boolean {
         try {
@@ -48,18 +49,34 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
      */
 
     fun checkrun(w: Pijob): Boolean {
+        while (removeStatus) {
+            TimeUnit.MILLISECONDS.sleep(
+                100
+            )
+        }
         try {
-            if (runinglist.size < 1)
+            if (runinglist.size == 0)
                 return false //ถ้าไม่มี job เลย ส่ง
+        } catch (e: Exception) {
+            logger.error("Check Running size ERROR ${e.message}")
+            throw e
+        }
+        var pijob: PijobrunInterface?=null
+        try {
             var run = runinglist.find {
-                it.getPijobid() == w.id && it.runStatus()
+                pijob = it
+                if(it!=null)
+                    it.getPijobid() == w.id && it.runStatus()
+                return false
             }
             if (run != null)
                 return true
             return false
         } catch (e: Exception) {
-            e.printStackTrace()
-            logger.error("${e.message}")
+            if(pijob!=null)
+            logger.error("Find job run : ${pijob?.getPJ()?.name}  ID : ${pijob?.getPijobid()}  status : ${pijob?.runStatus()} ${e.message} Buffer ${runinglist}")
+            else
+                logger.error("pijob is null")
         }
         return true //ถ้า ERROR ก็ส่ง 1 ออกไปเลย
     }
@@ -70,6 +87,11 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
      */
     fun checkalreadyrun(w: PijobrunInterface): Boolean {
         try {
+            while (removeStatus) {
+                TimeUnit.MILLISECONDS.sleep(
+                    100
+                )
+            }
             logger.debug("CheckJOB runing size: ${runinglist.size} Job id: ${w.getPijobid()} REFID: ${w}")
             if (runinglist.size > 0) {
                 logger.debug("CheckJOB have thread run ${runinglist.size}")
@@ -86,7 +108,7 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
             }
 
         } catch (e: Exception) {
-            logger.error("Error check run ${e.message} ${w.getPJ()}")
+            logger.error("Error ${w.getPJ().name} check run ${e.message} ")
         }
         return false
     }
@@ -124,13 +146,23 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
     }
 
     @Scheduled(
-        initialDelay = 120000,
-        fixedDelay = 120000
+        initialDelay = 1000,
+        fixedDelay = 15000
     )
     fun removeEndjob(): List<PijobrunInterface> {
-        var notrun = runinglist.filter { it.runStatus() == false }
-        runinglist.removeAll(notrun)
-        return runinglist
+        try {
+            removeStatus = true
+            var result = runinglist.filter { it.runStatus() } as ArrayList<PijobrunInterface>
+            if (result != null) {
+                runinglist = result
+            }
+            removeStatus = false
+            return runinglist
+        } catch (e: Exception) {
+            logger.error("Remove endjob error ERROR ${e.message}")
+            removeStatus = false
+            throw e
+        }
     }
 
     var df = SimpleDateFormat("HH:mm")
@@ -142,42 +174,5 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
     fun checktime(job: Pijob) = cts.checkTime(job, Date())
 
 
-//    fun checktime(job: Pijob): Boolean {
-//        var can = false
-//        try {
-//            var n = df.format(Date())
-//            var now = df.parse(n)
-//            logger.debug("checktime  ${job.name} : N:${n} now ${now} now time ${now.time}")
-//            logger.debug("checktime  ${job.name} : s: ${job.stimes} ${now} e:${job.etimes}")
-//            if (job.stimes != null && job.etimes != null) {
-//                var st = df.parse(job.stimes).time
-//                var et = df.parse(job.etimes).time
-//                if (st <= now.time && now.time <= et)
-//                    can = true
-//                logger.debug("checktime  ${job.name} : ${st} <= ${now} <= ${et} can:${can}")
-//
-//            } else if (job.stimes != null && job.etimes == null) {
-//                var st = df.parse(job.stimes).time
-//                if (st <= now.time)
-//                    can = true
-//                logger.debug("checktime ${job.name} : ${st} <= ${now} Can:${can}")
-//            } else if (job.stimes == null && job.etimes != null) {
-//                var st = df.parse(job.etimes).time
-//                if (st <= now.time)
-//                    can = true
-//                logger.debug("checktime ${job.name} : ${st} >= ${now} can:${can}")
-//            } else {
-//                logger.debug("${job.name} checktime not set ")
-//                can = true
-//            }
-//        } catch (e: Exception) {
-//            logger.error("checktime  ${job.name} : ${e.message}")
-//        }
-//
-//        return can
-//    }
-
-    companion object {
-        internal var logger = LoggerFactory.getLogger(TaskService::class.java)
-    }
+    var logger = LoggerFactory.getLogger(TaskService::class.java)
 }

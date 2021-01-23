@@ -35,6 +35,20 @@ class CheckTimeService(var lgs: LogService?=null) {
             var n = df.parse(df.format(now))
             var nl = n.time
 
+
+            if(job.stimes!=null && job.etimes!=null)
+            {
+                try {
+                    var s = df.parse(job.stimes)
+                    var e = df.parse(job.etimes)
+                    if(s.time<= nl && nl<=e.time)
+                        return true
+                    return false
+                }catch (e:Exception)
+                {
+                    logger.error("Parse ERROR")
+                }
+            }
             //หาว่าเวลาก่อนหน้าที่กำหนดหรือเปล่า
             if (job.stimes.isNullOrEmpty() && job.etimes!=null && job.etimes!!.isNotEmpty()) {
                 var e = df.parse(job.etimes)
@@ -59,8 +73,10 @@ class CheckTimeService(var lgs: LogService?=null) {
             //ทดสอบแบบก่อนเวลา
 
 
+
+
         } catch (e: Exception) {
-            logger.error(e.message)
+            logger.error("Check time ERROR JOB:${job.name}: ${e.message}")
         }
 
         return false
