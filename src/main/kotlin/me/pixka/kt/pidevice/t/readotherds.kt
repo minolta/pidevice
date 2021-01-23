@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.t
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.IptableServicekt
+import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.*
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
@@ -27,22 +28,19 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
 
     @Scheduled(fixedDelay = 5000)
     fun run() {
+        var pijob: Pijob?=null
         try {
             logger.debug("Run #readtemp")
             var jobs = findJob.loadjob("readtemp")
             logger.debug("Found job ${jobs}")
-            if (jobs != null)
 
+            if (jobs != null)
                 for (i in jobs) {
+                    pijob = i
                     logger.debug("Run job ${i}")
                     if (i.tlow != null) {
                         var t= mtp.readTmp(i)?.toDouble()
-                        if (i.tlow?.toDouble()!! <= t!!
-                                && taskService.runinglist.find {
-                                    it.getPijobid() == i.id
-                                            && it.runStatus()
-                                } == null) {
-
+                        if (i.tlow?.toDouble()!! <= t!!){
                             if (!taskService.checkrun(i)) {
                                 var t = ReadTmpTask(i, null, pideviceService, dvs, mtp)
                                 taskService.run(t)
@@ -59,7 +57,7 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
                 }
 
         } catch (e: Exception) {
-            logger.error("Read OTher ds ERROR ${e.message}")
+            logger.error("JOB:${pijob?.name} Read OTher ds ERROR ${e.message}  ")
         }
         logger.debug("End #readtemp")
     }

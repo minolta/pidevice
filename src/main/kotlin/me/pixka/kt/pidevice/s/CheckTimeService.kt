@@ -36,7 +36,7 @@ class CheckTimeService(var lgs: LogService?=null) {
             var nl = n.time
 
 
-            if(job.stimes!=null && job.etimes!=null)
+            if(job.stimes!=null && job.etimes!=null && (job.stimes!!.isNotEmpty() && job.etimes!!.isNotEmpty()))
             {
                 try {
                     var s = df.parse(job.stimes)
@@ -46,7 +46,7 @@ class CheckTimeService(var lgs: LogService?=null) {
                     return false
                 }catch (e:Exception)
                 {
-                    logger.error("Parse ERROR")
+                    logger.error("Parse ERROR ${job.name} ${job.stimes} ${job.etimes}")
                 }
             }
             //หาว่าเวลาก่อนหน้าที่กำหนดหรือเปล่า

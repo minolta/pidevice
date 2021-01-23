@@ -94,6 +94,7 @@ class DustcheckWorker(job: Pijob, var mtp: MactoipService, val ntfs: NotifyServi
     }
 
     fun getDustinfo(): Dustobj {
+        status = "Check dust ${pijob.desdevice?.name} "
         try {
             var t = mtp.readStatus(pijob)
             return mtp.om.readValue<Dustobj>(t)

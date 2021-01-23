@@ -18,8 +18,10 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.ThreadPoolExecutor
 
 @RestController
-class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
-               val ips: IptableServicekt, val context: ApplicationContext, val httpService: HttpService) {
+class TaskList(
+    val taskService: TaskService, val pjs: PijobService, val readUtil: ReadUtil,
+    val ips: IptableServicekt, val context: ApplicationContext, val httpService: HttpService
+) {
 
 
     @CrossOrigin
@@ -95,24 +97,32 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     @ResponseBody
     fun list(): ArrayList<tl> {
 
-        var list = ArrayList<tl>()
-        var runs = taskService.runinglist
-        for (run in runs) {
-            try {
-                if(run!=null) {
+
+        try {
+            var list = ArrayList<tl>()
+            var runs = taskService.runinglist.iterator()
+
+            while (runs.hasNext()) {
+                try {
+                    var run = runs.next()
+
                     var pj = run.getPJ()
-                    var t = tl(run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
-                            run.runStatus(), pj.ports, run.getPJ().job?.name, run.exitdate(), run.getPJ().refid)
+                    var t = tl(
+                        run.getPijobid(), run.getPJ().name, run.startRun(), run.state(),
+                        run.runStatus(), pj.ports, run.getPJ().job?.name, run.exitdate(), run.getPJ().refid
+                    )
                     list.add(t)
-                }
-            } catch (e: Exception) {
-                logger.error("List task error ${e.message}")
+                } catch (e: Exception) {
+                    logger.error("List task error ${e.message}")
 //                throw e
+                }
             }
+
+
+            return list
+        } catch (e: Exception) {
+            throw e
         }
-
-        return list
-
     }
 
     @CrossOrigin
@@ -169,8 +179,10 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 
     fun getTl(it: PijobrunInterface): tl {
-        var tl = tl(it.getPijobid(), it.getPJ().name, it.startRun(), it.state(),
-                it.runStatus(), it.getPJ().ports, it.getPJ().job?.name, it.exitdate(), it.getPJ().refid)
+        var tl = tl(
+            it.getPijobid(), it.getPJ().name, it.startRun(), it.state(),
+            it.runStatus(), it.getPJ().ports, it.getPJ().job?.name, it.exitdate(), it.getPJ().refid
+        )
         tl.name = it.getPJ().name
         return tl
     }
@@ -216,7 +228,14 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
         var i = 1
         for (thread in threadSet) {
             if (thread is PijobrunInterface) {
-                var t = tl(thread.getPijobid(), thread.getPJ().name, thread.startRun(), thread.state(), thread.runStatus(), null)
+                var t = tl(
+                    thread.getPijobid(),
+                    thread.getPJ().name,
+                    thread.startRun(),
+                    thread.state(),
+                    thread.runStatus(),
+                    null
+                )
                 list.add(t)
                 i++
             } else
@@ -287,9 +306,11 @@ class TaskList(val taskService: TaskService, val pjs: PijobService, val readUtil
     }
 }
 
-class tl(var id: Long? = null, var name: String? = null, var startrun: Date? = null,
-         var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null,
-         var jobtype: String? = null, var exitdate: Date? = null, var refid: Long? = 0)
+class tl(
+    var id: Long? = null, var name: String? = null, var startrun: Date? = null,
+    var state: String? = null, var runstatus: Boolean? = null, var ports: List<Portstatusinjob>? = null,
+    var jobtype: String? = null, var exitdate: Date? = null, var refid: Long? = 0
+)
 
 
 class ThreadinfoCount(var activecount: Int? = null, var coresize: Int? = null, var queuesize: Int? = null)

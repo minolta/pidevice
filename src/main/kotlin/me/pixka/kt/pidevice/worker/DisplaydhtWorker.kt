@@ -21,16 +21,18 @@ class DisplaydhtWorker(pijob: Pijob, var mtp: MactoipService) : DWK(pijob), Runn
                     try {
                         var name = pijob.desdevice?.name
                         var ip = mtp.mactoip(it.device?.mac!!)
-                        var url = mtp.http.encode("ค่าความชืนของ ${name}:${dht.h} อุณหภูมิ:${dht.t} ")
-                        var re = mtp.http.get("http://${ip}/settext?t=${url}&tn=2&l=4", 5000)
+                        var url = mtp.http.encode("ค่าความชืนของ ${name}: ${dht.h} อุณหภูมิ: ${dht.t} ")
+                        var re = mtp.http.get("http://${ip}/settext?t=${url}&tn=2&l=4", 60000)
                         status = "http://${ip}/settext?t=${url}&tn=2&l=4"
                     } catch (e: Exception) {
+                        isRun=false
+                        logger.error("Display ERROR :  ${e.message}")
+                        status = "Display ERROR :  ${e.message}"
                         mtp.lgs.createERROR(
                             "${e.message}", Date(),
                             "DisplaydhtWorker", Thread.currentThread().name, "24", "run()",
                             "${it.device?.mac}", pijob.refid
                         )
-                        logger.error(e.message)
                     }
                 }
             }
@@ -44,8 +46,7 @@ class DisplaydhtWorker(pijob: Pijob, var mtp: MactoipService) : DWK(pijob), Runn
                 "${e.message}", Date(),
                 "DisplaydhtWorker", Thread.currentThread().name, "16", "run()", pijob.pidevice?.mac
             )
-            logger.error(e.message)
-
+            logger.error("JOB ${pijob.name} : DisplaydhtWorker ${e.message}")
             status = "Error ${e.message}"
 
         }

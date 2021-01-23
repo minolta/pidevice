@@ -18,22 +18,25 @@ class OffpumpWorker(job: Pijob, val mtp: MactoipService) : DWK(job), Runnable {
             var ip = mtp.mactoip(pijob.desdevice?.mac!!)
             mac = pijob.desdevice?.mac
             try {
-                var re = mtp.http.get("http://${ip}/off", 20000)
+                status = "Try to OFF Pump ${pijob.name}"
+                var re = mtp.http.get("http://${ip}/off", 60000)
                 var s = om.readValue<Status>(re)
                 status = "Off pumb is ok ${s.uptime} Power is off ok."
             } catch (e: Exception) {
+                isRun = false
                 logger.error("Off pumb error  offpump ${e.message} ${pijob.name}")
                 mtp.lgs.createERROR(" ${e.message}", Date(),
                         "OffpumpWorker", "", "", "run", mac, pijob.refid)
                 status = "Off pumb error  offpump ${e.message} ${pijob.name}"
-                isRun = false
+
             }
         } catch (e: Exception) {
+            isRun = false
             logger.error("offpump ${e.message} ${pijob.name}")
             mtp.lgs.createERROR("${e.message}", Date(), "OffpumpWorker",
                     "", "", "run", mac, pijob.refid)
             status = "offpump ${e.message} ${pijob.name}"
-            isRun = false
+
         }
         exitdate = findExitdate(pijob)
     }

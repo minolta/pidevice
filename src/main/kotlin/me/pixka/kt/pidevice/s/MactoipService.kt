@@ -144,7 +144,7 @@ class MactoipService(
         }
     }
 
-    fun readStatus(job: Pijob): String {
+    fun readStatus(job: Pijob,timeout:Int=60000): String {
         var ip: String? = null
         try {
             ip = mactoip(job.desdevice?.mac!!)
@@ -153,7 +153,7 @@ class MactoipService(
             throw e
         }
         try {
-            var result = http.get("http://${ip}", 5000)
+            var result = http.get("http://${ip}", timeout)
             return result
         } catch (e: Exception) {
             logger.error("Get Status ERROR ${e.message} ${job.name}")

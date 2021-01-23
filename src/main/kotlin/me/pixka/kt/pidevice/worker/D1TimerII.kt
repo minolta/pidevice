@@ -86,8 +86,8 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
                     throw e
                 }
             } else {
-                status = "Ip not found Mac ${mac}"
-                throw Exception("IP NOT FOUDN")
+                status = "Ip not found Mac ${mac} "
+                throw Exception("IP NOT Found ")
             }
         } catch (e: Exception) {
             status = "Set() ERROR ${e.message}"

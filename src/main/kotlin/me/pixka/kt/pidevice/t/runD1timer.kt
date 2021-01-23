@@ -56,5 +56,5 @@ class runD1Timer(
     }
 
 
-    internal var logger = LoggerFactory.getLogger(runD1Timer::class.java)
+var logger = LoggerFactory.getLogger(runD1Timer::class.java)
 }
