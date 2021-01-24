@@ -112,7 +112,7 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
 
     @Scheduled(
         initialDelay = 1000,
-        fixedDelay = 1000
+        fixedDelay = 30000
     )
     fun removeEndjob(): List<PijobrunInterface> {
         var items = runinglist.iterator()
