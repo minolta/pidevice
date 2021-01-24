@@ -43,7 +43,13 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
                         try {
                             var ip = mtp.mactoip(mac!!)
                             status = "Check ${name} at  ${ip}"
-                            var re = mtp.http.get("http://${ip}", 5000)
+                            var portnum = ""
+                            if(pijob.tlow!=null)
+                            {
+                                portnum = ":${pijob.tlow?.toInt()}"
+                            }
+                            var url = "http://${ip}${portnum}"
+                            var re = mtp.http.get(url, 5000)
                             var s = mtp.om.readValue<Status>(re)
                             status = "${name} is Active uptime ${s.uptime}"
 

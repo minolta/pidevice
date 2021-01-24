@@ -1,8 +1,5 @@
 package me.pixka.kt.pidevice
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pidevice.o.NmapObject

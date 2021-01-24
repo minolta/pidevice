@@ -14,20 +14,16 @@ class Dusttotm1Worker(pijob: Pijob, var mtc: MactoipService) : DWK(pijob), Runna
         try {
             isRun = true
             startRun = Date()
-
-            var s = mtc.readStatus(pijob)
-
+            var s = mtc.readStatus(pijob,120000)
             try {
                 var d = mtc.om.readValue<Dustobj>(s)
                 status = "Pm is ${d.pm25}"
                 todisplay(d.pm25?.toInt()!!)
                 exitdate = findExitdate(pijob)
-
             } catch (e: Exception) {
                 logger.error("Convert dust obj error ${e.message}")
                 isRun=false
             }
-
         } catch (e: Exception) {
             logger.error("Read dust ERROR ${e.message} JOB: ${pijob.name}")
             isRun = false

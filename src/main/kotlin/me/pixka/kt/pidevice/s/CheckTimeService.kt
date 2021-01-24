@@ -29,44 +29,54 @@ class CheckTimeService(var lgs: LogService?=null) {
      */
     fun checkTime(job: Pijob, now: Date): Boolean {
         try {
-            if(job.stimes == null && job.etimes == null)
+
+            if (job.stimes.isNullOrEmpty() && job.etimes.isNullOrEmpty())
                 return true // not set time rang
             var n = df.parse(df.format(now))
             var nl = n.time
 
-            //set ช่วงเวลา
-            if (job.stimes != null && job.etimes != null) {
-                var s = df.parse(job.stimes)
-                var e = df.parse(job.etimes)
-                var sl = s.time
-                var el = e.time
-                logger.debug("${job.name}  RUNOFFPUMP ${sl} <= ? ${nl} <= ${el}")
-                if (nl in sl..el)
-                    return true
-            } else
-            //แบบถ้าเวลาที่ส่งมาหลังจากนี้จะทำงาน
-                if (job.stimes != null && job.etimes == null) {
-                    var s = df.parse(job.stimes)
-                    var sl = s.time
-                    logger.debug("${job.name} RUNOFFPUMP ${s} <= ? ${n} ")
-                    if (sl <= nl)
-                        return true
-                } else
-                //ทดสอบแบบก่อนเวลา
-                    if (job.stimes == null && job.etimes != null) {
-                        var e = df.parse(job.etimes)
-                        var el = e.time
 
-                        logger.debug("${job.name} RUNOFFPUMP  ${n} <= ${e}")
-                        if (nl <= el)
-                            return true
-                    }
+            if(job.stimes!=null && job.etimes!=null && (job.stimes!!.isNotEmpty() && job.etimes!!.isNotEmpty()))
+            {
+                try {
+                    var s = df.parse(job.stimes)
+                    var e = df.parse(job.etimes)
+                    if(s.time<= nl && nl<=e.time)
+                        return true
+                    return false
+                }catch (e:Exception)
+                {
+                    logger.error("Parse ERROR ${job.name} ${job.stimes} ${job.etimes}")
+                }
+            }
+            //หาว่าเวลาก่อนหน้าที่กำหนดหรือเปล่า
+            if (job.stimes.isNullOrEmpty() && job.etimes!=null && job.etimes!!.isNotEmpty()) {
+                var e = df.parse(job.etimes)
+                var el = e.time
+
+                if (nl <= el)
+                    return true
+
+                return false
+            }
+
+            if(job.stimes!=null && job.etimes.isNullOrEmpty() && job.stimes!!.isNotEmpty())
+            {
+                var e = df.parse(job.etimes)
+                var el = e.time
+
+                if (nl >= el)
+                    return true
+
+                return false
+            }
+            //ทดสอบแบบก่อนเวลา
+
+
+
+
         } catch (e: Exception) {
-           if(lgs!=null)
-            lgs?.createERROR("${e.message}", Date(),
-                    "CheckTimeService", "", "", "",
-                    job.desdevice?.mac, job.refid)
-            logger.error("ERROR  ${e.message} JOB: ${job.name}")
+            logger.error("Check time ERROR JOB:${job.name}: ${e.message}")
         }
 
         return false

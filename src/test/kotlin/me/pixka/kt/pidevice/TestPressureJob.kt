@@ -31,7 +31,7 @@ class TestPressureJob {
         var n = NotifyPressureWorker(job, readStatusService, "http://192.168.89.233", notifyService)
         n.run()
         println(n.psi)
-        println(n.run)
+//        println(n.run)
 //        var f = ee.submit(n)
 //
 //        f.get(2,TimeUnit.SECONDS)

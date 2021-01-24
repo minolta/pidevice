@@ -38,7 +38,7 @@ class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: H
                     if (checkTimeService.checkTime(job, Date()) && !task.checkrun(job)) {
                         var offpumpWorker = OffpumpWorker(job,mtp)
                         if (!task.run(offpumpWorker)) {
-                            logger.error("Can not Run ${job.name}")
+//                            logger.error("Can not Run ${job.name}")
                         }
                     }
                 }

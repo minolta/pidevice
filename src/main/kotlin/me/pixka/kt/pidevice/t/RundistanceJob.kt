@@ -27,12 +27,12 @@ class RundistanceJob(
                         if (task.checktime(it)) {
                             var t = DistanceWorker(it, mtp, ps)
                             if (!task.run(t)) {
-                                mtp.lgs.createERROR(
-                                    "Not run job ${it.name}", Date(),
-                                    "RundistanceJob", Thread.currentThread().name, "31",
-                                    "run()", it.desdevice?.mac, it.refid, it.pidevice?.refid
-                                )
-                                logger.error("Not run job ${it.name}")
+//                                mtp.lgs.createERROR(
+//                                    "Not run job ${it.name}", Date(),
+//                                    "RundistanceJob", Thread.currentThread().name, "31",
+//                                    "run()", it.desdevice?.mac, it.refid, it.pidevice?.refid
+//                                )
+//                                logger.error("Not run job ${it.name}")
                             }
                         }
                     }

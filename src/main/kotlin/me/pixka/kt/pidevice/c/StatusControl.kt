@@ -10,9 +10,9 @@ class StatusControl (val uptime:UptimeTask)
     @CrossOrigin
     @RequestMapping(value = ["/"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
-    fun value(): Statusobj {
+    fun value(): String {
 
-        return Statusobj(uptime.uptime)
+        return "{\"uptime\": ${uptime.uptime}}"
     }
 }
 @JsonIgnoreProperties(ignoreUnknown = true)
