@@ -19,7 +19,7 @@ class DisplaytmpWorker(p: Pijob, val mtp: MactoipService) : DWK(p), Runnable {
         var refid: Long? = 0L
 
         try {
-            var t = mtp.readTmp(pijob, 15000)
+            var t = mtp.readTmp(pijob, 60000)
             if (pijob.tlow != null && t != null) //แสดงว่ามีการกำหนดอุณหภูมิขั้นตำสำหรับแสดงผล
             {
                 val low = pijob.tlow?.toDouble()
@@ -50,7 +50,7 @@ class DisplaytmpWorker(p: Pijob, val mtp: MactoipService) : DWK(p), Runnable {
                         var url = mtp.http.encode("ความร้อน : ${name} = ${t}")
                         var u = "http://${displayip}/settext?t=${url}&tn=2&l=${l}"
                         status = u
-                        var re = mtp.http.getNoCache(u, 10000)
+                        var re = mtp.http.getNoCache(u, 60000)
                         status = "set Tmp ${name} ${t} ${re}"
                         exitdate = findExitdate(pijob)
                     } else {
