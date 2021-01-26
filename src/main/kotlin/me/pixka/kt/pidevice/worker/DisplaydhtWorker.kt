@@ -22,7 +22,7 @@ class DisplaydhtWorker(pijob: Pijob, var mtp: MactoipService) : DWK(pijob), Runn
                         var name = pijob.desdevice?.name
                         var ip = mtp.mactoip(it.device?.mac!!)
                         var url = mtp.http.encode("ค่าความชืนของ ${name}: ${dht.h} อุณหภูมิ: ${dht.t} ")
-                        var re = mtp.http.get("http://${ip}/settext?t=${url}&tn=2&l=4", 60000)
+                        var re = mtp.http.get("http://${ip}/settext?t=${url}&tn=2&l=4", 120000)
                         status = "http://${ip}/settext?t=${url}&tn=2&l=4"
                     } catch (e: Exception) {
                         isRun=false
