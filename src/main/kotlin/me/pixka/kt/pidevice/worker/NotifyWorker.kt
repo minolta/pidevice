@@ -20,6 +20,8 @@ class NotifyPressureWorker(
 
     override fun run() {
         try {
+            if(pijob.token!=null)
+                token = pijob.token
             startRun = Date()
             isRun = true
             status = "Status run Read psi at ${target} ${startRun}"
@@ -48,6 +50,10 @@ class NotifyPressureWorker(
             }
         } catch (e: Exception) {
             logger.error("JOB ${pijob.name} Notify Pressure ERROR ${e.message}")
+            if(token!=null)
+            {
+                notify.message("JOB ${pijob.name} Notify Pressure ERROR ${e.message}",token)
+            }
             status = "Job has error ${e.message}"
             isRun = false
         }

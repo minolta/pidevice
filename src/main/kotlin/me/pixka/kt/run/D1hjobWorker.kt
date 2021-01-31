@@ -18,26 +18,36 @@ class D1hjobWorker(
 ) : DWK(job), Runnable {
     var om = ObjectMapper()
     var waitstatus = false
+    var token: String? = null
 
+    fun notify(msg: String) {
+        if (token != null) {
+            ntfs.message(msg, token!!)
+        }
+    }
 
     override fun run() {
         startRun = Date()
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
+        token = pijob.token
         Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
+        notify("JOB ${pijob.name} Open Pump Delay 10")
 
         try {
             var openpumptime = mtp.findTimeofjob(pijob)
 
-            openpumptime  = openpumptime+120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
+            openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
-            var o = mtp.openpump(pijob,openpumptime)
+            var o = mtp.openpump(pijob, openpumptime)
             status = "${o} Open Pump Delay 10"
+
             TimeUnit.SECONDS.sleep(10)
 
             if (pijob.tlow != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
                 logger.debug("Slow start ${pijob.tlow}")
+                notify("Slow start JOB:${pijob.name} TLOW: ${pijob.tlow}")
             }
             waitstatus = false //ใช้น้ำ
             go()
@@ -46,12 +56,14 @@ class D1hjobWorker(
             if (exitdate == null)
                 isRun = false
             status = "End normal"
+            notify("End job ${pijob.name}")
             return
         } catch (e: Exception) {
             isRun = false
             exitdate = findExitdate(pijob)
             logger.error("ERROR 1 ${e.message}")
             status = "ERROR 1 ${e.message}"
+            notify("ERROR 1 ${e.message} JOB:${pijob.name}")
             mtp.lgs.createERROR(
                 "ERROR 1 ${e.message}", Date(), "D1hjobWorker",
                 "", "", "", "", pijob.refid
@@ -124,6 +136,7 @@ class D1hjobWorker(
                     var s = om.readValue<Status>(v)
                     logger.debug("D1h Value ${status}")
                     status = "Set ${portname} to ${value}  ${s.status} and run ${runtime}"
+                    notify("JOB ${pijob.name} Set ${portname} to ${value}  ${s.status} and run ${runtime}")
                     TimeUnit.SECONDS.sleep(runtime)
                     if (waittime != null) {
                         status = "Wait time of port ${waittime}"
@@ -137,6 +150,7 @@ class D1hjobWorker(
             } catch (e: Exception) {
                 logger.error("Error 2 ${e.message}")
                 status = " Error 2 ${e.message}"
+                notify("JOB: ${pijob.name} Error 2 ${e.message}")
                 mtp.lgs.createERROR(
                     " Error 2 ${e.message}", Date(), "D1hjobWorker",
                     "", "", "go()", pijob.desdevice?.mac, pijob.refid

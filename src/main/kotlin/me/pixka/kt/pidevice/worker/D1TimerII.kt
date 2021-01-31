@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
 class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : DWK(job), Runnable {
     var maxrun = 0
     var maxwait = 0
+    var token:String?=null
 
     //    var df = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
     override fun run() {
@@ -20,7 +21,7 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
         isRun = true
         startRun = Date()
         status = "Start run"
-
+        token = pijob.token
         try {
             var t = mtp.readTmp(pijob, 10000)
             status = "Current tmp ${t}"
@@ -43,7 +44,12 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
             if (waitlowtmp(pijob)) {
                 //ถ้าถึงแล้ว
                 status = "ความเลยขั้นต่ำไปแล้ว"
+                if(token!=null)
+                    line.message("JOB: ${pijob.name}  ความเลยขั้นต่ำไปแล้ว ${pijob.tlow}")
                 if (waithightmp(pijob)) {
+                    if(token!=null)
+                        line.message("JOB: ${pijob.name}  ความร้อนถึงความร้อนสูงสุดแล้ว ${pijob.thigh}")
+
                     setPort()
                     exitdate = findExitdate(pijob, (maxrun + maxwait).toLong())
                 } else {
