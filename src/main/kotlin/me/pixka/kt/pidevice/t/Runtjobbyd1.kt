@@ -47,7 +47,7 @@ class Runtjobbyd1(val pjs: PijobService,
                                 var ip = ips.findByMac(job.desdevice?.mac!!)
                                 if (ip != null) {
 
-                                    var re = httpService.get("http://${ip.ip}", 10000)
+                                    var re = httpService.get("http://${ip.ip}", 60000)
                                     var t = om.readValue<Tmpobj>(re)
                                     if (checktmp(t, job)) {
                                         var testjob = pjs.findByRefid(job.runwithid)
@@ -58,18 +58,20 @@ class Runtjobbyd1(val pjs: PijobService,
                             }
                         }
                     } catch (e: Exception) {
+                        logger.error("${job.name} ${e.message}")
                         lgs.createERROR("${e.message}", Date(), "Runtjobbyd1",
                                 "", "37", "run", mac, job.refid
                         )
-                        logger.error("${job.name} ${e.message}")
+
                     }
                 }
             }
         } catch (e: Exception) {
+            logger.error("Run t by d1 ${e.message}")
             lgs.createERROR("${e.message}", Date(),
                     "Runtjobbyd1", "",
                     "30", "run", mac, jid)
-            logger.error(e.message)
+
         }
     }
 
@@ -95,7 +97,7 @@ class Runtjobbyd1(val pjs: PijobService,
         try {
             var ip = ips.findByMac(job.desdevice?.mac!!)
             if (ip != null) {
-                var re = httpService.get("http://${ip}", 5000)
+                var re = httpService.get("http://${ip}", 15000)
                 var tmp = om.readValue<Tmpobj>(re)
                 var run = checktmp(tmp, job)
                 var testjob = pjs.findByRefid(job.runwithid)
@@ -109,6 +111,7 @@ class Runtjobbyd1(val pjs: PijobService,
                 }
             }
         } catch (e: Exception) {
+            logger.error("Read tmp ${job.name} ERROR ${e.message}")
             lgs.createERROR("${e.message}", Date(),
                     "Runtjobbyd1", "", "87", "readtmp",
                     job.desdevice?.mac, job.refid)
