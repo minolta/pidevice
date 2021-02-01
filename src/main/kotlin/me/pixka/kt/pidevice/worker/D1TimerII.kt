@@ -45,10 +45,10 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
                 //ถ้าถึงแล้ว
                 status = "ความเลยขั้นต่ำไปแล้ว"
                 if(token!=null)
-                    line.message("JOB: ${pijob.name}  ความเลยขั้นต่ำไปแล้ว ${pijob.tlow}")
+                    line.message("JOB: ${pijob.name}  ความเลยขั้นต่ำไปแล้ว ${pijob.tlow}",token!!)
                 if (waithightmp(pijob)) {
                     if(token!=null)
-                        line.message("JOB: ${pijob.name}  ความร้อนถึงความร้อนสูงสุดแล้ว ${pijob.thigh}")
+                        line.message("JOB: ${pijob.name}  ความร้อนถึงความร้อนสูงสุดแล้ว ${pijob.thigh}",token!!)
 
                     setPort()
                     exitdate = findExitdate(pijob, (maxrun + maxwait).toLong())
