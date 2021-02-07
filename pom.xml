@@ -82,7 +82,7 @@
         <dependency>
             <groupId>me.pixka.kt</groupId>
             <artifactId>pibasekt</artifactId>
-            <version>1.0.6-stable</version>
+            <version>1.0.7-stable</version>
         </dependency>
 
         <dependency>
