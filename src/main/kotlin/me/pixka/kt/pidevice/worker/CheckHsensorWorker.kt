@@ -30,7 +30,7 @@ class CheckHsensorWorker(job: Pijob, var mtp: MactoipService, val line: NotifySe
                         if(!hobject.equals(pijob))
                         {//ถ้าไม่อยู่ในช่วง ให้ notify
                             if(pijob.token!=null)
-                            line.message("H/T out of rang TLOW: ${pijob.tlow}  THigh ${pijob.thigh}  T:${hobject.t} " +
+                            line.message("Device : ${it.device?.name} H/T out of rang TLOW: ${pijob.tlow}  THigh ${pijob.thigh}  T:${hobject.t} " +
                                     " HLOW :${pijob.hlow} HHIGH:${pijob.hhigh} ${hobject.h}",pijob.token!!)
                         }
 
