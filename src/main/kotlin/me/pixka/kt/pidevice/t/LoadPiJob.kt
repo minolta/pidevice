@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.*
+import me.pixka.kt.pidevice.s.LoadpumpService
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
@@ -14,9 +15,12 @@ import org.springframework.stereotype.Component
  */
 @Component
 @Profile("!test")
-class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: PideviceService,
-                val ptijs: PortstatusinjobService, val js: JobService, val pgs: PijobgroupService,
-                val pns: PortnameService, val ls: LogistateService, val ips: IptableServicekt) {
+class LoadPiJob(
+    val httpService: HttpService, val pjs: PijobService, val pds: PideviceService,
+    val ptijs: PortstatusinjobService, val js: JobService, val pgs: PijobgroupService,
+    val pns: PortnameService, val ls: LogistateService, val ips: IptableServicekt,
+    val loadpumpService: LoadpumpService
+) {
     var host = System.getProperty("piserver")
     var target = host + "/pijob/lists"
     var targetloadstatus = host + "/portstatusinjob/lists"
@@ -25,9 +29,7 @@ class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: Pi
     @Scheduled(fixedDelay = 2000)
     fun load() {
         var mac = System.getProperty("mac")
-//        if (mac == null)
-//            mac = io.wifiMacAddress()
-        var re: String? = httpService.get(target + "/${mac}",500)
+        var re: String? = httpService.get(target + "/${mac}", 500)
         var alljobs = om.readValue<List<Pijob>>(re!!)
         if (alljobs != null) {
             alljobs.forEach {
@@ -78,12 +80,13 @@ class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: Pi
             throw e
         }
     }
+
     /**
      * ใช้สำหรับ load port from server
      */
     fun loadPortinjob(refid: Long): List<Portstatusinjob>? {
         try {
-            var re = httpService.get(targetloadstatus + "/" + refid,500)
+            var re = httpService.get(targetloadstatus + "/" + refid, 500)
             var ports = om.readValue<List<Portstatusinjob>>(re)
             return ports
         } catch (e: Exception) {
@@ -115,11 +118,33 @@ class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: Pi
                 if (ports != null) {
                     savenewPorts(newjob, ports)
                 }
+                //load pump in job to device
+                SavePump(newjob.refid!!,newjob.id)
             }
         } catch (e: Exception) {
             logger.error("ERROR Save new job ${it.name} ${e.message}")
             throw e
         }
+
+    }
+
+    //สำหรับ save pump ลงใน device refid เป็น id ของ pijob ที่อยู่บน Server
+    fun SavePump(refid: Long, pijobid: Long) {
+        var listfromserver = loadpumpService.loadPump(refid)
+
+        listfromserver.forEach {
+            try {
+                it.pijob_id = pijobid
+                it.refid = refid
+                it.pidevice = pds.findOrCreate(it.pidevice?.mac!!)
+                it.pijob = pjs.find(pijobid)
+                loadpumpService.pumpforpijobService.save(it)//save to localdevice
+            } catch (e: Exception) {
+                logger.error("ERROR Save pump to device ${it.pijob?.name}")
+
+            }
+        }
+
 
     }
 
@@ -152,7 +177,7 @@ class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: Pi
 
                 var pt = ptijs.finByRefId(it.id) //ดึงจากในเครื่อง
                 if (pt != null) { //old port
-                    if(pt.verref!=it.ver) {
+                    if (pt.verref != it.ver) {
                         pt.device = finddevice(it.device!!)
                         pt.enable = it.enable
                         pt.pijob = job
@@ -200,12 +225,12 @@ class LoadPiJob(val httpService: HttpService, val pjs: PijobService, val pds: Pi
             }
 
             var ports = loadPortinjob(ref.refid!!)
-            if (ports != null && ports.size>0)
+            if (ports != null && ports.size > 0)
                 editPorts(ref, ports as List<Portstatusinjob>)
         } catch (e: Exception) {
             logger.error("Edit pijob ${ref.name}  ERROR:${e.message}")
         }
     }
 
-         var logger = LoggerFactory.getLogger(LoadPiJob::class.java)
+    var logger = LoggerFactory.getLogger(LoadPiJob::class.java)
 }
