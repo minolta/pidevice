@@ -1,15 +1,16 @@
 stages:
   - build
+  - install
 build_base:
   stage: build
   trigger:
     project: rokkor/pibasekt
     branch: master
     strategy: depend
-build:
-  stage: build
+install:
+  stage: install
   tags:
-    - build
+    - install
   script:
     - echo "build"
-    - mvn compile -DskipTests=true
+    - mvn install -DskipTests=true
