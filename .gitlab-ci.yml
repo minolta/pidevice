@@ -3,12 +3,18 @@ stages:
   - install
 build_base:
   stage: build
+  only:
+    refs:
+      - master
   trigger:
     project: rokkor/pibasekt
     branch: master
     strategy: depend
 install:
   stage: install
+  only:
+    refs:
+      - master
   tags:
     - install
   script:
