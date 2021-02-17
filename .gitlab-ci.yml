@@ -1,0 +1,15 @@
+stages:
+  - build
+build_base:
+  stage: build
+  trigger:
+    project: rokkor/basejpa
+    branch: master
+    strategy: depend
+build:
+  stage: build
+  tags:
+    - build
+  script:
+    - echo "build"
+    - mvn compile -DskipTests=true
