@@ -3,7 +3,7 @@ stages:
 build_base:
   stage: build
   trigger:
-    project: rokkor/basejpa
+    project: rokkor/pibasekt
     branch: master
     strategy: depend
 build:
