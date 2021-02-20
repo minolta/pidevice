@@ -33,7 +33,6 @@ class Runhjobbyd1(
 
     fun rQ() {
         try {
-//            queue.printqueue()
             //ถ้ามี job ใน คิวให้้ run ให้หมดก่อน
             if (queue.size() > 0) {
                 runQueue()//พยาม run ที่อยู่ในคิวก่อน

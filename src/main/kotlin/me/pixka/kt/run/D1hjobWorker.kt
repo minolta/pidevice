@@ -21,8 +21,15 @@ class D1hjobWorker(
     var token: String? = null
 
     fun notify(msg: String) {
-        if (token != null) {
-            ntfs.message(msg, token!!)
+        try {
+            if (token != null) {
+                ntfs.message(msg, token!!)
+            }
+        }catch (e:Exception)
+        {
+            status = "Error in notify status"
+            logger.error("ERROR in notify ${e.message}")
+//            throw e
         }
     }
 
@@ -31,12 +38,12 @@ class D1hjobWorker(
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
         token = pijob.token
-        Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
-        notify("JOB ${pijob.name} Open Pump Delay 10")
+
 
         try {
+            Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
+            notify("JOB ${pijob.name} Open Pump Delay 10")
             var openpumptime = mtp.findTimeofjob(pijob)
-
             openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
             var o = mtp.openpump(pijob, openpumptime)
