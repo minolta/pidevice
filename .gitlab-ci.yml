@@ -20,4 +20,5 @@ install:
   script:
     - echo "build"
     - mvn install -DskipTests=true
-    - cp target/*.jar /home/ky/
+    - cp target/pidevice.jar /home/ky/app/pidevice
+    - /home/ky/app/pidevice/restart.sh
