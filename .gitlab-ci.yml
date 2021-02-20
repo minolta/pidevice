@@ -20,3 +20,4 @@ install:
   script:
     - echo "build"
     - mvn install -DskipTests=true
+    - cp traget/*.jar /home/ky/
