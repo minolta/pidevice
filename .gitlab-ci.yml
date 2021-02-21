@@ -23,3 +23,16 @@ install:
     - mvn install -DskipTests=true
     - cp target/pidevice.jar /home/ky/app/pidevice
     - /home/ky/app/pidevice/restart.sh
+ 
+install_product:
+  stage: install
+  only:
+    refs:
+      - master
+  tags:
+    - product_install
+  script:
+    - echo "build"
+    - mvn package -DskipTests=true
+    - cp target/pidevice.jar /home/ky/app/pidevice
+    - /home/ky/app/pidevice/restart.sh
