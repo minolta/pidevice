@@ -26,7 +26,7 @@ install:
     - cp target/pidevice.jar /home/ky/app/pidevice
     - /home/ky/app/pidevice/restart.sh
 
-product_build:
+product_build_job:
   stage: product_build
   only:
     refs:
