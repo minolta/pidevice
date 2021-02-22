@@ -2,8 +2,8 @@
 stages:
   - build
   - install
-  - product_build
-  - product_install
+  # - product_build
+  # - product_install
 build_base:
   stage: build
   only:
