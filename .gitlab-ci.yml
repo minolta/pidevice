@@ -1,8 +1,9 @@
 #update server 2 retry
 stages:
   - build
-  - product_build
   - install
+  - product_build
+  - product_install
 build_base:
   stage: build
   only:
@@ -26,7 +27,7 @@ install:
     - /home/ky/app/pidevice/restart.sh
 
 product_build:
-  stage: build
+  stage: product_build
   only:
     refs:
       - master
