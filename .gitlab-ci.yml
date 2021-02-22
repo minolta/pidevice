@@ -1,6 +1,7 @@
 #update server 2 retry
 stages:
   - build
+  - product_build
   - install
 build_base:
   stage: build
@@ -23,8 +24,19 @@ install:
     - mvn install -DskipTests=true
     - cp target/pidevice.jar /home/ky/app/pidevice
     - /home/ky/app/pidevice/restart.sh
- 
-install_product:
+
+product_build:
+  stage: build
+  only:
+    refs:
+      - master
+  # tags:
+  #   - product_build
+  trigger:
+    project: rokkor/pibasekt
+    branch: master
+    strategy: depend
+product_install:
   stage: install
   only:
     refs:
