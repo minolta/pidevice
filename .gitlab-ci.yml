@@ -38,7 +38,7 @@ product_build:
     branch: master
     strategy: depend
 product_install:
-  stage: install
+  stage: product_install
   only:
     refs:
       - master
