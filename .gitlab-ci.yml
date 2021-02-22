@@ -1,4 +1,4 @@
-#update server 2
+#update server 2 retry
 stages:
   - build
   - install
