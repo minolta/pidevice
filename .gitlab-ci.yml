@@ -20,7 +20,7 @@ install:
       - master
   tags:
     - install
-    - product_install
+    # - product_install
   script:
     - echo "build"
     - mvn install -DskipTests=true
