@@ -20,32 +20,9 @@ install:
       - master
   tags:
     - install
-  script:
-    - echo "build"
-    - mvn install -DskipTests=true
-    - cp target/pidevice.jar /home/ky/app/pidevice
-    - /home/ky/app/pidevice/restart.sh
-
-product_build_job:
-  stage: product_build
-  only:
-    refs:
-      - master
-  # tags:
-  #   - product_build
-  trigger:
-    project: rokkor/pibasekt
-    branch: master
-    strategy: depend
-product_install:
-  stage: product_install
-  only:
-    refs:
-      - master
-  tags:
     - product_install
   script:
     - echo "build"
-    - mvn package -DskipTests=true
+    - mvn install -DskipTests=true
     - cp target/pidevice.jar /home/ky/app/pidevice
     - /home/ky/app/pidevice/restart.sh
