@@ -50,5 +50,5 @@ runtest:
             docker stop $OLD && docker rm $OLD
            fi
     - docker pull kykub/pidevice
-    - docker run -p 3334:8080 -d --name pidevice  -e JAVA_OPTS=" -Dspring.datasource.url=jdbc:h2:~/pidevice;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.20  -Dmac=b8:27:eb:19:8f:5f  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://point.pixka.me:3333 " kykub/pidevice
+    - docker run -p 3334:888 -d --name pidevice  -e JAVA_OPTS=" -Dspring.datasource.url=jdbc:h2:~/pidevice;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.20  -Dmac=b8:27:eb:19:8f:5f  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://point.pixka.me:3333 " kykub/pidevice
     
