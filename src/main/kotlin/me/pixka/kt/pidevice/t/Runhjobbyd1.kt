@@ -13,6 +13,7 @@ import me.pixka.kt.run.D1hjobWorker
 import me.pixka.kt.run.GroupRunService
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
@@ -22,6 +23,7 @@ import java.util.*
  * เป็น การ run แบบเรียงลำดับ
  */
 @Component
+@Profile("!test")
 class Runhjobbyd1(
     val pjs: PijobService, val findJob: FindJob,
     val task: TaskService,
@@ -324,7 +326,7 @@ class QueueService {
     fun remove(p: Pijob): Boolean {
         var toremove: Qobject? = null
         try {
-            toremove = queue.find { it.pijob?.id?.equals(p.id)!! }
+            toremove = queue.find { it.pijob?.equals(p)!! }
             if (toremove != null)
                 return queue.remove(toremove)
             return false
@@ -380,7 +382,12 @@ class Qobject(
     override fun equals(other: Any?): Boolean {
 
         if (other is Pijob) {
-            if (other.id == this.pijob?.id)
+            if (other.equals(this.pijob))
+                return true
+        }
+        if(other is Qobject)
+        {
+            if(other.pijob?.equals(this.pijob)!!)
                 return true
         }
 

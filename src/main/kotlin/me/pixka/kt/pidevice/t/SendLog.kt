@@ -6,11 +6,13 @@ import me.pixka.kt.pibase.s.HttpService
 import me.pixka.log.d.LogService
 import me.pixka.log.d.Logsevent
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
+@Profile("!test")
 class SendLog(val service: LogService, val httpService: HttpService) {
     var om = ObjectMapper()
 

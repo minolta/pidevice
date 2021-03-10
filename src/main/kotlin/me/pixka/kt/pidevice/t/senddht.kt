@@ -9,6 +9,7 @@ import me.pixka.kt.pibase.t.HttpPostTask
 import me.pixka.log.d.LogService
 import me.pixka.pibase.o.Infoobj
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -16,6 +17,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("!test")
 class SendDht(val dhts: DhtvalueService, val http: HttpService,val lgs:LogService) {
     val om = ObjectMapper()
     @Scheduled(fixedDelay = 1000)

@@ -4,6 +4,7 @@ import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pidevice.o.NmapObject
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.File
@@ -12,6 +13,7 @@ import java.io.File
  * สำหรับ อ่านค่า scan ip จาก file แล้วเอามาใส่ใน Database
  */
 @Component
+@Profile("!test")
 class NewFindip(val ips: IptableServicekt) {
 
     @Scheduled(fixedDelay = 60000)

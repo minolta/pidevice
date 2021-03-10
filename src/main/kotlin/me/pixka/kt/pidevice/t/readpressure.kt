@@ -12,12 +12,13 @@ import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.ReadPressureTask
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.CompletableFuture
 
 @Component
-//@Profile("pi")
+@Profile("!test")
 class Findreadpressure(val pideviceService: PideviceService, val ps: PressurevalueService,
                        val js: JobService, val pjs: PijobService, val findJob: FindJob,val mtp:MactoipService,
                        val httpService: HttpService, val ips: IptableServicekt, val ts: TaskService,

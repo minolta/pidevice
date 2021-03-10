@@ -8,10 +8,12 @@ import me.pixka.kt.pibase.d.PijobgroupService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pidevice.s.MactoipService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("!test")
 class Loaddiz(
     val mtp: MactoipService, val ds: PideviceService, val pgs: PijobgroupService,
     val dizs: DeviceinzoneService

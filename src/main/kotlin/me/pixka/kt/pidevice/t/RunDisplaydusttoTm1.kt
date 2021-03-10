@@ -5,6 +5,7 @@ import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.Dusttotm1Worker
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component
  * สำหรับแสดงผลไป tm1 ของ esp32 sensor
  */
 @Component
+@Profile("!test")
 class RunDisplaydusttoTm1(val findJob: FindJob, val task: TaskService, val mtc: MactoipService) {
 
     @Scheduled(fixedDelay = 1000)

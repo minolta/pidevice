@@ -10,6 +10,7 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.s.Tmpobj
 import me.pixka.kt.run.ReadTmpTask
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component
  *
  */
 @Component
+@Profile("!test")
 class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
               val dvs: Ds18valueService,
               val pideviceService: PideviceService, val findJob: FindJob,

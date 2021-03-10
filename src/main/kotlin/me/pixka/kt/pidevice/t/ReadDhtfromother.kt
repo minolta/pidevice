@@ -11,11 +11,13 @@ import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.run.ReadDhtWorker
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
+@Profile("!test")
 class ReadDhtfromother(
         val pjs: PijobService,
         val js: JobService, val task: TaskService,
