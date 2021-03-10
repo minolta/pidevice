@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit
 //ไม่ใช้แล้ว
 //@Component
 //@Profile("!test")
+
 class Runloadpijob( val service: PijobService, val psijs: PortstatusinjobService,
                    val ls: LogistateService, val pijobgroupService: PijobgroupService,
                    val js: JobService, val dsservice: DS18sensorService,val httpService: HttpService,

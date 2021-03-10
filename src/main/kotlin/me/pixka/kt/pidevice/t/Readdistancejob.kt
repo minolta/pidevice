@@ -9,11 +9,13 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.ReadDistanceWorker
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
+@Profile("!test")
 class Readdistancejob(val findJob: FindJob, val mactoipService: MactoipService,
                       val ds:DistanceService, val task: TaskService, val lgs: LogService,
                       val pideviceService: PideviceService) {

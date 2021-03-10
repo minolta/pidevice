@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import me.pixka.kt.pibase.d.CountfgService
 import me.pixka.kt.pibase.t.HttpPostTask
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("!test")
 class SendCountfg(val service: CountfgService) {
     val om = ObjectMapper()
     var ex = Executors.newSingleThreadExecutor()

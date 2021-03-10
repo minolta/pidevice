@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.s.ReadStatusService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.NotifytmpWorker
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component
  * ใช้สำหรับ job ที่บอกว่า pressure อยู่ในช่วงที่กำหนดหรือเปล่า
  */
 @Component
+@Profile("!test")
 class NotifytmpByLine(val readStatusService: ReadStatusService, val notifyService: NotifyService,
                       val findjob: FindJob, val iptableService: IptableServicekt,
                       val task: TaskService) {

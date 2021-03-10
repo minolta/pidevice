@@ -10,10 +10,12 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.run.D1pjobWorker
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("!test")
 class Runpjobbyd1(val pjs: PijobService,
                   val js: JobService,val findJob: FindJob,val mtp:MactoipService,
                   val task: TaskService, val readUtil: ReadUtil

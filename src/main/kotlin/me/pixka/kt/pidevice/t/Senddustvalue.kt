@@ -8,11 +8,13 @@ import me.pixka.kt.pidevice.worker.DisplaytmpWorker
 import me.pixka.kt.run.Status
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
+@Profile("!test")
 class Senddustvalue(val server: PmService, val httpService: HttpService,val lgs:LogService) {
 
     val om = ObjectMapper()

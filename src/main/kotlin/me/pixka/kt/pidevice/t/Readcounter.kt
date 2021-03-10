@@ -13,6 +13,7 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.ReadcounterWorker
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -20,6 +21,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("!test")
 class Readcounter(val pjs: PijobService, val js: JobService, val findJob: FindJob,
                   val logService: LogService, val ts: TaskService, val httpService: HttpService,
                   val cfgs: CountfgService, val iptableServicekt: IptableServicekt) {

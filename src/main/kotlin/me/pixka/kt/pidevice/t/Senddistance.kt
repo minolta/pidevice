@@ -7,11 +7,13 @@ import me.pixka.kt.pibase.d.DistanceService
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
 
 @Component
+@Profile("!test")
 class Senddistance(val service: DistanceService, val httpService: HttpService, val lgs: LogService) {
     var target = System.getProperty("piserver") + "/adddistance"
     val om = ObjectMapper()

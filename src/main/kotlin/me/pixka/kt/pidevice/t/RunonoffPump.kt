@@ -12,6 +12,7 @@ import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.run.OffpumpWorker
 import me.pixka.log.d.LogService
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture
 
 
 @Component
+@Profile("!test")
 class RunoffPump(val pjs: PijobService, val findJob: FindJob, val httpService: HttpService,
                  val js: JobService, val checkTimeService: CheckTimeService,val mtp:MactoipService,
                  val task: TaskService, val ips: IptableServicekt, val lgs: LogService

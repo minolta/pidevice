@@ -9,6 +9,7 @@ import me.pixka.pibase.o.Infoobj
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -17,6 +18,7 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 
 @Component
+@Profile("!test")
 class Sendds(val service: Ds18valueService) {
 
 

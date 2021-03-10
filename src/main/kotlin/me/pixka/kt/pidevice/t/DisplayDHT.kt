@@ -6,10 +6,12 @@ import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.DisplaydhtWorker
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("!test")
 class DisplayDHT(val findJob: FindJob,val task:TaskService,val mtp: MactoipService,
                  val portstatusinjobService: PortstatusinjobService) {
 

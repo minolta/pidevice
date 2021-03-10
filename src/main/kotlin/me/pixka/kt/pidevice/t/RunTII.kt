@@ -8,12 +8,14 @@ import me.pixka.kt.pidevice.s.ReadTmpService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.D1TWorkerII
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.util.*
 
 @Component
+@Profile("!test")
 class RunTII(
     val findJob: FindJob, val checkTimeService: CheckTimeService, val taskService: TaskService,
     val readTmpService: ReadTmpService, val mtp: MactoipService

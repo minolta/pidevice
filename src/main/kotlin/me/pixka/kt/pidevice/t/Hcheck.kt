@@ -6,10 +6,12 @@ import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.CheckHsensorWorker
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("!test")
 class Hcheck(val findJob: FindJob,val task:TaskService,val mtp:MactoipService,val line:NotifyService) {
 
 

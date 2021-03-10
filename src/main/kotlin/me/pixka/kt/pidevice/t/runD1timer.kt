@@ -10,10 +10,12 @@ import me.pixka.kt.pidevice.u.Dhtutil
 import me.pixka.kt.pidevice.u.ReadUtil
 import me.pixka.kt.pidevice.worker.D1TimerII
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Profile("!test")
 class runD1Timer(
     val pjs: PijobService,
     val js: JobService, val findJob: FindJob,
