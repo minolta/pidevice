@@ -13,7 +13,7 @@ import java.io.File
  * สำหรับ อ่านค่า scan ip จาก file แล้วเอามาใส่ใน Database
  */
 @Component
-@Profile("!test")
+@Profile("!test,ip")
 class NewFindip(val ips: IptableServicekt) {
 
     @Scheduled(fixedDelay = 60000)
@@ -21,33 +21,35 @@ class NewFindip(val ips: IptableServicekt) {
         var file = System.getProperty("nmapfile")
         if (file == null) {
             logger.error("not set nmapfile -Dnmapfile=....")
-            throw Exception("not set nmapfile -Dnmapfile=....")
+//            throw Exception("not set nmapfile -Dnmapfile=....")
+//            return
         }
+        else {
 
-        var f = File(file)
-        var devices = get(f)
+            var f = File(file)
+            var devices = get(f)
 
-        try {
-            if (devices.size > 0) {
+            try {
+                if (devices.size > 0) {
 
-                devices.forEach {
+                    devices.forEach {
 
-                    var ip = ips.findByMac(it.mac!!)
-                    if (ip != null) {//edit
-                        ip.ip = it.ip
-                        ips.save(ip)
-                    } else {//new
-                        ip = Iptableskt()
-                        ip.mac = it.mac
-                        ip.ip = it.ip
-                        ips.save(ip)
+                        var ip = ips.findByMac(it.mac!!)
+                        if (ip != null) {//edit
+                            ip.ip = it.ip
+                            ips.save(ip)
+                        } else {//new
+                            ip = Iptableskt()
+                            ip.mac = it.mac
+                            ip.ip = it.ip
+                            ips.save(ip)
+                        }
                     }
                 }
+            } catch (e: Exception) {
+                logger.error("Save or edit ip has problem ${e.message}")
             }
-        } catch (e: Exception) {
-            logger.error("Save or edit ip has problem ${e.message}")
         }
-
     }
 
     @Scheduled(cron = "00 00 00 * * ?")
