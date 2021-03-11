@@ -17,7 +17,7 @@ import java.util.*
 class MactoipService(
     val ips: IptableServicekt, val lgs: LogService, val http: HttpService,
     val dhts: ReadDhtService, val psis: PortstatusinjobService,
-    val dizs: DeviceinzoneService,val pjs:PijobService,val pus:PumpforpijobService
+    val dizs: DeviceinzoneService, val pjs: PijobService, val pus: PumpforpijobService
 ) {
     val om = ObjectMapper()
     fun mactoip(mac: String): String? {
@@ -51,7 +51,7 @@ class MactoipService(
             var id = pijob.pijobgroup?.id
 
             if (id != null) {
-                var devices = dizs.deviceinszone(id!!)
+                var devices = dizs.deviceinszone(id)
 
                 if (devices != null) {
                     devices.forEach {
@@ -81,6 +81,15 @@ class MactoipService(
         } catch (e: Exception) {
             logger.error("openpump ERROR ${e.message}")
             return "openpump ERROR ${e.message}"
+        }
+    }
+
+    fun openpumps(pidevice: PiDevice, timetoopen: Int) {
+        try {
+            var re = http.getNoCache("http://${pidevice.ip}/run?delay=${timetoopen}", 15000)
+            var status = om.readValue<Statusobj>(re)
+        } catch (e: Exception) {
+            logger.error("openpump ERROR ON PUMP ${e.message}")
         }
     }
 
@@ -145,7 +154,7 @@ class MactoipService(
         }
     }
 
-    fun readStatus(job: Pijob,timeout:Int=60000): String {
+    fun readStatus(job: Pijob, timeout: Int = 60000): String {
         var ip: String? = null
         try {
             ip = mactoip(job.desdevice?.mac!!)
@@ -202,18 +211,18 @@ class MactoipService(
     }
 
 
-    fun readPressure(pidevice:PiDevice): Double? {
+    fun readPressure(pidevice: PiDevice): Double? {
         try {
             var url = "http://${pidevice.ip}"
 
             var result = http.getNoCache(url)
             var status = om.readValue<Statusobj>(result)
             return status.psi
-        }catch (e:Exception)
-        {
-            logger.error("Read Pressure : "+e.message)
+        } catch (e: Exception) {
+            logger.error("Read Pressure : " + e.message)
             throw e
         }
     }
+
     var logger = LoggerFactory.getLogger(MactoipService::class.java)
 }
