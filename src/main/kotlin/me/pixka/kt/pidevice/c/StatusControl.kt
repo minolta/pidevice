@@ -16,4 +16,4 @@ class StatusControl (val uptime:UptimeTask)
     }
 }
 @JsonIgnoreProperties(ignoreUnknown = true)
-class Statusobj(var uptime:Long?=0,var status:String?=null)
+class Statusobj(var uptime:Long?=0,var status:String?=null,var psi:Double?=null)

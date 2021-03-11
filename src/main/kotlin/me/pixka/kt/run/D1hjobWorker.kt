@@ -25,13 +25,37 @@ class D1hjobWorker(
             if (token != null) {
                 ntfs.message(msg, token!!)
             }
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             status = "Error in notify status"
             logger.error("ERROR in notify ${e.message}")
-//            throw e
         }
     }
+
+
+    fun checkPressure(p: Pijob): Boolean {
+
+        try {
+            var pij = mtp.pus.bypijobid(p.id)
+
+            if (pij == null)
+                return false
+            var psi = mtp.readPressure(pij.get(0).pidevice!!)
+
+            if (psi == null) {
+                logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
+                return false
+            }
+
+            var setp = p.tlow?.toDouble()
+
+            if (setp!! < psi)
+                return true
+        } catch (e: Exception) {
+            logger.error("WORKER D1h error ${pijob.name} ERROR: " + e.message)
+        }
+        return false
+    }
+
 
     override fun run() {
         startRun = Date()
@@ -39,6 +63,18 @@ class D1hjobWorker(
         waitstatus = false //เริ่มมาก็ทำงาน
         token = pijob.token
 
+        try {
+            if (pijob.tlow != null) {
+                if (!checkPressure(pijob)) {
+                    notify("Job(${pijob.name}) not run bacouse Pressure is low")
+                    isRun = false
+                    waitstatus = true
+                    return
+                }
+            }
+        } catch (e: Exception) {
+            logger.error("ERROR PiJOB:  ${pijob.name} ${e.message}")
+        }
 
         try {
             Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "

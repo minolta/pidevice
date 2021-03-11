@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.c.Statusobj
 import me.pixka.log.d.LogService
@@ -16,7 +17,7 @@ import java.util.*
 class MactoipService(
     val ips: IptableServicekt, val lgs: LogService, val http: HttpService,
     val dhts: ReadDhtService, val psis: PortstatusinjobService,
-    val dizs: DeviceinzoneService
+    val dizs: DeviceinzoneService,val pjs:PijobService,val pus:PumpforpijobService
 ) {
     val om = ObjectMapper()
     fun mactoip(mac: String): String? {
@@ -201,5 +202,18 @@ class MactoipService(
     }
 
 
+    fun readPressure(pidevice:PiDevice): Double? {
+        try {
+            var url = "http://${pidevice.ip}"
+
+            var result = http.getNoCache(url)
+            var status = om.readValue<Statusobj>(result)
+            return status.psi
+        }catch (e:Exception)
+        {
+            logger.error("Read Pressure : "+e.message)
+            throw e
+        }
+    }
     var logger = LoggerFactory.getLogger(MactoipService::class.java)
 }
