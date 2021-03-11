@@ -29,9 +29,9 @@ class NotifyPressureByLine(
                 jobs.map {
                     if (!task.checkrun(it)) {
                         if (it.desdevice != null) {
-                            var ip = iptableService.findByMac(it.desdevice?.mac!!)
+                            var ip = it.desdevice?.ip
                             if (ip != null) {
-                                var t = "http://${ip.ip}"
+                                var t = "http://${ip}"
                                 var n = NotifyPressureWorker(it, readStatusService, t, notifyService)
 
                                 task.run(n)
