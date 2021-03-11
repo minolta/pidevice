@@ -56,6 +56,22 @@ class D1hjobWorker(
         return false
     }
 
+    fun openPumpinpijob(pj: Pijob, timetoopen: Int) {
+        var pumpsinpijob = mtp.pus.bypijobid(pj.id)
+        if (pumpsinpijob != null) {
+            pumpsinpijob.forEach {
+
+                try {
+                    status = "Open pump ${it.pidevice?.name}"
+                    mtp.openpumps(it.pidevice!!, timetoopen)
+
+                } catch (e: Exception) {
+                        logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
+                }
+
+            }
+        }
+    }
 
     override fun run() {
         startRun = Date()
@@ -63,8 +79,8 @@ class D1hjobWorker(
         waitstatus = false //เริ่มมาก็ทำงาน
         token = pijob.token
 
-        try {
-            if (pijob.tlow != null) {
+        try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
+            if (pijob.tlow != null && pijob.tlow?.toDouble()!! > 0.0) {
                 if (!checkPressure(pijob)) {
                     notify("Job(${pijob.name}) not run bacouse Pressure is low")
                     isRun = false
@@ -76,14 +92,27 @@ class D1hjobWorker(
             logger.error("ERROR PiJOB:  ${pijob.name} ${e.message}")
         }
 
+
+
+
+
         try {
+
+
             Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
             notify("JOB ${pijob.name} Open Pump Delay 10")
             var openpumptime = mtp.findTimeofjob(pijob)
             openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
             var o = mtp.openpump(pijob, openpumptime)
+
+
             status = "${o} Open Pump Delay 10"
+
+
+
+            openPumpinpijob(pijob,openpumptime)
+
 
             TimeUnit.SECONDS.sleep(10)
 
