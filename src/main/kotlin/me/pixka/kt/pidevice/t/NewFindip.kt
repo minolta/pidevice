@@ -12,8 +12,8 @@ import java.io.File
 /**
  * สำหรับ อ่านค่า scan ip จาก file แล้วเอามาใส่ใน Database
  */
-@Component
-@Profile("!test,ip")
+//@Component
+//@Profile("!test,ip")
 class NewFindip(val ips: IptableServicekt) {
 
     @Scheduled(fixedDelay = 60000)
