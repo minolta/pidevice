@@ -27,6 +27,7 @@ class LoadPumpsTask(
                 try {
                     var pumps = lps.loadPump(it.refid!!)
                     if (pumps.size > 0) {//ถ้ามีข้อมูลปั๊ม
+                        lps.resetPumps(pumps,it)
                         lps.savePumps(pumps, it)
                     }
                 } catch (e: Exception) {

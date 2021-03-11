@@ -26,6 +26,37 @@ val om = ObjectMapper()
             throw e
         }
     }
+
+    /**
+    * รับปั็มใหม่เข้ามาในระบบแล้วค้นหาว่ามีหรือเปล่า
+    * */
+    fun resetPumps(pumps:List<Pumpforpijob>,job:Pijob)
+    {
+
+        var buf = ArrayList<Pumpforpijob>()
+        var old = pus.bypijobid(job.id)
+
+        if(old!=null)
+        {
+            old.forEach {
+                  var refid = it.refid
+                if(pumps.find { it.id == refid }==null)
+                {
+                    buf.add(it)//เพิ่มเข้าไป delete
+                }
+            }
+        }
+
+
+        logger.debug("Delete not use pumps in pijobs now ${buf.size}")
+
+        buf.forEach {
+            pus.delete(it)
+        }
+    }
+    /**
+     * บันทึกปั๊มใหม่ลงใน device
+     */
     fun savePumps(pumps:List<Pumpforpijob>,job:Pijob)
     {
         if (pumps.size > 0) {//ถ้ามีข้อมูลปั๊ม
@@ -44,6 +75,7 @@ val om = ObjectMapper()
                     p.pijob = job
                     p.pidevice = pi
                     p.enable = true
+                    p.refid = it.id
                     println("New Pumps in job ")
                     pus.save(p)
 
