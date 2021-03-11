@@ -72,7 +72,6 @@ val om = ObjectMapper()
                     pds.save(pi)
                 }
                 var p = pus.checkPumpinjob(pi.id, job.id)
-
                 if(p==null)
                 {
                     p = Pumpforpijob()
