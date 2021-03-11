@@ -28,7 +28,7 @@ class Checkin(val notifyService: NotifyService, val mtp: MactoipService) {
             i.mac = System.getProperty("mac")
             i.password = UUID.randomUUID().toString() // สร้าง ยฟหหไนพก
             var re = mtp.http.post(url, i, 2000)
-            println(re)
+//            println(re)
             var t = om.readValue<Devicecheckin>(re)
         } catch (e: Exception) {
             logger.error(e.message)

@@ -114,7 +114,7 @@ class Runhjobbyd1(
 
     fun getHobj(job: Pijob): HObject? {
         try {
-            var ip = mtp.mactoip(job.desdevice?.mac!!)
+            var ip = job.desdevice?.ip
             logger.debug("Call IP : ${ip} RunH")
             if (ip != null) {
                 var re = mtp.http.get("http://${ip}", 12000)
