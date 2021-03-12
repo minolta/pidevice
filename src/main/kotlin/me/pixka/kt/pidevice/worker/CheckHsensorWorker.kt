@@ -23,7 +23,7 @@ class CheckHsensorWorker(job: Pijob, var mtp: MactoipService, val line: NotifySe
                 sensorstocheck.forEach {
                     if (it.enable == true) {
                         status = "Check h/t ${it.device?.name}"
-                        var ip = mtp.mactoip(it.device?.mac!!)
+                        var ip =  it.device?.ip
                         var re = mtp.http.get("http://${ip}",60000)
                         var hobject = om.readValue<HTObject>(re)
                         status = "${it.device?.name} H:${hobject.h} T:${hobject.t}"

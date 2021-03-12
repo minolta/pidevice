@@ -25,7 +25,7 @@ class DustWorker(job: Pijob, var ports: ArrayList<Portstatusinjob>,val mtp:Macto
         var mac = ""
         try {
             ports.filter { it.enable == true }.forEach {
-                var ip = mtp.mactoip(it.device?.mac!!)
+                var ip = it.device?.ip
                 mac = it.device?.mac!!
                 if (ip != null) {
                     if (it.runtime != null && it.runtime!!.toInt() > totalrun)
