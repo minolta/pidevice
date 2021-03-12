@@ -34,6 +34,7 @@ class D1hjobWorker(
 
     fun checkPressure(p: Pijob): Boolean {
 
+        var psi:Double?=null
         try {
             var pij = mtp.pus.bypijobid(p.id)
 
@@ -42,7 +43,7 @@ class D1hjobWorker(
 
             pij.forEach {
 
-                var psi = mtp.readPressure(it.pidevice!!)
+             psi = mtp.readPressure(it.pidevice!!)
 
                 if (psi == null) {
                     logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
@@ -51,9 +52,10 @@ class D1hjobWorker(
                 var setp = p.tlow?.toDouble()
 
                 //ถ้าอ่านไและสูงกว่าก็ให้ job ทำงาน
-                if (setp!! < psi!!)
+                if (setp!! <= psi!!)
                     return true
             }
+            logger.error("${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}")
             //ถ้าอ่าน psi ของแต่ละปั๊มไม่ได้ก็ไม่ผ่าน
             return false
 
@@ -92,6 +94,7 @@ class D1hjobWorker(
                     notify("Job(${pijob.name}) not run bacouse Pressure is low")
                     isRun = false
                     waitstatus = true
+                    logger.error("Pressure is low")
                     return
                 }
             }
@@ -123,10 +126,10 @@ class D1hjobWorker(
 
             TimeUnit.SECONDS.sleep(10)
 
-            if (pijob.tlow != null) {//delay ก่อน
-                TimeUnit.SECONDS.sleep(pijob.tlow!!.toLong())
-                logger.debug("Slow start ${pijob.tlow}")
-                notify("Slow start JOB:${pijob.name} TLOW: ${pijob.tlow}")
+            if (pijob.thigh != null) {//delay ก่อน
+                TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
+                logger.debug("Slow start ${pijob.thigh}")
+                notify("Slow start JOB:${pijob.name} TLOW: ${pijob.thigh}")
             }
             waitstatus = false //ใช้น้ำ
             go()
