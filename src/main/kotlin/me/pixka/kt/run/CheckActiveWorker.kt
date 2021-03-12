@@ -61,14 +61,15 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
                             else
                                 ntfs.message("Check active ${name} Timeout ${e.message}")
 
-                            logger.error(e.message)
+                            logger.error("ERROR Check ${name}  : ${e.message}")
                             throw e
 
                         }
                         catch (e: Exception) {
                             mtp.lgs.createERROR("ERROR ${e.message}",Date(),
                                     "CheckActiveWorker",Thread.currentThread().name,"39")
-                            logger.error(e.message)
+                            logger.error("ERROR Check ${name}  : ${e.message}")
+                            e.printStackTrace()
                             if(token!=null)
                             {
                                 ntfs.message("${name} ERROR: ${e.message}",token)
@@ -93,6 +94,7 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
 
         } catch (e: Exception) {
             logger.error(e.message)
+            e.printStackTrace()
             mtp.lgs.createERROR("Error ${e.message} ${pijob.name}", Date(), "",
                     "", "", "", "${mac}", pijob.refid)
             status = "Error ${e.message} ${pijob.name}"
