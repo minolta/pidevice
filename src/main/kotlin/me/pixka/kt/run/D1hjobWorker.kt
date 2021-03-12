@@ -51,7 +51,7 @@ class D1hjobWorker(
                 var setp = p.tlow?.toDouble()
 
                 //ถ้าอ่านไและสูงกว่าก็ให้ job ทำงาน
-                if (setp!! < psi!!)
+                if (setp!! <= psi!!)
                     return true
             }
             //ถ้าอ่าน psi ของแต่ละปั๊มไม่ได้ก็ไม่ผ่าน
@@ -92,6 +92,7 @@ class D1hjobWorker(
                     notify("Job(${pijob.name}) not run bacouse Pressure is low")
                     isRun = false
                     waitstatus = true
+                    logger.error("Pressure is low ${pijob.name}")
                     return
                 }
             }
