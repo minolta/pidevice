@@ -92,6 +92,7 @@ class D1hjobWorker(
             if (pijob.tlow != null && pijob.tlow?.toDouble()!! > 0.0) {
                 if (!checkPressure(pijob)) {
                     notify("Job(${pijob.name}) not run bacouse Pressure is low")
+                    TimeUnit.SECONDS.sleep(10)
                     isRun = false
                     waitstatus = true
                     logger.error("Pressure is low")
@@ -244,6 +245,7 @@ class D1hjobWorker(
             }
         } //end for
 
+        isRun=false
     }
 
     fun haveError(token: String?, e: Exception) {

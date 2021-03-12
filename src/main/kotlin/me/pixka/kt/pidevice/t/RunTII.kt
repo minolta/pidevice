@@ -63,7 +63,7 @@ class RunTII(
         try {
             var t: BigDecimal? = null
             try {
-                t = mtp.readTmp(pijob, 10000)
+                t = mtp.readTmp(pijob, 5000)
             } catch (e: Exception) {
                 logger.error("${pijob.name} Read Tmp ERROR ${e.message}")
                 throw e
