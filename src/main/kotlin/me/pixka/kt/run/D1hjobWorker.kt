@@ -39,17 +39,24 @@ class D1hjobWorker(
 
             if (pij == null)
                 return false
-            var psi = mtp.readPressure(pij.get(0).pidevice!!)
 
-            if (psi == null) {
-                logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
-                return false
+            pij.forEach {
+
+                var psi = mtp.readPressure(it.pidevice!!)
+
+                if (psi == null) {
+                    logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
+                }
+
+                var setp = p.tlow?.toDouble()
+
+                //ถ้าอ่านไและสูงกว่าก็ให้ job ทำงาน
+                if (setp!! < psi!!)
+                    return true
             }
+            //ถ้าอ่าน psi ของแต่ละปั๊มไม่ได้ก็ไม่ผ่าน
+            return false
 
-            var setp = p.tlow?.toDouble()
-
-            if (setp!! < psi)
-                return true
         } catch (e: Exception) {
             logger.error("WORKER D1h error ${pijob.name} ERROR: " + e.message)
         }
