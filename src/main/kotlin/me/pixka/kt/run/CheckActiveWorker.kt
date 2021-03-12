@@ -41,7 +41,7 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
                         var mac = port.device?.mac
 
                         try {
-                            var ip = mtp.mactoip(mac!!)
+                            var ip = port.device?.ip
                             status = "Check ${name} at  ${ip}"
                             var portnum = ""
                             if(pijob.tlow!=null)
