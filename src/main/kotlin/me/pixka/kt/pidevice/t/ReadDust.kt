@@ -32,7 +32,7 @@ class ReadDust(val findJob: FindJob, val ts: TaskService, val pmService: PmServi
                 logger.debug("Run READ DUST ${it.name}")
                 try {
                     mac = it.desdevice?.mac
-                    var i = mtp.mactoip(it.desdevice?.mac!!)
+                    var i = it.desdevice?.ip
                     if (i != null) {
                         if (!ts.checkrun(it)) {
                             var r = ReaddustWorker(it, i, pmService, pideviceService, mtp)

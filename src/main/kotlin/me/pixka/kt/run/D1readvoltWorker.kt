@@ -22,7 +22,7 @@ class D1readvoltWorker(
         Thread.currentThread().name = "JOBID:${pijob.id} D1readvolt : ${pijob.name} ${startRun}"
         try {
             if (pijob.desdevice?.mac != null) {
-                var ip = mtp.mactoip(pijob.desdevice?.mac!!)
+                var ip = pijob.desdevice?.ip
                 var re = mtp.http.get("http://${ip}", 20000)
                 var v = mtp.om.readValue<VbattObject>(re)
                 var psv = Vbatt()

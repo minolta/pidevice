@@ -32,7 +32,7 @@ class ReadPressureTask(p: Pijob, var mtp:MactoipService,
             Thread.currentThread().name = "JOBID:${pijob.id}  ReadPressure:${pijob.name} ${startRun}"
             var ip:String?=null
             try {
-                  ip = mtp.mactoip(pijob.desdevice?.mac!!)
+                  ip = pijob.desdevice?.ip
             } catch (e: Exception) {
                 logger.error("Find device error ${pijob.desdevice?.mac!!} ${e.message}")
             }

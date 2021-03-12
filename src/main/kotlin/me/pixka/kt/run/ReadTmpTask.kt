@@ -33,7 +33,7 @@ class ReadTmpTask(p: Pijob,
             Thread.currentThread().name = "JOBID:${pijob.id}  Tmp:${pijob.name} ${startRun}"
             if (tmpobj == null) {
                 //ไม่มีข้อมูลของ tmpobj
-                var ip = mtp.mactoip(pijob.desdevice?.mac!!)
+                var ip =  pijob.desdevice?.ip
                 if (ip != null) {
                     var re = mtp.http.get("http://${ip}",2000)
                      tmpobj = om.readValue<Tmpobj>(re)

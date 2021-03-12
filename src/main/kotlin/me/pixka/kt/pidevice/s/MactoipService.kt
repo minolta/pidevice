@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.kt.pibase.d.*
 import me.pixka.kt.pibase.s.HttpService
+import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pibase.s.PortstatusinjobService
 import me.pixka.kt.pidevice.c.Statusobj
@@ -16,22 +17,28 @@ import java.util.*
 @Service
 class MactoipService(
     val ips: IptableServicekt, val lgs: LogService, val http: HttpService,
-    val dhts: ReadDhtService, val psis: PortstatusinjobService,
+    val dhts: ReadDhtService, val psis: PortstatusinjobService, val pds: PideviceService,
     val dizs: DeviceinzoneService, val pjs: PijobService, val pus: PumpforpijobService
 ) {
     val om = ObjectMapper()
     fun mactoip(mac: String): String? {
         try {
-            var ip = ips.findByMac(mac)
-            if (ip != null)
-                return ip.ip
-            lgs.createERROR(
-                "IP Not found for ${mac}", Date(), "MacToip", "",
-                "14", "mactoip", "${mac}"
-            )
-            throw Exception("IP Not found for ${mac}")
+            var d = pds.findByMac(mac)
+
+            var ip = d?.ip
+
+            if (ip == null) {
+                lgs.createERROR(
+                    "IP Not found for ${mac}", Date(), "MacToip", "",
+                    "14", "mactoip", "${mac}"
+                )
+                throw Exception("IP Not found for ${mac}")
+            }
+            return ip
+
         } catch (e: Exception) {
             logger.error("Mac to ip:${e.message} ")
+            e.printStackTrace()
             lgs.createERROR(
                 "${e.message}", Date(), "MacToip", "",
                 "14", "mactoip", "${mac}"
@@ -55,7 +62,7 @@ class MactoipService(
 
                 if (devices != null) {
                     devices.forEach {
-                        var ip = mactoip(it.pidevice?.mac!!)
+                        var ip = it.pidevice?.ip
                         try {
                             var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 15000)
                             var status = om.readValue<Statusobj>(re)
@@ -119,7 +126,7 @@ class MactoipService(
 
     fun readTmp(pijob: Pijob, timeout: Int = 20000): BigDecimal? {
         try {
-            val ip = mactoip(pijob.desdevice?.mac!!)
+            val ip = pijob.desdevice?.ip
             if (ip != null) {
                 val to: Tmpobj
                 try {
@@ -157,7 +164,7 @@ class MactoipService(
     fun readStatus(job: Pijob, timeout: Int = 60000): String {
         var ip: String? = null
         try {
-            ip = mactoip(job.desdevice?.mac!!)
+            ip = job.desdevice?.ip
         } catch (e: Exception) {
             logger.error("Read status ERROR ${e.message} ${job.name}")
             throw e

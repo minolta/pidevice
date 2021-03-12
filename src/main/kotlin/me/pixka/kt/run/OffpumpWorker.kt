@@ -15,7 +15,7 @@ class OffpumpWorker(job: Pijob, val mtp: MactoipService) : DWK(job), Runnable {
         logger.debug("Start run ${startRun}")
         var mac: String? = null
         try {
-            var ip = mtp.mactoip(pijob.desdevice?.mac!!)
+            var ip = pijob.desdevice?.ip
             mac = pijob.desdevice?.mac
             try {
                 status = "Try to OFF Pump ${pijob.name}"
