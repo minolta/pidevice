@@ -34,7 +34,7 @@ class D1hjobWorker(
 
     fun checkPressure(p: Pijob): Boolean {
 
-        var psi:Double?=null
+        var psi: Double? = null
         try {
             var pij = mtp.pus.bypijobid(p.id)
 
@@ -43,7 +43,7 @@ class D1hjobWorker(
 
             pij.forEach {
 
-             psi = mtp.readPressure(it.pidevice!!)
+                psi = mtp.readPressure(it.pidevice!!)
 
                 if (psi == null) {
                     logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
@@ -75,10 +75,26 @@ class D1hjobWorker(
                     mtp.openpumps(it.pidevice!!, timetoopen)
 
                 } catch (e: Exception) {
-                        logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
+                    logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
                 }
 
             }
+        }
+    }
+
+    fun openpump() {
+        try {
+            var openpumptime = mtp.findTimeofjob(pijob)
+            openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
+            status = "Time of job : ${openpumptime}"
+            var o = mtp.openpump(pijob, openpumptime)
+            status = "${o} Open Pump Delay 10"
+            openPumpinpijob(pijob, openpumptime)
+            notify("JOB ${pijob.name} Open Pump Delay 10")
+            TimeUnit.SECONDS.sleep(10)
+
+        } catch (e: Exception) {
+            logger.error("Open pumps error ${e.message}")
         }
     }
 
@@ -88,15 +104,18 @@ class D1hjobWorker(
         waitstatus = false //เริ่มมาก็ทำงาน
         token = pijob.token
 
+        openpump()
+
+
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
             if (pijob.tlow != null && pijob.tlow?.toDouble()!! > 0.0) {
                 if (!checkPressure(pijob)) {
-                    notify("Job(${pijob.name}) not run bacouse Pressure is low")
-                    status = "Job(${pijob.name}) not run bacouse Pressure is low"
+                    notify("Job(${pijob.name}) not run because Pressure is low")
+                    status = "Not run bacouse Pressure is low"
                     TimeUnit.SECONDS.sleep(10)
                     isRun = false
                     waitstatus = true
-                    logger.error("Pressure is low")
+                    logger.error(" ${pijob.name} Pressure is low")
                     return
                 }
             }
@@ -112,21 +131,6 @@ class D1hjobWorker(
 
 
             Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
-            notify("JOB ${pijob.name} Open Pump Delay 10")
-            var openpumptime = mtp.findTimeofjob(pijob)
-            openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
-            status = "Time of job : ${openpumptime}"
-            var o = mtp.openpump(pijob, openpumptime)
-
-
-            status = "${o} Open Pump Delay 10"
-
-
-
-            openPumpinpijob(pijob,openpumptime)
-
-
-            TimeUnit.SECONDS.sleep(10)
 
             if (pijob.thigh != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
