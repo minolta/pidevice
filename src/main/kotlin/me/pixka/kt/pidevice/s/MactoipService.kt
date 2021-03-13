@@ -64,7 +64,7 @@ class MactoipService(
                     devices.forEach {
                         var ip = it.pidevice?.ip
                         try {
-                            var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 15000)
+                            var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 2000)
                             var status = om.readValue<Statusobj>(re)
                         } catch (e: Exception) {
                             logger.error("openpump ERROR ON PUMP ${e.message}")
@@ -78,16 +78,19 @@ class MactoipService(
                         return error
                 } else {
                     logger.warn("openpump Not pump in this zone to open")
-                    return "openpump Not pump in this zone to open"
+                    throw Exception("openpump Not pump in this zone to open")
+//                    return "openpump Not pump in this zone to open"
 
                 }
             } else {
                 logger.error("openpump Zone id is null")
-                return "openpump Zone id is null"
+                throw Exception("openpump Zone id is null")
+//                return "openpump Zone id is null"
             }
         } catch (e: Exception) {
             logger.error("openpump ERROR ${e.message}")
-            return "openpump ERROR ${e.message}"
+            throw e
+        //            return "openpump ERROR ${e.message}"
         }
     }
 
