@@ -31,26 +31,18 @@ class D1hjobWorker(
         }
     }
 
-
     fun checkPressure(p: Pijob): Boolean {
-
         var psi: Double? = null
         try {
             var pij = mtp.pus.bypijobid(p.id)
-
             if (pij == null)
                 return false
-
             pij.forEach {
-
                 psi = mtp.readPressure(it.pidevice!!)
-
                 if (psi == null) {
                     logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
                 }
-
                 var setp = p.tlow?.toDouble()
-
                 //ถ้าอ่านไและสูงกว่าก็ให้ job ทำงาน
                 if (setp!! <= psi!!)
                     return true
@@ -58,7 +50,6 @@ class D1hjobWorker(
             logger.error("${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}")
             //ถ้าอ่าน psi ของแต่ละปั๊มไม่ได้ก็ไม่ผ่าน
             return false
-
         } catch (e: Exception) {
             logger.error("WORKER D1h error ${pijob.name} ERROR: " + e.message)
         }
@@ -66,20 +57,22 @@ class D1hjobWorker(
     }
 
     fun openPumpinpijob(pj: Pijob, timetoopen: Int) {
-        var pumpsinpijob = mtp.pus.bypijobid(pj.id)
-        if (pumpsinpijob != null) {
-            pumpsinpijob.forEach {
-
-                try {
-                    status = "Open pump ${it.pidevice?.name}"
-                    mtp.openpumps(it.pidevice!!, timetoopen)
-
-                } catch (e: Exception) {
-                    logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
+        try {
+            var pumpsinpijob = mtp.pus.bypijobid(pj.id)
+            if (pumpsinpijob != null) {
+                pumpsinpijob.forEach {
+                    try {
+                        status = "Open pump ${it.pidevice?.name}"
+                        mtp.openpumps(it.pidevice!!, timetoopen)
+                    } catch (e: Exception) {
+                        logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
+                    }
                 }
-
             }
+        } catch (e: Exception) {
+            logger.error("ERROR openPumpinpijob ${e.message}")
         }
+
     }
 
     fun openpump() {
@@ -92,7 +85,6 @@ class D1hjobWorker(
             openPumpinpijob(pijob, openpumptime)
             notify("JOB ${pijob.name} Open Pump Delay 10")
             TimeUnit.SECONDS.sleep(10)
-
         } catch (e: Exception) {
             logger.error("Open pumps error ${e.message}")
         }
@@ -103,14 +95,11 @@ class D1hjobWorker(
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
         token = pijob.token
-
         openpump()
-
-
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
             if (pijob.tlow != null && pijob.tlow?.toDouble()!! > 0.0) {
                 if (!checkPressure(pijob)) {
-                    notify("Job(${pijob.name}) not run because Pressure is low")
+                    notify("Job (${pijob.name}) not run because Pressure is low")
                     status = "Not run bacouse Pressure is low"
                     TimeUnit.SECONDS.sleep(10)
                     isRun = false
@@ -122,16 +111,8 @@ class D1hjobWorker(
         } catch (e: Exception) {
             logger.error("ERROR PiJOB:  ${pijob.name} ${e.message}")
         }
-
-
-
-
-
         try {
-
-
             Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
-
             if (pijob.thigh != null) {//delay ก่อน
                 TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
                 logger.debug("Slow start ${pijob.thigh}")
@@ -159,10 +140,7 @@ class D1hjobWorker(
             waitstatus = true
             throw e
         }
-
     }
-
-
     fun getLogic(v: Logistate?): Int {
         var value = 0
         if (v != null && v.name != null) {
@@ -175,12 +153,9 @@ class D1hjobWorker(
                 status = "Value to set ERROR ${v.name}"
             else
                 status = "Port state Error is Null"
-
         }
-
         return value
     }
-
     fun go() {//Run
 
         var token = pijob.token
