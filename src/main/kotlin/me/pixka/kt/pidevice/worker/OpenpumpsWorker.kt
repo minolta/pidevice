@@ -1,7 +1,9 @@
 package me.pixka.kt.pidevice.worker
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pidevice.c.Statusobj
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.run.DWK
 import org.slf4j.LoggerFactory
@@ -36,7 +38,8 @@ class OpenpumpsWorker(
                         status = "Open pumps Error ${it.device?.name} ${timetoopen}"
                         throw e
                     }
-                    " Run ok OPEN PUMP : ${it.device?.name} ${re} RUN ${timetoopen}"
+                    var s = mtp.om.readValue<Statusobj>(re)
+                    " Run ok OPEN PUMP : ${it.device?.name} Pump uptime : ${s.uptime} RUN ${timetoopen}"
                 }.thenAccept {
                     status = it
                 }.exceptionally {
