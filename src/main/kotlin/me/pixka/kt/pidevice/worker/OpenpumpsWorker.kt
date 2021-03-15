@@ -33,11 +33,12 @@ class OpenpumpsWorker(
                         re = mtp.http.get(url, 2000)
                     } catch (e: Exception) {
                         logger.error("Open pumps Error ${it.device?.name} ${timetoopen}")
+                        status = "Open pumps Error ${it.device?.name} ${timetoopen}"
                         throw e
                     }
                     " Run ok OPEN PUMP : ${it.device?.name} ${re} RUN ${timetoopen}"
                 }.thenAccept {
-                    status = ""
+                    status = it
                 }.exceptionally {
                     logger.error("Error Job ${it.message}")
                     it.printStackTrace()
