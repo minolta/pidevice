@@ -66,6 +66,7 @@ class D1hjobWorker(
                         mtp.openpumps(it.pidevice!!, timetoopen)
                     } catch (e: Exception) {
                         logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
+//                        ntfs.
                     }
                 }
             }
