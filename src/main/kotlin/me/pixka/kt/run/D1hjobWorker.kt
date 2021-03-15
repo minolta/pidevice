@@ -226,6 +226,8 @@ class D1hjobWorker(
                         status = "ERROR wait pressure timeout"
                         throw Exception("${pijob.name}  Wait pressure Time out ")
                     }
+                    status = "Wait pressure ${wt}"
+                    notify("${pijob.name} wait pressure ${wt}")
                 }
                 setport(it)
             } catch (e: Exception) {
