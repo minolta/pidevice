@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture
 
 class OpenpumpsWorker(
     p: Pijob, var mtp: MactoipService,
-    var target: String, var notify: NotifyService
+    var notify: NotifyService
 ) : DWK(p), Runnable {
     override fun run() {
 
@@ -27,11 +27,10 @@ class OpenpumpsWorker(
                     var re = ""
                     var timetoopen = 10
                     try {
-                        timetoopen  = it.runtime!!
+                        timetoopen = it.runtime!!
                         var url = "http://${it.device?.ip}/run?delay=${timetoopen}"
                         re = mtp.http.get(url, 2000)
-                    }catch (e:Exception)
-                    {
+                    } catch (e: Exception) {
                         logger.error("Open pumps Error ${it.device?.name} ${timetoopen}")
                         throw e
                     }
@@ -39,7 +38,6 @@ class OpenpumpsWorker(
                 }.thenAccept {
                     status = ""
                 }.exceptionally {
-
                     logger.error("Error Job ${it.message}")
                     it.printStackTrace()
                     null
