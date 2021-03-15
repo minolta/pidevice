@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pidevice.s.MactoipService
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
@@ -31,6 +32,9 @@ class D1hjobWorker(
         }
     }
 
+    /**
+     * ตรวจแรงดันเองว่า ok ตาม tlow กำหนด
+     */
     fun checkPressure(p: Pijob): Boolean {
         var psi: Double? = null
         try {
@@ -120,7 +124,8 @@ class D1hjobWorker(
                 notify("Slow start JOB:${pijob.name} TLOW: ${pijob.thigh}")
             }
             waitstatus = false //ใช้น้ำ
-            go()
+//            go()
+            goII()
             waitstatus = true //หยุดใช้น้ำแล้ว
             exitdate = findExitdate(pijob)
             if (exitdate == null)
@@ -142,6 +147,7 @@ class D1hjobWorker(
             throw e
         }
     }
+
     fun getLogic(v: Logistate?): Int {
         var value = 0
         if (v != null && v.name != null) {
@@ -157,6 +163,88 @@ class D1hjobWorker(
         }
         return value
     }
+
+    /**
+     * สำหรับบอก port ว่าทำยังไง
+     */
+    fun setport(it: Portstatusinjob) {
+
+        var pw = it.waittime
+        var pr = it.runtime
+        var pn = it.portname!!.name
+        var v = it.status
+
+        var portname = pn
+        var runtime = 0L
+        if (pr != null) {
+            runtime = pr.toLong()
+        } else if (pijob.runtime != null) {
+            runtime = pijob.runtime!!
+        }
+        var waittime = 0L
+        if (pw != null) {
+            waittime = pw.toLong()
+        } else if (pijob.waittime != null) {
+            waittime = pijob.waittime!!
+        }
+        var value = getLogic(v)
+        try {
+            //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
+            var v = mtp.setport(it)
+            status = "Delay  ${runtime} + ${waittime}"
+            var s = om.readValue<Status>(v)
+            logger.debug("D1h Value ${status}")
+            status = "Set ${portname} to ${value}  ${s.status} and run ${runtime}"
+            notify("JOB ${pijob.name} Set ${portname} to ${value}  ${s.status} and run ${runtime}")
+            TimeUnit.SECONDS.sleep(runtime)
+            if (waittime != null) {
+                status = "Wait time of port ${waittime}"
+                TimeUnit.SECONDS.sleep(waittime)
+            }
+        } catch (e: ConnectException) {
+            haveError(token, e)
+        } catch (e: TimeoutException) {
+            haveError(token, e)
+        }
+    }
+
+
+    //เพิ่มการหยุดไปด้วย
+    fun goII() {
+        var ports = mtp.getPortstatus(pijob, true)
+        var wt = 0 //เวลาที่รอแรงดัน
+        var token = pijob.token
+        ports?.forEach {
+            status = "Run set  Device: ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
+            try {
+                startRun = Date()
+                wt = 0
+                while (!checkPressure(pijob)) {
+                    TimeUnit.SECONDS.sleep(1) //รอแรงดัน
+                    wt++
+                    if (wt >= 360) {
+                        status = "ERROR wait pressure timeout"
+                        throw Exception("${pijob.name}  Wait pressure Time out ")
+                    }
+                }
+                setport(it)
+            } catch (e: Exception) {
+                logger.error("Error 2 ${e.message}")
+                status = " Error 2 ${e.message}"
+                notify("JOB: ${pijob.name} Error 2 ${e.message}")
+                mtp.lgs.createERROR(
+                    " Error 2 ${e.message}", Date(), "D1hjobWorker",
+                    "", "", "goII()", pijob.desdevice?.mac, pijob.refid
+                )
+                isRun = false
+                waitstatus = true //หยุดใช้น้ำแล้ว
+            }
+
+        }
+
+
+    }
+
     fun go() {//Run
 
         var token = pijob.token
