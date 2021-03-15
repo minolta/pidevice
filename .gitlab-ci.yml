@@ -51,7 +51,7 @@ runtest:
             docker stop $OLD && docker rm $OLD
            fi
     - docker pull kykub/pidevice
-    - docker run -p 3334:888 -d --name pidevice  --restart unless-stopped -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Dspring.datasource.url=jdbc:h2:~/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.20  -Dmac=b8:27:eb:19:8f:5f  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://point.pixka.me:3333 " kykub/pidevice
+    - docker run -p 3334:888 -d --name pidevice  --restart always -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Dspring.datasource.url=jdbc:h2:~/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.20  -Dmac=b8:27:eb:19:8f:5f  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://point.pixka.me:3333 " kykub/pidevice
 
 runproduct:
   stage: product_install
@@ -68,4 +68,4 @@ runproduct:
             docker stop $OLD && docker rm $OLD
            fi
     - docker pull kykub/pidevice
-    - docker run -p 3334:888 -d --name pidevice  --restart unless-stopped  -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Xms1024m -Xmx6000m -Dspring.datasource.url=jdbc:h2:~/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.21  -Dmac=00:e0:4c:68:07:ae  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://point.pixka.me:3333 " kykub/pidevice
+    - docker run -p 3334:888 -d --name pidevice  --restart always  -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Xms1024m -Xmx6000m -Dspring.datasource.url=jdbc:h2:~/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.21  -Dmac=00:e0:4c:68:07:ae  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://point.pixka.me:3333 " kykub/pidevice
