@@ -163,7 +163,15 @@ class MactoipService(
             throw e
         }
     }
-
+    fun getPortstatus(job: Pijob,state:Boolean=true): List<Portstatusinjob>? {
+        try {
+            var  p =  psis.findByPijobid(job.id) as List<Portstatusinjob>?
+            return p?.filter { it.enable==true }
+        } catch (e: Exception) {
+            logger.error("Get portStatus ERROR ${e.message}")
+            throw e
+        }
+    }
     fun readStatus(job: Pijob, timeout: Int = 60000): String {
         var ip: String? = null
         try {
