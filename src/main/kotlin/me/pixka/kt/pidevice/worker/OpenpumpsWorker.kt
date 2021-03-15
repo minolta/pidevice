@@ -19,7 +19,7 @@ class OpenpumpsWorker(
         startRun = Date()
         status = "Start run ${startRun}"
         var ports = mtp.getPortstatus(pijob)
-
+//        mtp.findTimeofjob(pijob)
         if (ports != null) {
             ports.forEach {
                 //?delay=${timetoopen}
@@ -29,6 +29,7 @@ class OpenpumpsWorker(
                     try {
                         timetoopen = it.runtime!!
                         var url = "http://${it.device?.ip}/run?delay=${timetoopen}"
+                        status = "Open ${it.device?.name} in ${timetoopen}"
                         re = mtp.http.get(url, 2000)
                     } catch (e: Exception) {
                         logger.error("Open pumps Error ${it.device?.name} ${timetoopen}")
@@ -53,6 +54,10 @@ class OpenpumpsWorker(
 //                }
             }
         }
+
+        status = "End openpumps job"
+        exitdate = findExitdate(pijob)
+
     }
 
     var logger = LoggerFactory.getLogger(OpenpumpsWorker::class.java)
