@@ -36,6 +36,9 @@ class D1hjobWorker(
      * ตรวจแรงดันเองว่า ok ตาม tlow กำหนด
      */
     fun checkPressure(p: Pijob): Boolean {
+
+        if (pijob.tlow == null || pijob.tlow!!.toDouble() == 0.0)
+            return true
         var psi: Double? = null
         try {
             var pij = mtp.pus.bypijobid(p.id)
@@ -102,16 +105,14 @@ class D1hjobWorker(
         token = pijob.token
         openpump()
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
-            if (pijob.tlow != null && pijob.tlow?.toDouble()!! > 0.0) {
-                if (!checkPressure(pijob)) {
-                    notify("Job (${pijob.name}) not run because Pressure is low")
-                    status = "Not run bacouse Pressure is low"
-                    TimeUnit.SECONDS.sleep(10)
-                    isRun = false
-                    waitstatus = true
-                    logger.error(" ${pijob.name} Pressure is low")
-                    return
-                }
+            if (!checkPressure(pijob)) {
+                notify("Job (${pijob.name}) not run because Pressure is low")
+                status = "Not run bacouse Pressure is low"
+                TimeUnit.SECONDS.sleep(10)
+                isRun = false
+                waitstatus = true
+                logger.error(" ${pijob.name} Pressure is low")
+                return
             }
         } catch (e: Exception) {
             logger.error("ERROR PiJOB:  ${pijob.name} ${e.message}")
