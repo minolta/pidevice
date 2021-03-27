@@ -10,6 +10,7 @@ import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.JobService
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pidevice.s.CheckTimeService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.u.Dhtutil
@@ -29,7 +30,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                   val js: JobService,
                   val task: TaskService, val ips: IptableServicekt,
                   val dhs: Dhtutil,val mtp:MactoipService,
-                  val httpService: HttpService, val lgs: LogService) {
+                  val httpService: HttpService, val lgs: LogService,val checkTimeService: CheckTimeService) {
     val om = ObjectMapper()
 
     @Scheduled(fixedDelay = 1000)
@@ -43,21 +44,23 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
             if (list != null) {
                 list.forEach {
                     try {
-                        var checks = getPorttocheck(it)
-                        var sensorstatus = getSensorstatus(it)
-                        mac = it.desdevice?.mac
-                        var r = false
-                        if (checks != null) {
-                            for (c in checks) {
-                                r = r || getsensorstatusvalue(c.name!!, c.check!!, sensorstatus!!)
+                        if(checkTimeService.checkTime(it,Date())) {
+                            var checks = getPorttocheck(it)
+                            var sensorstatus = getSensorstatus(it)
+                            mac = it.desdevice?.mac
+                            var r = false
+                            if (checks != null) {
+                                for (c in checks) {
+                                    r = r || getsensorstatusvalue(c.name!!, c.check!!, sensorstatus!!)
+                                }
+                                logger.debug("R is ${r}")
                             }
-                            logger.debug("R is ${r}")
-                        }
-                        if (r && !task.checkrun(it)) {
+                            if (r && !task.checkrun(it)) {
 
-                            var t = D1portjobWorker(it,mtp)
-                            var run = task.run(t)
-                            logger.debug("Can run ${run}")
+                                var t = D1portjobWorker(it, mtp)
+                                var run = task.run(t)
+                                logger.debug("Can run ${run}")
+                            }
                         }
                     } catch (e: Exception) {
                         logger.error("ERROR Set port ${it.name}  ERROR ${e.message}")
