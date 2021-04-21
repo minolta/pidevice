@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*
-import javax.sound.sampled.Port
 
 @Service
 class MactoipService(
@@ -50,6 +49,19 @@ class MactoipService(
 
         return null
 
+    }
+
+    fun readDistance(ip: String): Long? {
+        try {
+            var url = "http://${ip}"
+            var re = http.get2Nocache(url)
+            var s = om.readValue<Statusobj>(re!!)
+            return s.distance
+        }catch (e:Exception)
+        {
+            e.printStackTrace()
+            throw e
+        }
     }
 
     fun openpump(pijob: Pijob, timetoopen: Int): String {
@@ -91,7 +103,7 @@ class MactoipService(
         } catch (e: Exception) {
             logger.error("openpump ERROR ${e.message}")
             throw e
-        //            return "openpump ERROR ${e.message}"
+            //            return "openpump ERROR ${e.message}"
         }
     }
 
@@ -164,15 +176,17 @@ class MactoipService(
             throw e
         }
     }
-    fun getPortstatus(job: Pijob,state:Boolean=true): List<Portstatusinjob>? {
+
+    fun getPortstatus(job: Pijob, state: Boolean = true): List<Portstatusinjob>? {
         try {
-            var  p =  psis.findByPijobid(job.id) as List<Portstatusinjob>?
-            return p?.filter { it.enable==true }
+            var p = psis.findByPijobid(job.id) as List<Portstatusinjob>?
+            return p?.filter { it.enable == true }
         } catch (e: Exception) {
             logger.error("Get portStatus ERROR ${e.message}")
             throw e
         }
     }
+
     fun readStatus(job: Pijob, timeout: Int = 60000): String {
         var ip: String? = null
         try {
@@ -244,7 +258,6 @@ class MactoipService(
     }
 
     var logger = LoggerFactory.getLogger(MactoipService::class.java)
-
 
 
 }
