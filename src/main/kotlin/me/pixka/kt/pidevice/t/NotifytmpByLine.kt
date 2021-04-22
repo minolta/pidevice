@@ -4,6 +4,7 @@ import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.ReadStatusService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.NotifytmpWorker
 import org.slf4j.LoggerFactory
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component
  */
 @Component
 @Profile("!test")
-class NotifytmpByLine(val readStatusService: ReadStatusService, val notifyService: NotifyService,
+class NotifytmpByLine(val mac:MactoipService, val notifyService: NotifyService,
                       val findjob: FindJob, val iptableService: IptableServicekt,
                       val task: TaskService) {
     @Scheduled(fixedDelay = 1000)
@@ -30,7 +31,7 @@ class NotifytmpByLine(val readStatusService: ReadStatusService, val notifyServic
                         var ip = iptableService.findByMac(it.desdevice?.mac!!)
                         if (ip != null) {
                             var t = "http://${ip.ip}"
-                            var n = NotifytmpWorker(it, readStatusService, t, notifyService)
+                            var n = NotifytmpWorker(it, mac, t, notifyService)
                             task.run(n)
                         }
                     }
