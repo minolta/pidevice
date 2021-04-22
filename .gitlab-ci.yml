@@ -1,4 +1,4 @@
-#update server 2 retry 5
+#update server 2 retry 6
 stages:
   - build
   - install
