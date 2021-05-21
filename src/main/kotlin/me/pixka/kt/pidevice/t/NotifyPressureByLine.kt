@@ -4,6 +4,7 @@ import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.ReadStatusService
+import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.worker.NotifyPressureWorker
 import org.slf4j.LoggerFactory
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Component
 @Profile("!test")
 class NotifyPressureByLine(
     val readStatusService: ReadStatusService, val notifyService: NotifyService,
-    val findjob: FindJob, val iptableService: IptableServicekt,
+    val findjob: FindJob, val mactoipService: MactoipService,
     val task: TaskService
 ) {
     @Scheduled(fixedDelay = 1000)
@@ -27,16 +28,20 @@ class NotifyPressureByLine(
             var jobs = findjob.loadjob("notifypressure")
             if (jobs != null) {
                 jobs.map {
-                    if (!task.checkrun(it)) {
-                        if (it.desdevice != null) {
-                            var ip = it.desdevice?.ip
-                            if (ip != null) {
-                                var t = "http://${ip}"
-                                var n = NotifyPressureWorker(it, readStatusService, t, notifyService)
+                    try {
+                        if (!task.checkrun(it)) {
+                            if (it.desdevice != null) {
+                                var ip = it.desdevice?.ip
+                                if (ip != null) {
+                                    var t = "http://${ip}"
+                                    var n = NotifyPressureWorker(it,mactoipService, t, notifyService)
 
-                                task.run(n)
+                                    task.run(n)
+                                }
                             }
                         }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
                 }
             }

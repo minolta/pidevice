@@ -113,7 +113,8 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Status(var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
              var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
-             var version: String? = null, var errormessage: String? = null, var status: String? = null,
+             var version: String? = null, var errormessage: String? = null,
+             var status: String? = null,var psi:Double?=null,
              var pm25: BigDecimal? = null, var pm1: BigDecimal? = null, var pm10: BigDecimal? = null) {
     override fun toString(): String {
         return "${name} ${message} ${ssid} ${version} ${t} ${h} ${ip}"
