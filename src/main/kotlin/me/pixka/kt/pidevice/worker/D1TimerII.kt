@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : DWK(job), Runnable {
     var maxrun = 0
     var maxwait = 0
-    var token:String?=null
+    var token: String? = null
 
     //    var df = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
     override fun run() {
@@ -43,15 +43,16 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
         try {
             if (waitlowtmp(pijob)) {
                 //ถ้าถึงแล้ว
-                status = "ความเลยขั้นต่ำไปแล้ว"
-                if(token!=null)
-                    line.message("JOB: ${pijob.name}  ความเลยขั้นต่ำไปแล้ว ${pijob.tlow}",token!!)
+                status = "ความร้อนเลยขั้นต่ำไปแล้ว"
+                if (token != null)
+                    line.message("JOB: ${pijob.name}  ความร้อนเลยขั้นต่ำไปแล้ว ${pijob.tlow}", token!!)
                 if (waithightmp(pijob)) {
-                    if(token!=null)
-                        line.message("JOB: ${pijob.name}  ความร้อนถึงความร้อนสูงสุดแล้ว ${pijob.thigh}",token!!)
+                    if (token != null)
+                        line.message("JOB: ${pijob.name}  ความร้อนถึงความร้อนสูงสุดแล้ว ${pijob.thigh}", token!!)
 
                     setPort()
-                    exitdate = findExitdate(pijob, (maxrun + maxwait).toLong())
+                    //ยังไม่เอาexitdate เพราะต้องรอความร้อนตำกว่า tlow ก่อนค่อยเปลียน
+//                    exitdate = findExitdate(pijob, (maxrun + maxwait).toLong())
                 } else {
                     status = "ความร้อนไม่ถึงขันสูง"
                     isRun = false//ไม่ถึงความร้อนสูง
@@ -66,8 +67,32 @@ class D1TimerII(job: Pijob, var mtp: MactoipService, val line: NotifyService) : 
             logger.error("ERROR ${e.message}")
             //ERROR
         }
+
+        waitforexit()
+
 //        status = "Exit normal"
 //        isRun = false
+    }
+
+    fun waitforexit() {
+        while (true) {
+            exitdate = findExitdate(pijob, (maxrun + maxwait).toLong())
+
+            var t = mtp.readTmp(pijob, 10000)
+
+//            status = "Read low tmp ${t}"
+            status = "รออุณหภูมตำกว่า tlow ${t} <=  ${pijob.tlow}"
+            //จะต้องอยู่ในช่วงตำสุดของระบบแต่ไม่เกินสูงของระบบ
+            if (t != null && (t.toDouble() <= pijob.tlow!!.toDouble())) {
+
+                exitdate = findExitdate(pijob, (maxrun + maxwait).toLong())
+                status = "Job have end and exit"
+                break //ออกจากระบบ
+            }
+            TimeUnit.SECONDS.sleep(1)
+            status = "wait to low tmp to exit"
+        }
+
     }
 
     fun set(mac: String, delay: Int, value: Int, port: String): Boolean {
