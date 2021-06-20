@@ -75,7 +75,6 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
                 go() // setport
                 setEnddate()
                 status = "${pijob.name} เริ่มจับเวลา ${df1.format(Date())} ถึง ${df1.format(exitdate)}"
-
             } catch (e: Exception) {
                 status = "พบปัญหา"
                 isRun = false
@@ -86,6 +85,8 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
             isRun = false
 
         }
+
+        //ต้องตรวจสอบว่า tmp ลงตำกว่า temp high แล้วหรือยังต้องเกิน
 
 
     }
@@ -118,7 +119,7 @@ class D1TimerWorker(val p: Pijob, var ips: IptableServicekt,
 
                 try {
                     val url = "http://${ip?.ip}/run?port=${portname}&value=${value?.toInt()}&delay=${rt}&waittime=${wt}"
-                    var re = httpService.get(url,30000)
+                    var re = httpService.get(url,1000)
                     var statusobj = om.readValue<Status>(re)
                     status = "Set Device :${it.device?.name} port ${portname} to ${value?.toInt()} runtime ${rt}  uptime ${statusobj.uptime} ok"
 
