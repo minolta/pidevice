@@ -242,6 +242,27 @@ class MactoipService(
             throw  e
         }
     }
+    //สำหรับ setport
+    fun setport(portstatusinjob: Portstatusinjob,timeout:Int): String {
+        try {
+            var url = findUrl(
+                portstatusinjob.device!!, portstatusinjob.portname!!.name!!,
+                portstatusinjob.runtime!!.toLong(), portstatusinjob.waittime!!.toLong(),
+                portstatusinjob.status!!.toInt()
+            )
+            return http.getNoCache(url, timeout)
+        } catch (e: Exception) {
+            logger.error("Set port :" + e.message)
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "MactoipService", Thread.currentThread().name, "51",
+                "setport()", portstatusinjob.device!!.mac, portstatusinjob.pijob!!.refid,
+                portstatusinjob.pijob!!.pidevice?.refid
+            )
+
+            throw  e
+        }
+    }
 
 
     fun readPressure(pidevice: PiDevice): Double? {

@@ -55,11 +55,15 @@ class D1hjobWorker(
                     return true
             }
             logger.error("${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}")
+            if (token != null)
+                ntfs.message("${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}", token!!)
+            status = "${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}"
             //ถ้าอ่าน psi ของแต่ละปั๊มไม่ได้ก็ไม่ผ่าน
             return false
         } catch (e: Exception) {
             logger.error("WORKER D1h error ${pijob.name} ERROR: " + e.message)
         }
+
         return false
     }
 
@@ -98,6 +102,14 @@ class D1hjobWorker(
         }
     }
 
+    fun slowstart() {
+        if (pijob.thigh != null) {//delay ก่อน
+            TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
+            logger.debug("Slow start ${pijob.thigh}")
+            notify("Slow start JOB:${pijob.name} TLOW: ${pijob.thigh}")
+        }
+    }
+
     override fun run() {
         startRun = Date()
         isRun = true
@@ -106,9 +118,10 @@ class D1hjobWorker(
         openpump()
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
             if (!checkPressure(pijob)) {
-                notify("Job (${pijob.name}) not run because Pressure is low")
-                status = "Not run bacouse Pressure is low"
-                TimeUnit.SECONDS.sleep(10)
+//                notify("Job (${pijob.name}) not run because Pressure is low")
+//                status = "Not run bacouse Pressure is low"
+
+                TimeUnit.SECONDS.sleep(600) //หยุดรอไป 10 นาที
                 isRun = false
                 waitstatus = true
                 logger.error(" ${pijob.name} Pressure is low")
@@ -119,11 +132,7 @@ class D1hjobWorker(
         }
         try {
             Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
-            if (pijob.thigh != null) {//delay ก่อน
-                TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
-                logger.debug("Slow start ${pijob.thigh}")
-                notify("Slow start JOB:${pijob.name} TLOW: ${pijob.thigh}")
-            }
+
             waitstatus = false //ใช้น้ำ
 //            go()
             goII()
@@ -191,11 +200,11 @@ class D1hjobWorker(
         var value = getLogic(v)
         try {
             //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-            var v = mtp.setport(it)
+            var v = mtp.setport(it, 15000)
             status = "Delay  ${runtime} + ${waittime}"
             var s = om.readValue<Status>(v)
             logger.debug("D1h Value ${status}")
-            status = "Set ${portname} to ${value}  ${s.status} and run ${runtime}"
+            status = "Set Device ${it.device?.name} port ${portname} to ${value}  ${s.status} and run ${runtime}"
             notify("JOB ${pijob.name} Set ${portname} to ${value}  ${s.status} and run ${runtime}")
             TimeUnit.SECONDS.sleep(runtime)
             if (waittime != null) {
@@ -203,9 +212,9 @@ class D1hjobWorker(
                 TimeUnit.SECONDS.sleep(waittime)
             }
         } catch (e: ConnectException) {
-            haveError(token, e)
+            haveError(token, e,it)
         } catch (e: TimeoutException) {
-            haveError(token, e)
+            haveError(token, e,it)
         }
     }
 
@@ -221,7 +230,7 @@ class D1hjobWorker(
                 startRun = Date()
                 wt = 0
                 while (!checkPressure(pijob)) {
-                    TimeUnit.SECONDS.sleep(1) //รอแรงดัน
+                    TimeUnit.SECONDS.sleep(10) //รอแรงดัน
                     wt++
                     if (wt >= 360) {
                         status = "ERROR wait pressure timeout"
@@ -299,9 +308,9 @@ class D1hjobWorker(
                         TimeUnit.SECONDS.sleep(waittime)
                     }
                 } catch (e: ConnectException) {
-                    haveError(token, e)
+                    haveError(token, e,port)
                 } catch (e: TimeoutException) {
-                    haveError(token, e)
+                    haveError(token, e,port)
                 }
             } catch (e: Exception) {
                 logger.error("Error 2 ${e.message}")
@@ -321,7 +330,7 @@ class D1hjobWorker(
 //        isRun=false // ไม่ต้องทำตรงนี้
     }
 
-    fun haveError(token: String?, e: Exception) {
+    fun haveError(token: String?, e: Exception, it: Portstatusinjob) {
         logger.error("Set port error  ${e.message}")
         status = "Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}"
         mtp.lgs.createERROR("Set port ERROR ${pijob.desdevice?.name} ${pijob.name}  ${e.message}", Date())
@@ -338,10 +347,17 @@ class D1hjobWorker(
         else
             ntfs.message("End job  ${pijob.name}   Can not connect to target ")
 
-        status = "End job  ${pijob.name}  Can not connect to target "
+        status = "End job  ${pijob.name}  Can not connect to target  ${it.device?.name}  port ${it.portname?.name}"
 
-        TimeUnit.SECONDS.sleep(5)
+        if (pijob.thigh != null) {
+            TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong()) //ถ้ามีการ set thigh มากให้ รอตามนั้นเลย
+        } else
+            TimeUnit.SECONDS.sleep(600)
+        isRun = false //ออกเลย
+
         //ไม่ทำอะไรข้ามไปเลยแล้วก็จบ job เลยถ้ามีปัญหารอรอบหน้าเลย
+
+
     }
 
 
