@@ -120,10 +120,14 @@ class D1hjobWorker(
             if (!checkPressure(pijob)) {
 //                notify("Job (${pijob.name}) not run because Pressure is low")
 //                status = "Not run bacouse Pressure is low"
-
-                TimeUnit.SECONDS.sleep(600) //หยุดรอไป 10 นาที
+                waitstatus = true //บอกว่าไม่ใช้น้ำแล้วแต่ยังรออยู่ บอกให้ job อื่นทำงานต่อ
+//                status= "แรงดันไม่พอ "
+                if (pijob.thigh != null) {
+                    TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
+                } else
+                    TimeUnit.SECONDS.sleep(600) //หยุดรอไป 10 นาที
                 isRun = false
-                waitstatus = true
+
                 logger.error(" ${pijob.name} Pressure is low")
                 return
             }
@@ -212,9 +216,9 @@ class D1hjobWorker(
                 TimeUnit.SECONDS.sleep(waittime)
             }
         } catch (e: ConnectException) {
-            haveError(token, e,it)
+            haveError(token, e, it)
         } catch (e: TimeoutException) {
-            haveError(token, e,it)
+            haveError(token, e, it)
         }
     }
 
@@ -308,9 +312,9 @@ class D1hjobWorker(
                         TimeUnit.SECONDS.sleep(waittime)
                     }
                 } catch (e: ConnectException) {
-                    haveError(token, e,port)
+                    haveError(token, e, port)
                 } catch (e: TimeoutException) {
-                    haveError(token, e,port)
+                    haveError(token, e, port)
                 }
             } catch (e: Exception) {
                 logger.error("Error 2 ${e.message}")
