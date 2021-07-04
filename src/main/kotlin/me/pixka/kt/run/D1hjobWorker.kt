@@ -73,11 +73,13 @@ class D1hjobWorker(
             if (pumpsinpijob != null) {
                 pumpsinpijob.forEach {
                     try {
-                        status = "Open pump ${it.pidevice?.name}"
+                        status = "Open pump ${it.pidevice?.name} Time:${timetoopen}"
+                        TimeUnit.SECONDS.sleep(1)
                         mtp.openpumps(it.pidevice!!, timetoopen)
                     } catch (e: Exception) {
+                        status = "open Pump ERROR ${it.pidevice?.name}"
                         logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
-//                        ntfs.
+                        TimeUnit.SECONDS.sleep(1)
                     }
                 }
             }
@@ -126,9 +128,11 @@ class D1hjobWorker(
                     TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
                 } else
                     TimeUnit.SECONDS.sleep(600) //หยุดรอไป 10 นาที
-                isRun = false
 
+                isRun = false
                 logger.error(" ${pijob.name} Pressure is low")
+                status=  "Exit "
+                openpump()
                 return
             }
         } catch (e: Exception) {
