@@ -187,6 +187,9 @@ class MactoipService(
         }
     }
 
+    /**
+     * เป็นการอ่าน status ของ des device
+      */
     fun readStatus(job: Pijob, timeout: Int = 60000): String {
         var ip: String? = null
         try {
