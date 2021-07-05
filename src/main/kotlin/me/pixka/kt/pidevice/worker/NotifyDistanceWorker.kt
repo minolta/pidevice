@@ -38,8 +38,11 @@ class NotifyDistanceWorker(
                 status = "Not in rang "
             }
             TimeUnit.SECONDS.sleep(1)
+
             exitdate = findExitdate(pijob)
             status = "End job normal"
+
+
 
         } catch (e: Exception) {
 
