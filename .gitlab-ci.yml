@@ -1,20 +1,20 @@
 #update server 2 retry 6
 stages:
-  - build
+#  - build
   - install
   - runtest
   - product_install
   # - product_build
   # - product_install
-build_base:
-  stage: build
-  only:
-    refs:
-      - master
-  trigger:
-    project: rokkor/pibasekt
-    branch: master
-    strategy: depend
+#build_base:
+#  stage: build
+#  only:
+#    refs:
+#      - master
+#  trigger:
+#    project: rokkor/pibasekt
+#    branch: master
+#    strategy: depend
 
 
 install:
