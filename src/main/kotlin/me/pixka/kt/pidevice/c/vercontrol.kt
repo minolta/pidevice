@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.*
 class VerControl()
 {
     @CrossOrigin
-    @RequestMapping(value = ["/ver"], method = arrayOf(RequestMethod.GET))
+    @RequestMapping(value = ["/version"], method = arrayOf(RequestMethod.GET))
     @ResponseBody
     fun ver(): String {
-        return "1.0"
+        return "1.1"
     }
 
 }
