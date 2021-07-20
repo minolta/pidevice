@@ -1,5 +1,6 @@
 package me.pixka.kt.pidevice.t
 
+import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
@@ -8,7 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class RunperssureJob(val findJob: FindJob,val task:TaskService,val mac:MactoipService) {
+class RunperssureJob(val findJob: FindJob,val task:TaskService,val mac:MactoipService,val ntfs:NotifyService) {
 
     @Scheduled(fixedDelay = 2000)
     fun run()
@@ -22,7 +23,7 @@ class RunperssureJob(val findJob: FindJob,val task:TaskService,val mac:MactoipSe
 
                 if(!task.checkrun(it))
                 {
-                    var p = PressureWorker(it,mac)
+                    var p = PressureWorker(it,mac,ntfs)
                     task.run(p)
                 }
 
