@@ -12,25 +12,32 @@ import java.util.concurrent.TimeUnit
  * worker จะทำการตรวจสอบว่า แรงดันอยู่ในช่วงหรือเปล่า
  *
  */
-class PressureWorker(p: Pijob, val mactoipService: MactoipService,var ntfs:NotifyService) : DWK(p), Runnable {
+class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs: NotifyService) : DWK(p), Runnable {
     override fun run() {
 
         var token = System.getProperty("pressurenotify")
         var psi: Double? = 0.0
+        try {
+            startRun = Date()
+            status = "Start run ${startRun}"
+            isRun = true
 
-        startRun = Date()
-        status = "Start run ${startRun}"
-        isRun = true
+            var canrun = runWaitrang()
 
-        var canrun = runWaitrang()
+            if (canrun) {
+                status = "Perssure in rang run set port"
+                setPort()
+            } else {
+                status = "Not in rang exit"
+            }
 
-        if (canrun) {
-            status = "Perssure in rang run set port"
-            setPort()
+            exitdate = findExitdate(pijob)
+            status = "Exit job"
+        } catch (e: Exception) {
+            status = "ERROR ${e.message}"
+            isRun = false
+
         }
-
-        exitdate = findExitdate(pijob)
-        status = "Exit job"
     }
 
     fun setPort() {
@@ -40,23 +47,21 @@ class PressureWorker(p: Pijob, val mactoipService: MactoipService,var ntfs:Notif
             ports.forEach {
                 try {
                     mactoipService.setport(it)
-                    if(pijob.token!=null)
-                    {
+                    if (pijob.token != null) {
                         var loop = 10
-                        if(pijob.hhigh!=null)
+                        if (pijob.hhigh != null)
                             loop = pijob.hhigh!!.toInt()
-                        for(i in 0..loop)
-                        {
+                        for (i in 0..loop) {
                             var m = ""
-                            if(pijob.description!=null)
+                            if (pijob.description != null)
                                 m = pijob.description!!
-                            ntfs.message("แรงดันตำมากเกินเวลา ${pijob.tlow}  ${m}",pijob.token!!)
+                            ntfs.message("แรงดันตำมากเกินเวลา ${pijob.tlow}  ${m}", pijob.token!!)
                             TimeUnit.SECONDS.sleep(1)
                         }
                     }
                     if (it.runtime != null)
                         TimeUnit.SECONDS.sleep(it.runtime!!.toLong())
-                    if(it.waittime!=null)
+                    if (it.waittime != null)
                         TimeUnit.SECONDS.sleep(it.waittime!!.toLong())
                 } catch (e: Exception) {
                     status = "${pijob.name} set port ERROR ${e.message}"
@@ -91,9 +96,7 @@ class PressureWorker(p: Pijob, val mactoipService: MactoipService,var ntfs:Notif
             }
             status = "Perssure in condition now"
             return true
-        }
-        catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error("Check perssion ERROR ${e.message}")
             throw e
         }
