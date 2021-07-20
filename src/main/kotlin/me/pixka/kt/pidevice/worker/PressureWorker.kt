@@ -47,7 +47,10 @@ class PressureWorker(p: Pijob, val mactoipService: MactoipService,var ntfs:Notif
                             loop = pijob.hhigh!!.toInt()
                         for(i in 0..loop)
                         {
-                            ntfs.message("แรงดันตำมากเกินเวลา ${pijob.tlow} ",pijob.token!!)
+                            var m = ""
+                            if(pijob.description!=null)
+                                m = pijob.description!!
+                            ntfs.message("แรงดันตำมากเกินเวลา ${pijob.tlow}  ${m}",pijob.token!!)
                             TimeUnit.SECONDS.sleep(1)
                         }
                     }
