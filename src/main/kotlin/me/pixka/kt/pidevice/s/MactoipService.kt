@@ -268,11 +268,11 @@ class MactoipService(
     }
 
 
-    fun readPressure(pidevice: PiDevice): Double? {
+    fun readPressure(pidevice: PiDevice,timeout:Int=20000): Double? {
         try {
             var url = "http://${pidevice.ip}"
 
-            var result = http.getNoCache(url)
+            var result = http.getNoCache(url,timeout)
             var status = om.readValue<Statusobj>(result)
             return status.psi
         } catch (e: Exception) {
