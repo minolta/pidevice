@@ -27,12 +27,11 @@ class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs: Not
             if (canrun) {
                 status = "Perssure in rang run set port"
                 setPort()
-            } else {
-                status = "Not in rang exit"
+                status= " exit normal "
             }
 
             exitdate = findExitdate(pijob)
-            status = "Exit job"
+//            status = "Exit job"
         } catch (e: Exception) {
             status = "Exit with ERROR ${e.message}"
             isRun = false
@@ -84,7 +83,7 @@ class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs: Not
 //                        TimeUnit.SECONDS.sleep(wait)
 //                    }
 
-                    status = "Exit job"
+//                    status = "Exit job"
                     return false
 
                 }
