@@ -68,7 +68,7 @@ class Rundustjob(val findJob: FindJob, val mtp: MactoipService,
     fun runThread(job: Pijob) {
         var it = readPm(job)
         var canrun = checkCanrun(job, it!!)
-        if (canrun) {
+        if (canrun && task.checktime(job)) {
             var ports = ps.findByPijobid(job.id) as ArrayList<Portstatusinjob>
             var t = DustWorker(job, ports, mtp)
             task.run(t)
