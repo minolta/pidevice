@@ -29,19 +29,24 @@ class LoadPiJob(
     @Scheduled(fixedDelay = 2000)
     fun load() {
         var mac = System.getProperty("mac")
-        var re: String? = httpService.get(target + "/${mac}", 500)
-        var alljobs = om.readValue<List<Pijob>>(re!!)
-        if (alljobs != null) {
-            alljobs.forEach {
+        if(host!=null) {
+            var re: String? = httpService.get(target + "/${mac}", 500)
+            var alljobs = om.readValue<List<Pijob>>(re!!)
+            if (alljobs != null) {
+                alljobs.forEach {
 
-                var ref = pjs.findByRefid(it.id)
-                if (ref != null) {
-                    edit(it, ref)
-                } else {
-                    newjob(it)
+                    var ref = pjs.findByRefid(it.id)
+                    if (ref != null) {
+                        edit(it, ref)
+                    } else {
+                        newjob(it)
+                    }
+
                 }
-
             }
+        }else
+        {
+
         }
     }
 
