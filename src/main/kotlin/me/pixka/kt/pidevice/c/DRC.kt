@@ -20,14 +20,16 @@ class DRC(val ps: PijobService,val mtp:MactoipService,val ntf:NotifyService,val 
 
             if(pijob!=null)
             {
-                if(pijob.job?.name.equals("hjob"))
+                if(pijob.job?.name.equals("runhbyd1"))
                 {
                     var task = D1hjobWorker(pijob,mtp,ntf)
                     return ts.run(task)
                 }
+
+                throw Exception("Not support job ${pijob}")
             }
 
-            throw Exception("job not found")
+            throw Exception("job not found : ${refid}")
         }
         catch (e:Exception)
         {
