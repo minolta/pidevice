@@ -18,7 +18,7 @@ class Checkactive(val js: JobService, val task: TaskService,
                   val findJob: FindJob,val ntfs: NotifyService, val mtp: MactoipService) {
     var logger = LoggerFactory.getLogger(Checkactive::class.java)
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     fun run() {
         logger.debug("checkactive")
         try {

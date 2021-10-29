@@ -12,8 +12,7 @@ import java.net.SocketTimeoutException
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
-class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifyService)
-    : DWK(job), Runnable {
+class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifyService) : DWK(job), Runnable {
 
 
     var logger = LoggerFactory.getLogger(CheckActiveWorker::class.java)
@@ -27,25 +26,18 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
 
         try {
             var ports = mtp.getPortstatus(pijob) as List<Portstatusinjob>
-
             ports = ports.filter { it.enable == true }
-
             logger.debug("Found port ${ports.size} ${pijob.name}")
-
             for (port in ports) {
-
                 if (port.enable != null && port.enable!!) {
-
                     CompletableFuture.supplyAsync {
                         var name = port.device?.name
                         var mac = port.device?.mac
-
                         try {
                             var ip = port.device?.ip
                             status = "Check ${name} at  ${ip}"
                             var portnum = ""
-                            if(pijob.tlow!=null)
-                            {
+                            if (pijob.tlow != null) {
                                 portnum = ":${pijob.tlow?.toInt()}"
                             }
                             var url = "http://${ip}${portnum}"
@@ -53,34 +45,44 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
                             var s = mtp.om.readValue<Status>(re)
                             status = "${name} is Active uptime ${s.uptime}"
 
-                        }catch (e: SocketTimeoutException) {
-                            if(token!=null)
-                            {
-                                ntfs.message("Check active ${name} Timeout ${e.message}",token)
+                            //check other message
+                            if (s.type.equals("PUMP")) {
+                                if (token != null) {
+                                    if (s.message!=null && s.message!!.lowercase().indexOf("over") != -1) {
+                                        ntfs.message("PUMP ${port.device!!.name} Over run   ${s.message}", token)
+                                    }
+
+                                    if (s.errormessage!=null && s.errormessage!!.lowercase().indexOf("over") != -1) {
+                                        ntfs.message("PUMP ${port.device!!.name} Over run   ${s.message}", token)
+                                    }
+
+                                }
                             }
-                            else
+
+                        } catch (e: SocketTimeoutException) {
+                            if (token != null) {
+                                ntfs.message("Check active ${name} Timeout ${e.message}", token)
+                            } else
                                 ntfs.message("Check active ${name} Timeout ${e.message}")
 
                             logger.error("${pijob.name} ERROR Check ${name}  : ${e.message}")
                             throw e
 
-                        }
-                        catch (e: Exception) {
-                            mtp.lgs.createERROR("ERROR ${e.message}",Date(),
-                                    "CheckActiveWorker",Thread.currentThread().name,"39")
+                        } catch (e: Exception) {
+                            mtp.lgs.createERROR(
+                                "ERROR ${e.message}", Date(),
+                                "CheckActiveWorker", Thread.currentThread().name, "39"
+                            )
                             logger.error(" ${pijob.name} ERROR Check ${name}  : ${e.message}")
                             e.printStackTrace()
-                            if(token!=null)
-                            {
-                                ntfs.message("${name} ERROR: ${e.message}",token)
-                            }
-                            else
+                            if (token != null) {
+                                ntfs.message("${name} ERROR: ${e.message}", token)
+                            } else
                                 ntfs.message("${name} ERROR: ${e.message}")
 
                             throw e
 
                         }
-
 
 
                     }
@@ -95,8 +97,10 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
         } catch (e: Exception) {
             logger.error("${pijob.name} ERROR ${e.message} ")
             e.printStackTrace()
-            mtp.lgs.createERROR("Error ${e.message} ${pijob.name}", Date(), "",
-                    "", "", "", "${mac}", pijob.refid)
+            mtp.lgs.createERROR(
+                "Error ${e.message} ${pijob.name}", Date(), "",
+                "", "", "", "${mac}", pijob.refid
+            )
             status = "Error ${e.message} ${pijob.name}"
         }
 
@@ -111,11 +115,13 @@ class CheckActiveWorker(job: Pijob, val mtp: MactoipService, val ntfs: NotifySer
 }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class Status(var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
-             var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
-             var version: String? = null, var errormessage: String? = null,
-             var status: String? = null,var psi:Double?=null,
-             var pm25: BigDecimal? = null, var pm1: BigDecimal? = null, var pm10: BigDecimal? = null) {
+class Status(
+    var message: String? = null, var ip: String? = null, var uptime: Long? = 0,
+    var name: String? = null, var t: BigDecimal? = null, var h: BigDecimal? = null, var ssid: String? = null,
+    var version: String? = null, var errormessage: String? = null,
+    var status: String? = null, var psi: Double? = null, var type: String? = null,
+    var pm25: BigDecimal? = null, var pm1: BigDecimal? = null, var pm10: BigDecimal? = null
+) {
     override fun toString(): String {
         return "${name} ${message} ${ssid} ${version} ${t} ${h} ${ip}"
     }
