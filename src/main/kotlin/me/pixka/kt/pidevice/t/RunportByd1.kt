@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.t
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.IptableServicekt
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
@@ -29,7 +30,7 @@ import java.util.*
 class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                   val js: JobService,
                   val task: TaskService, val ips: IptableServicekt,
-                  val dhs: Dhtutil,val mtp:MactoipService,
+                  val dhs: Dhtutil,val mtp:MactoipService,val ntfs:NotifyService,
                   val httpService: HttpService, val lgs: LogService,val checkTimeService: CheckTimeService) {
     val om = ObjectMapper()
 
@@ -57,7 +58,7 @@ class RunportByd1(val pjs: PijobService, val findJob: FindJob,
                             }
                             if (r && !task.checkrun(it)) {
 
-                                var t = D1portjobWorker(it, mtp)
+                                var t = D1portjobWorker(it, mtp,ntfs)
                                 var run = task.run(t)
                                 logger.debug("Can run ${run}")
                             }
