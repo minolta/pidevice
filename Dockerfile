@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM openjdk:17
 ARG JAR_FILE=target/pidevice.jar
 COPY ${JAR_FILE} app.jar
 #RUN apk add --no-cache tzdata

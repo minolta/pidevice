@@ -3,19 +3,22 @@ package me.pixka.kt.run
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.readValue
+import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pidevice.s.MactoipService
 import org.slf4j.LoggerFactory
 import java.util.*
 
-class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable {
+class D1portjobWorker(job: Pijob, var mtp: MactoipService, var ntfs: NotifyService) : DWK(job), Runnable {
     var waitstatus: Boolean = false
+    var token: String? = null
     override fun run() {
 
         startRun = Date()
         isRun = true
         status = "Start run ${startRun}"
         waitstatus = false //เริ่มมาก็ทำงาน
+        token = pijob.token
         Thread.currentThread().name = "JOBID:${pijob.id} D1PORT : ${pijob.name} ${startRun}"
         try {
             waitstatus = false
@@ -27,6 +30,8 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
             isRun = false
             status = "Run By port is ERROR ${e.message}"
             logger.error("Run By port is ERROR ${e.message}")
+            if (token != null)
+                ntfs.message("Run By port is ERROR ${e.message}", token!!)
             mtp.lgs.createERROR(
                 "${e.message}", Date(),
                 "D1readportWorker", Thread.currentThread().name, "22",
@@ -48,6 +53,7 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
             ports.filter {
                 it.enable != null && it.enable == true
             }.forEach {
+
                 var pw = it.waittime
                 var pr = it.runtime
                 //หาเวลาที่มากสุดไปรวมกับเวลาของ main job เพื่อให้ออกไปหยุดรอ
@@ -65,6 +71,9 @@ class D1portjobWorker(job: Pijob, var mtp: MactoipService) : DWK(job), Runnable 
 
                 } catch (e: Exception) {
                     status = "ERROR ${e.message}"
+                    if (token != null) {
+                        ntfs.message("${pijob.name} Set port ${it.portname?.name} ERROR ${e.message}", token!!)
+                    }
                     mtp.lgs.createERROR(
                         "${e.message}", Date(),
                         "D1ReadportWorker",
