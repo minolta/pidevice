@@ -18,6 +18,6 @@ class TestChecktime {
     {
         var job = Pijob()
         job.etimes
-        ts.checktime()
+        ts.checktime(job)
     }
 }

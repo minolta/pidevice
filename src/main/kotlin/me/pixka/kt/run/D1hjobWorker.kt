@@ -140,11 +140,12 @@ class D1hjobWorker(
         } catch (e: Exception) {
             logger.error("ERROR PiJOB:  ${pijob.name} ${e.message}")
         }
+
+
         try {
             Thread.currentThread().name = "JOBID:${pijob.id} D1H : ${pijob.name} "
-
+            status = "Set port now"
             waitstatus = false //ใช้น้ำ
-//            go()
             goII()
             waitstatus = true //หยุดใช้น้ำแล้ว
             exitdate = findExitdate(pijob)
