@@ -38,7 +38,8 @@ class D1hjobWorker(
     fun checkPressure(p: Pijob): Boolean {
 
         if (pijob.tlow == null || pijob.tlow!!.toDouble() == 0.0)
-            return true
+            return true //ไม่มีการ check pressure
+
         var psi: Double? = null
         try {
             var pij = mtp.pus.bypijobid(p.id)
@@ -50,7 +51,7 @@ class D1hjobWorker(
                     logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
                 }
                 var setp = p.tlow?.toDouble()
-                //ถ้าอ่านไและสูงกว่าก็ให้ job ทำงาน
+                //ถ้าอ่านและสูงกว่าก็ให้ job ทำงาน
                 if (setp!! <= psi!!)
                     return true
             }
@@ -63,7 +64,7 @@ class D1hjobWorker(
         } catch (e: Exception) {
             logger.error("WORKER D1h error ${pijob.name} ERROR: " + e.message)
         }
-
+        status = "Pressure is ok"
         return false
     }
 
@@ -99,6 +100,7 @@ class D1hjobWorker(
             openPumpinpijob(pijob, openpumptime)
             notify("JOB ${pijob.name} Open Pump Delay 10")
             TimeUnit.SECONDS.sleep(10)
+            status = "Open pump ok"
         } catch (e: Exception) {
             logger.error("Open pumps error ${e.message}")
         }
@@ -131,8 +133,8 @@ class D1hjobWorker(
 
                 isRun = false
                 logger.error(" ${pijob.name} Pressure is low")
-                status=  "Exit "
-                openpump()
+                status = "Exit Pressure is low "
+//                openpump()
                 return
             }
         } catch (e: Exception) {
@@ -238,7 +240,7 @@ class D1hjobWorker(
                 startRun = Date()
                 wt = 0
                 while (!checkPressure(pijob)) {
-                    TimeUnit.SECONDS.sleep(10) //รอแรงดัน
+                    TimeUnit.SECONDS.sleep(1) //รอแรงดัน
                     wt++
                     if (wt >= 360) {
                         status = "ERROR wait pressure timeout"
