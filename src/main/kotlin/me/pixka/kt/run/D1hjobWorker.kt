@@ -64,7 +64,9 @@ class D1hjobWorker(
         } catch (e: Exception) {
             logger.error("WORKER D1h error ${pijob.name} ERROR: " + e.message)
         }
-        status = "Pressure is ok"
+
+
+        status = "Pressure not  ok"
         return false
     }
 
@@ -86,6 +88,7 @@ class D1hjobWorker(
             }
         } catch (e: Exception) {
             logger.error("ERROR openPumpinpijob ${e.message}")
+            status = "ERROR openPumpinpijob ${e.message}"
         }
 
     }
@@ -97,7 +100,7 @@ class D1hjobWorker(
             status = "Time of job : ${openpumptime}"
             var o = mtp.openpump(pijob, openpumptime)
             status = "${o} Open Pump Delay 10"
-            openPumpinpijob(pijob, openpumptime)
+//            openPumpinpijob(pijob, openpumptime)
             notify("JOB ${pijob.name} Open Pump Delay 10")
             TimeUnit.SECONDS.sleep(10)
             status = "Open pump ok"
@@ -127,10 +130,13 @@ class D1hjobWorker(
                 waitstatus = true //บอกว่าไม่ใช้น้ำแล้วแต่ยังรออยู่ บอกให้ job อื่นทำงานต่อ
 //                status= "แรงดันไม่พอ "
                 if (pijob.thigh != null) {
+                    status = "Wait ... ${pijob.thigh!!.toLong()}"
                     TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
-                } else
-                    TimeUnit.SECONDS.sleep(600) //หยุดรอไป 10 นาที
 
+                } else {
+                    status = "Wait ... 600"
+                    TimeUnit.SECONDS.sleep(600) //หยุดรอไป 10 นาที
+                }
                 isRun = false
                 logger.error(" ${pijob.name} Pressure is low")
                 status = "Exit Pressure is low "
