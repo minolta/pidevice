@@ -76,6 +76,7 @@ class MactoipService(
                 if (devices != null) {
                     devices.forEach {
                         var ip = it.pidevice?.ip
+
                         try {
                             var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 2000)
                             var status = om.readValue<Statusobj>(re)
