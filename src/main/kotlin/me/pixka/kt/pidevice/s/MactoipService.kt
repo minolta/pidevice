@@ -110,6 +110,7 @@ class MactoipService(
             var status = om.readValue<Statusobj>(re)
         } catch (e: Exception) {
             logger.error("openpump ERROR ON PUMP ${e.message}")
+            throw e
         }
     }
 
