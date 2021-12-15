@@ -32,6 +32,8 @@ class D1hjobWorker(
         }
     }
 
+    var psi: Double? = null
+
     /**
      * ตรวจแรงดันเองว่า ok ตาม tlow กำหนด
      */
@@ -40,7 +42,7 @@ class D1hjobWorker(
         if (pijob.tlow == null || pijob.tlow!!.toDouble() == 0.0)
             return true //ไม่มีการ check pressure
 
-        var psi: Double? = null
+
         try {
             var pij = mtp.pus.bypijobid(p.id)
             if (pij == null)
@@ -117,6 +119,27 @@ class D1hjobWorker(
         }
     }
 
+    fun checkperssureLoop(): Boolean {
+
+        var waitloop = 30
+
+        if (pijob.thigh != null)
+            waitloop = pijob.thigh!!.toInt()
+
+        for (i in 1..waitloop) {
+            if (!checkPressure(pijob)) {
+                status = "wait pressure ${psi}  loop time ${i}"
+                TimeUnit.SECONDS.sleep(1)
+            }
+            else
+            {
+                return true
+            }
+        }
+
+        return false
+    }
+
     override fun run() {
         startRun = Date()
         isRun = true
@@ -124,7 +147,7 @@ class D1hjobWorker(
         token = pijob.token
         openpump()
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
-            if (!checkPressure(pijob)) {
+            if (!checkperssureLoop()) {
 //                notify("Job (${pijob.name}) not run because Pressure is low")
 //                status = "Not run bacouse Pressure is low"
                 waitstatus = true //บอกว่าไม่ใช้น้ำแล้วแต่ยังรออยู่ บอกให้ job อื่นทำงานต่อ
@@ -132,7 +155,6 @@ class D1hjobWorker(
                 if (pijob.thigh != null) {
                     status = "Wait ... ${pijob.thigh!!.toLong()}"
                     TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
-
                 } else {
                     status = "Wait ... 600"
                     TimeUnit.SECONDS.sleep(600) //หยุดรอไป 10 นาที

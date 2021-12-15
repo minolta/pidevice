@@ -78,7 +78,7 @@ class MactoipService(
                         var ip = it.pidevice?.ip
 
                         try {
-                            var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 2000)
+                            var re = http.getNoCache("http://${ip}/run?delay=${timetoopen}", 5000)
                             var status = om.readValue<Statusobj>(re)
                         } catch (e: Exception) {
                             logger.error("openpump ERROR ON PUMP ${e.message}")
