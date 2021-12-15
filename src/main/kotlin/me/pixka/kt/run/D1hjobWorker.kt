@@ -128,7 +128,7 @@ class D1hjobWorker(
 
         for (i in 1..waitloop) {
             if (!checkPressure(pijob)) {
-                status = "wait pressure ${psi}  loop time ${i}"
+                status = "wait pressure ${psi}  loop time ${i}/${waitloop}"
                 TimeUnit.SECONDS.sleep(1)
             }
             else
