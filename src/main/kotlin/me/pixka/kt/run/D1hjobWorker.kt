@@ -84,7 +84,7 @@ class D1hjobWorker(
                     } catch (e: Exception) {
                         status = "${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}"
                         logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
-                        TimeUnit.SECONDS.sleep(1)
+                        TimeUnit.SECONDS.sleep(10)
                     }
                 }
             }
@@ -268,19 +268,29 @@ class D1hjobWorker(
             status = "Run set  Device: ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
             try {
                 startRun = Date()
-                wt = 0
-                while (!checkPressure(pijob)) {
-                    TimeUnit.SECONDS.sleep(1) //รอแรงดัน
-                    wt++
-                    if (wt >= 360) {
-                        status = "ERROR wait pressure timeout"
-                        throw Exception("${pijob.name}  Wait pressure Time out ")
-                    }
-                    status = "Wait pressure ${wt}"
-                    if (wt % 30 == 0) //fixbug too many notify
-                        notify("${pijob.name} wait pressure ${wt}")
+//                wt = 0
+//                while (!checkPressure(pijob)) {
+//                    TimeUnit.SECONDS.sleep(1) //รอแรงดัน
+//                    wt++
+//                    if (wt >= 360) {
+//                        status = "ERROR wait pressure timeout"
+//                        throw Exception("${pijob.name}  Wait pressure Time out ")
+//                    }
+//                    status = "Wait pressure ${wt}"
+//                    if (wt % 30 == 0) //fixbug too many notify
+//                        notify("${pijob.name} wait pressure ${wt}")
+//                }
+                if(checkperssureLoop())
+                {
+                    setport(it)
                 }
-                setport(it)
+                else
+                {
+                    status = "Perssure not ok exit set port ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
+                }
+
+
+
             } catch (e: Exception) {
                 logger.error("Error 2 ${e.message}")
                 status = " Error 2 ${e.message}"
