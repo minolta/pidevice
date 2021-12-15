@@ -82,7 +82,7 @@ class D1hjobWorker(
                         TimeUnit.SECONDS.sleep(1)
                         mtp.openpumps(it.pidevice!!, timetoopen)
                     } catch (e: Exception) {
-                        status = "open Pump ERROR ${it.pidevice?.name}"
+                        status = "${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}"
                         logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
                         TimeUnit.SECONDS.sleep(1)
                     }
@@ -100,8 +100,9 @@ class D1hjobWorker(
             var openpumptime = mtp.findTimeofjob(pijob)
             openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
-            var o = mtp.openpump(pijob, openpumptime)
-            status = "${o} Open Pump Delay 10"
+//            var o = mtp.openpump(pijob, openpumptime)
+//            status = "${o} Open Pump Delay 10"
+            openPumpinpijob(pijob,openpumptime)
 //            openPumpinpijob(pijob, openpumptime)
             notify("JOB ${pijob.name} Open Pump Delay 10")
             TimeUnit.SECONDS.sleep(10)
@@ -297,77 +298,7 @@ class D1hjobWorker(
 
     }
 
-    fun go() {//Run
 
-        var token = pijob.token
-        status = "Run set port "
-        var ports = pijob.ports
-        if (ports == null)
-            return
-        logger.debug("Ports ${ports}")
-        ports = ports.filter { it.enable == true }
-
-        for (port in ports) {
-            if (port.enable == null || !port.enable!!) {
-                logger.debug("Port disable ${port}")
-                continue //ข้ามไปเลย
-            }
-            var pw = port.waittime
-            var pr = port.runtime
-            var pn = port.portname!!.name
-            var v = port.status
-
-            var portname = pn
-            var runtime = 0L
-            if (pr != null) {
-                runtime = pr.toLong()
-            } else if (pijob.runtime != null) {
-                runtime = pijob.runtime!!
-            }
-            var waittime = 0L
-            if (pw != null) {
-                waittime = pw.toLong()
-            } else if (pijob.waittime != null) {
-                waittime = pijob.waittime!!
-            }
-            var value = getLogic(v)
-            try {
-                startRun = Date()
-                try {
-                    //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-                    var v = mtp.setport(port)
-                    status = "Delay  ${runtime} + ${waittime}"
-                    var s = om.readValue<Status>(v)
-                    logger.debug("D1h Value ${status}")
-                    status = "Set ${portname} to ${value}  ${s.status} and run ${runtime}"
-                    notify("JOB ${pijob.name} Set ${portname} to ${value}  ${s.status} and run ${runtime}")
-                    TimeUnit.SECONDS.sleep(runtime)
-                    if (waittime != null) {
-                        status = "Wait time of port ${waittime}"
-                        TimeUnit.SECONDS.sleep(waittime)
-                    }
-                } catch (e: ConnectException) {
-                    haveError(token, e, port)
-                } catch (e: TimeoutException) {
-                    haveError(token, e, port)
-                }
-            } catch (e: Exception) {
-                logger.error("Error 2 ${e.message}")
-                status = " Error 2 ${e.message}"
-                notify("JOB: ${pijob.name} Error 2 ${e.message}")
-                mtp.lgs.createERROR(
-                    " Error 2 ${e.message}", Date(), "D1hjobWorker",
-                    "", "", "go()", pijob.desdevice?.mac, pijob.refid
-                )
-                isRun = false
-                waitstatus = true //หยุดใช้น้ำแล้ว
-                break //ออกเลย
-
-            }
-        } //end for
-
-//        isRun=false // ไม่ต้องทำตรงนี้
-    }
 
     fun haveError(token: String?, e: Exception, it: Portstatusinjob) {
         logger.error("Set port error  ${e.message}")
