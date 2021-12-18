@@ -154,7 +154,7 @@ class D1hjobWorker(
                 waitstatus = true //บอกว่าไม่ใช้น้ำแล้วแต่ยังรออยู่ บอกให้ job อื่นทำงานต่อ
 //                status= "แรงดันไม่พอ "
                 if (pijob.thigh != null) {
-                    status = "Wait ... ${pijob.thigh!!.toLong()}"
+                    status = "Wait by T high ... ${pijob.thigh!!.toLong()}"
                     TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
                 } else {
                     status = "Wait ... 600"
