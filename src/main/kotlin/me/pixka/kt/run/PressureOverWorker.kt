@@ -17,15 +17,22 @@ class PressureOverWorker(p: Pijob, mactoipService: MactoipService, n: NotifyServ
 
         isRun = true
         startRun = Date()
+        var nloop = 5
 
         try {
             if (checkinrnage()) {
-                if (pijob.token != null) {
-                    ntfs.message("Over pressure $pijob.name", pijob.token!!)
-                    status = "Over pressure $pijob.name"
-                } else {
-                    ntfs.message("Over pressure $pijob.name")
-                    status = "Over pressure $pijob.name"
+                if(pijob.hhigh!=null)
+                {
+                    nloop = pijob.hhigh!!.toInt()
+                }
+                for(ii in 0..nloop) {
+                    if (pijob.token != null) {
+                        ntfs.message("Over pressure $pijob.name", pijob.token!!)
+                        status = "Over pressure $pijob.name"
+                    } else {
+                        ntfs.message("Over pressure $pijob.name")
+                        status = "Over pressure $pijob.name"
+                    }
                 }
                 setPort()
                 status = "exit normal"
