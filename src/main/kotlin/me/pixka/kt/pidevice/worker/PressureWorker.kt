@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
  * worker จะทำการตรวจสอบว่า แรงดันอยู่ในช่วงหรือเปล่า
  *
  */
-class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs: NotifyService) : DWK(p), Runnable {
+open class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs: NotifyService) : DWK(p), Runnable {
     override fun run() {
 
         var token = System.getProperty("pressurenotify")
