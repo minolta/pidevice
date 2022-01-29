@@ -7,6 +7,7 @@ import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
 import me.pixka.kt.pidevice.s.MactoipService
+import me.pixka.kt.pidevice.s.WarterLowPressureService
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
 import java.util.*
@@ -15,11 +16,15 @@ import java.util.concurrent.TimeoutException
 
 class D1hjobWorker(
     var job: Pijob,
-    val mtp: MactoipService, val ntfs: NotifyService
+    val mtp: MactoipService, val ntfs: NotifyService, val lps: WarterLowPressureService
 ) : DWK(job), Runnable {
     var om = ObjectMapper()
     var waitstatus = false
     var token: String? = null
+
+    fun canrun(): Boolean {
+        return lps.canuse
+    }
 
     fun notify(msg: String) {
         try {
@@ -100,10 +105,7 @@ class D1hjobWorker(
             var openpumptime = mtp.findTimeofjob(pijob)
             openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
-//            var o = mtp.openpump(pijob, openpumptime)
-//            status = "${o} Open Pump Delay 10"
-            openPumpinpijob(pijob,openpumptime)
-//            openPumpinpijob(pijob, openpumptime)
+            openPumpinpijob(pijob, openpumptime)
             notify("JOB ${pijob.name} Open Pump Delay 10")
             TimeUnit.SECONDS.sleep(10)
             status = "Open pump ok"
@@ -112,13 +114,6 @@ class D1hjobWorker(
         }
     }
 
-    fun slowstart() {
-        if (pijob.thigh != null) {//delay ก่อน
-            TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
-            logger.debug("Slow start ${pijob.thigh}")
-            notify("Slow start JOB:${pijob.name} TLOW: ${pijob.thigh}")
-        }
-    }
 
     fun checkperssureLoop(): Boolean {
 
@@ -131,9 +126,7 @@ class D1hjobWorker(
             if (!checkPressure(pijob)) {
                 status = "wait pressure ${psi}  loop time ${i}/${waitloop}"
                 TimeUnit.SECONDS.sleep(1)
-            }
-            else
-            {
+            } else {
                 return true
             }
         }
@@ -141,11 +134,30 @@ class D1hjobWorker(
         return false
     }
 
+    fun reportlowpressure() {
+        lps.reportLowPerssure(pijob.desdevice!!.id, 0.0, pijob.desdevice)
+        if (!lps.canuse) {
+            for (i in 0..40) {
+                //ถ้าไม่สามารถ run แล้วให้  notify เลย
+                if (pijob.token != null) {
+                    ntfs.message("Low Pressure H job stop !!! Check pipe or Warter System", pijob.token!!)
+                } else
+                    ntfs.message("Low Pressure H job stop !!! Check pipe or Warter System")
+                TimeUnit.SECONDS.sleep(50)
+            }
+        }
+    }
+
     override fun run() {
         startRun = Date()
+        token = pijob.token
+        if (!canrun()) {
+            status = "Can not run Service not allow"
+            return
+        }
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
-        token = pijob.token
+
         openpump()
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
             if (!checkperssureLoop()) {
@@ -163,7 +175,7 @@ class D1hjobWorker(
                 isRun = false
                 logger.error(" ${pijob.name} Pressure is low")
                 status = "Exit Pressure is low "
-//                openpump()
+                reportlowpressure()
                 return
             }
         } catch (e: Exception) {
@@ -268,27 +280,13 @@ class D1hjobWorker(
             status = "Run set  Device: ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
             try {
                 startRun = Date()
-//                wt = 0
-//                while (!checkPressure(pijob)) {
-//                    TimeUnit.SECONDS.sleep(1) //รอแรงดัน
-//                    wt++
-//                    if (wt >= 360) {
-//                        status = "ERROR wait pressure timeout"
-//                        throw Exception("${pijob.name}  Wait pressure Time out ")
-//                    }
-//                    status = "Wait pressure ${wt}"
-//                    if (wt % 30 == 0) //fixbug too many notify
-//                        notify("${pijob.name} wait pressure ${wt}")
-//                }
-                if(checkperssureLoop())
-                {
-                    setport(it)
-                }
-                else
-                {
-                    status = "Perssure not ok exit set port ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
-                }
 
+                if (checkperssureLoop()) {
+                    setport(it)
+                } else {
+                    status =
+                        "Perssure not ok exit set port ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
+                }
 
 
             } catch (e: Exception) {
@@ -307,7 +305,6 @@ class D1hjobWorker(
 
 
     }
-
 
 
     fun haveError(token: String?, e: Exception, it: Portstatusinjob) {

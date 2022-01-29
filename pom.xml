@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.pixka.kt</groupId>
     <artifactId>pidevice</artifactId>
-    <version>1.0.5-STABLE</version>
+    <version>1.0.6-STABLE</version>
     <packaging>jar</packaging>
     <name>pidevice</name>
     <description>Demo project for Spring Boot</description>
