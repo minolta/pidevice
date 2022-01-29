@@ -11,6 +11,7 @@ import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.pidevice.s.WarterLowPressureService
 import me.pixka.kt.run.D1hjobWorker
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -19,7 +20,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 
 @DataJpaTest
 class TestDirectorun {
-
+    @Autowired
+    lateinit var lps:WarterLowPressureService
     @Autowired
     lateinit var ps: PijobService
 
@@ -71,7 +73,7 @@ class TestDirectorun {
 
         if (pijob.job!!.equals("hjob")) {
             println("Hjob ")
-            var task = D1hjobWorker(pijob, mtp, ntf)
+            var task = D1hjobWorker(pijob, mtp, ntf,lps)
             var run = taskService.run(task)
             Assertions.assertTrue(run)
         }

@@ -9,6 +9,7 @@ import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.PijobService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
+import me.pixka.kt.pidevice.s.WarterLowPressureService
 import me.pixka.kt.run.D1hjobWorker
 import me.pixka.kt.run.GroupRunService
 import me.pixka.log.d.LogService
@@ -29,7 +30,7 @@ class Runhjobbyd1(
     val task: TaskService,
     val mtp: MactoipService,
     val groups: GroupRunService, val lgs: LogService,
-    val ntfs: NotifyService, val queue: QueueService
+    val ntfs: NotifyService, val queue: QueueService,val lps:WarterLowPressureService
 ) {
     val om = ObjectMapper()
 
@@ -66,7 +67,7 @@ class Runhjobbyd1(
                             if (h != null) {
                                 if (checkHtorun(it, h)) {
                                     if (groups.c(job)) {//ไม่มี job run อยู่ และในกลุม run ไม่มีใครใช้น้ำ
-                                        var t = D1hjobWorker(job, mtp, ntfs)
+                                        var t = D1hjobWorker(job, mtp, ntfs,lps)
                                         var run = task.run(t)
                                         logger.debug("H job is run ${run}")
                                         //ถ้าการ run อยู่จะเอาเข้าคิว
@@ -145,7 +146,7 @@ class Runhjobbyd1(
 
     fun runfromQ(q: Qobject) {
         try {
-            var t = D1hjobWorker(q.pijob!!, mtp, ntfs)
+            var t = D1hjobWorker(q.pijob!!, mtp, ntfs,lps)
             if (!task.checkrun(q.pijob!!)) {
                 var run = task.run(t)
                 if (run) {
@@ -237,7 +238,7 @@ class Runhjobbyd1(
 
             queue.queue.forEach {
                 if (groups.c(it.pijob!!)) {//ไม่มีใครใช้น้ำ
-                    var t = D1hjobWorker(it.pijob!!, mtp, ntfs)
+                    var t = D1hjobWorker(it.pijob!!, mtp, ntfs,lps)
                     if (task.run(t)) {
                         it.toremove = true //เพราะ run แล้ว
                         logger.debug("Run ${it.pijob?.name}")
