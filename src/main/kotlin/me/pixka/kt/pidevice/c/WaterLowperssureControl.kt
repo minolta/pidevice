@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 
+
 @RestController
 class WaterLowperssureControl(val lps:WarterLowPressureService) {
 
@@ -17,5 +18,14 @@ class WaterLowperssureControl(val lps:WarterLowPressureService) {
     fun setlowmax(@PathVariable("max")max:Int): Int {
         lps.maxcount=max
         return max
+    }
+    @GetMapping(path=["/togerhjob"])
+    fun settoger()
+    {
+        lps.canuse=!lps.canuse
+    }
+    @GetMapping(path=["/resetlows"])
+    fun resetLow(): Boolean {
+        return lps.reset()
     }
 }
