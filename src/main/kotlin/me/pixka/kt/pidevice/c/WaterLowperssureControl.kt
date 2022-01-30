@@ -24,9 +24,9 @@ class WaterLowperssureControl(val lps:WarterLowPressureService) {
         return lps.canuse
     }
     @GetMapping(path=["/togerhjob"])
-    fun settoger()
-    {
+    fun settoger(): Boolean {
         lps.canuse=!lps.canuse
+        return lps.canuse
     }
     @GetMapping(path=["/resetlows"])
     fun resetLow(): Boolean {
