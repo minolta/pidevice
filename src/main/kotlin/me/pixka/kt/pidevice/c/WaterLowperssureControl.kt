@@ -19,6 +19,10 @@ class WaterLowperssureControl(val lps:WarterLowPressureService) {
         lps.maxcount=max
         return max
     }
+    @GetMapping(path=["/waterlowstatus"])
+    fun warterlowstatus(): Boolean {
+        return lps.canuse
+    }
     @GetMapping(path=["/togerhjob"])
     fun settoger()
     {
