@@ -143,11 +143,15 @@ class D1hjobWorker(
                     ntfs.message("Low Pressure H job stop !!! Check pipe or Warter System", pijob.token!!)
                 } else
                     ntfs.message("Low Pressure H job stop !!! Check pipe or Warter System")
-                TimeUnit.SECONDS.sleep(50)
+                TimeUnit.SECONDS.sleep(1)
             }
         }
     }
-
+    fun resetlowpressure()
+    {
+        //ถ้า pressure ok แล้วก็ clear ให้หมด
+        lps.reset()
+    }
     override fun run() {
         startRun = Date()
         token = pijob.token
@@ -161,10 +165,7 @@ class D1hjobWorker(
         openpump()
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
             if (!checkperssureLoop()) {
-//                notify("Job (${pijob.name}) not run because Pressure is low")
-//                status = "Not run bacouse Pressure is low"
                 waitstatus = true //บอกว่าไม่ใช้น้ำแล้วแต่ยังรออยู่ บอกให้ job อื่นทำงานต่อ
-//                status= "แรงดันไม่พอ "
                 if (pijob.thigh != null) {
                     status = "Wait by T high ... ${pijob.thigh!!.toLong()}"
                     TimeUnit.SECONDS.sleep(pijob.thigh!!.toLong())
@@ -177,6 +178,9 @@ class D1hjobWorker(
                 status = "Exit Pressure is low "
                 reportlowpressure()
                 return
+            }
+            else{
+                resetlowpressure()
             }
         } catch (e: Exception) {
             logger.error("ERROR PiJOB:  ${pijob.name} ${e.message}")
