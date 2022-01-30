@@ -135,7 +135,7 @@ class D1hjobWorker(
     }
 
     fun reportlowpressure() {
-        lps.reportLowPerssure(pijob.desdevice!!.id, 0.0, pijob.desdevice)
+        lps.reportLowPerssure(pijob.desdevice!!.id, 0.0, pijob.desdevice,pijob)
         if (!lps.canuse) {
             for (i in 0..40) {
                 //ถ้าไม่สามารถ run แล้วให้  notify เลย

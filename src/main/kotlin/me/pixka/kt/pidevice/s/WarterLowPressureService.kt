@@ -1,6 +1,7 @@
 package me.pixka.kt.pidevice.s
 
 import me.pixka.kt.pibase.d.PiDevice
+import me.pixka.kt.pibase.d.Pijob
 import org.springframework.stereotype.Service
 import java.util.*
 
@@ -13,9 +14,9 @@ class WarterLowPressureService {
     var canuse = true
 
 
-    fun reportLowPerssure(deviceid: Long, psi: Double, pidevice: PiDevice? = null) {
+    fun reportLowPerssure(deviceid: Long, psi: Double, pidevice: PiDevice? = null,job:Pijob?=null) {
         lowpressureCount++
-        reports.add(ReportLowPerssureObject(deviceid, psi, pidevice, Date()))
+        reports.add(ReportLowPerssureObject(deviceid, psi, pidevice, Date(),job))
         if (lowpressureCount >= maxcount) {
             //ปิดระบบน้ำเลย
             canuse = false
@@ -33,5 +34,5 @@ class ReportLowPerssureObject(
     var pideviceid: Long,
     var psi: Double,
     var pidevice: PiDevice? = null,
-    var lowtime: Date? = null
+    var lowtime: Date? = null,var job:Pijob?=null
 )
