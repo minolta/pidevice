@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.run.D1hjobWorker
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -16,7 +17,9 @@ class TestLowPressureService {
 
     @Test
     fun testService() {
-        var wls = WarterLowPressureService()
+        var f = mockk<FindJob>()
+        var ntfs = mockk<NotifyService>()
+        var wls = WarterLowPressureService(f,ntfs)
         wls.lowpressureCount++
 
         Assertions.assertTrue(wls.lowpressureCount == 1)
@@ -35,7 +38,6 @@ class TestLowPressureService {
         var mtp = mockk<MactoipService>()
         var pijob = mockk<Pijob>()
         every { pijob.tlow } returns BigDecimal(0.0)
-        var ntfs = mockk<NotifyService>()
         every { lps.canuse } returns false
         every { lps.reset() } returns true
         var dh1worker = D1hjobWorker(pijob, mtp, ntfs, lps)

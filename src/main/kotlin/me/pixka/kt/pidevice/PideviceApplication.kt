@@ -1,5 +1,7 @@
 package me.pixka.kt.pidevice
 
+import me.pixka.kt.pidevice.s.WarterLowPressureService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.domain.EntityScan
@@ -78,10 +80,14 @@ class PideviceApplication {
         return Executors.newFixedThreadPool(20)
     }
 
+    @Autowired
+    lateinit var ws:WarterLowPressureService
     @PostConstruct
     fun init() {
         // Setting Spring Boot SetTimeZone
 //        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        ws.setDefaultMaxCount()
+        println("Config Max count ${ws.maxcount}")
     }
 
 }
