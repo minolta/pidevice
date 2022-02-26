@@ -15,6 +15,17 @@ class D1tjobWorker(p: Pijob, val pijs: PortstatusinjobService, val mtp: MactoipS
     var totalwait = 0
     var om = ObjectMapper()
 
+
+    fun openpump() {
+        try {
+            var timetoopen = mtp.findTimeofjob(pijob)
+            mtp.openpump(pijob, timetoopen)
+        }catch (e:Exception)
+        {
+            logger.error("ERROR ${e.message}")
+            status = "ERROR ${e.message}"
+        }
+    }
     //remove run with
     override fun run() {
         try {
@@ -26,6 +37,7 @@ class D1tjobWorker(p: Pijob, val pijs: PortstatusinjobService, val mtp: MactoipS
             logger.debug("D1tjobWorker ${pijob.name} Now jobrun D1tjob")
             var ports = pijs.findByPijobid(pijob.id)
             logger.debug("D1tjobWorker set port ${ports} ${pijob}")
+            openpump()
             if (ports != null) {
                 setPort(ports as List<Portstatusinjob>)
             } else {
