@@ -103,6 +103,10 @@ class D1hjobWorker(
     fun openpump() {
         try {
             var openpumptime = mtp.findTimeofjob(pijob)
+            if(pijob.thigh!=null)
+            {
+                openpumptime = openpumptime+pijob!!.thigh!!.toInt()
+            }
             openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
             openPumpinpijob(pijob, openpumptime)
