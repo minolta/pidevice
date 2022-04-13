@@ -285,6 +285,11 @@ class D1hjobWorker(
         var wt = 0 //เวลาที่รอแรงดัน
         var token = pijob.token
         ports?.forEach {
+            if(!isRun)
+            {
+                status = "Exit by user"
+                return
+            }
             status = "Run set  Device: ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
             try {
                 startRun = Date()
