@@ -165,7 +165,7 @@ class D1hjobWorker(
         }
         isRun = true
         waitstatus = false //เริ่มมาก็ทำงาน
-
+        openportdownpressure()
         openpump()
         try { //ถ้ามีการำกำหนด Tlow ระบบ จะทำการตรวจสอบแรงดันตามกำหนด
             if (!checkperssureLoop()) {
@@ -278,6 +278,25 @@ class D1hjobWorker(
         }
     }
 
+    /**
+     * สำหรับเปิดแรงดันออกก่อนให้ปั๊มทำงานบ้างครั้งยังไม่ถึงแรงดันเปิดและแรงดันปิดทำให้ระบบรอ
+     */
+    fun openportdownpressure()
+    {
+        try {
+            var ports = mtp.getPortstatus(pijob, true)
+            if (ports != null && ports.size > 0) {
+               var port =  ports.get(0)
+                if(port!=null)
+                {
+                    mtp.setport(port, 5)
+                }
+            }
+        }catch (e:Exception)
+        {
+            throw e
+        }
+    }
 
     //เพิ่มการหยุดไปด้วย
     fun goII() {
