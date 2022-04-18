@@ -33,7 +33,6 @@ class Updatelocaldevices(val httpService: HttpService,val ps:PideviceService) {
         println(response.body())
         var list = om.readValue<List<PiDevice>>(response.body())
         var localdevices =  ps.all()
-
         localdevices.forEach {
             var found = findDevice(it,list)
             if(found!=null)
