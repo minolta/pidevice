@@ -30,7 +30,7 @@ class Updatelocaldevices(val httpService: HttpService,val ps:PideviceService) {
             .build()
             .send(request, HttpResponse.BodyHandlers.ofString())
 
-        println(response.body())
+//        println(response.body())
         var list = om.readValue<List<PiDevice>>(response.body())
         var localdevices =  ps.all()
         localdevices.forEach {
@@ -39,6 +39,7 @@ class Updatelocaldevices(val httpService: HttpService,val ps:PideviceService) {
             {
                 ps.save(found)
             }
+
         }
 
 
@@ -47,7 +48,7 @@ class Updatelocaldevices(val httpService: HttpService,val ps:PideviceService) {
     fun findDevice(device:PiDevice,fromnet:List<PiDevice>): PiDevice? {
 
         var found = fromnet.find { it.mac.equals(device.mac) }
-        println(found)
+//        println(found)
         if(found!=null)
         {
             if(!device.ip.equals(found.ip) || !device.name?.equals(found.name)!!)
