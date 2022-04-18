@@ -294,7 +294,7 @@ class D1hjobWorker(
             }
         }catch (e:Exception)
         {
-            throw e
+            logger.error("Open pressure ${e.message}")
         }
     }
 
