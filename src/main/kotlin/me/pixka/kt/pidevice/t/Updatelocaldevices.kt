@@ -19,7 +19,7 @@ class Updatelocaldevices(val httpService: HttpService,val ps:PideviceService) {
     @Scheduled(initialDelay = 1000, fixedDelay = 5000)
     fun updateDeviceinfo()
     {
-        var target = System.getProperty("piserver")+"devices/"
+        var target = System.getProperty("piserver")+"/devices/"
 
         val request: HttpRequest = HttpRequest.newBuilder()
             .uri(URI(target))
