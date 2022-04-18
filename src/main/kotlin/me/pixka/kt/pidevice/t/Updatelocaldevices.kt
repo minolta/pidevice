@@ -8,6 +8,10 @@ import me.pixka.kt.pibase.s.HttpService
 import me.pixka.kt.pibase.s.PideviceService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 
 @Component
 class Updatelocaldevices(val httpService: HttpService,val ps:PideviceService) {
@@ -17,11 +21,18 @@ class Updatelocaldevices(val httpService: HttpService,val ps:PideviceService) {
     {
         var target = System.getProperty("piserver")+"devices/"
 
-        var result  = httpService.get(target)
+        val request: HttpRequest = HttpRequest.newBuilder()
+            .uri(URI(target))
+            .GET()
+            .build()
+
+        val response: HttpResponse<String> = HttpClient.newBuilder()
+            .build()
+            .send(request, HttpResponse.BodyHandlers.ofString())
+
+        println(response.body())
+        var list = om.readValue<List<PiDevice>>(response.body())
         var localdevices =  ps.all()
-
-        var list = om.readValue<List<PiDevice>>(result!!)
-
         localdevices.forEach {
             var found = findDevice(it,list)
             if(found!=null)
