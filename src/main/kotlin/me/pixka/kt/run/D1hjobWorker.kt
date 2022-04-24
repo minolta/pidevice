@@ -264,7 +264,7 @@ class D1hjobWorker(
             status = "Delay  ${runtime} + ${waittime}"
             var s = om.readValue<Status>(v)
             logger.debug("D1h Value ${status}")
-            status = "Set Device ${it.device?.name} port ${portname} to ${value}  ${s.status} and run ${runtime}"
+            status = "Set Device ${it.device?.name} port ${portname} to ${value}  ${s.status} and run ${runtime} sec at ${psi} psi"
             notify("JOB ${pijob.name} Set ${portname} to ${value}  ${s.status} and run ${runtime}")
             TimeUnit.SECONDS.sleep(runtime)
             if (waittime != null) {
