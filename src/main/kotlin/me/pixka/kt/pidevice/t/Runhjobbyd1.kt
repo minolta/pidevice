@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
+import me.pixka.kt.pibase.d.SensorinjobService
 import me.pixka.kt.pibase.o.HObject
 import me.pixka.kt.pibase.s.FindJob
 import me.pixka.kt.pibase.s.PijobService
@@ -30,7 +31,7 @@ class Runhjobbyd1(
     val task: TaskService,
     val mtp: MactoipService,
     val groups: GroupRunService, val lgs: LogService,
-    val ntfs: NotifyService, val queue: QueueService,val lps:WarterLowPressureService
+    val ntfs: NotifyService, val queue: QueueService,val lps:WarterLowPressureService,val sipj:SensorinjobService
 ) {
     val om = ObjectMapper()
 
@@ -118,9 +119,32 @@ class Runhjobbyd1(
             var ip = job.desdevice?.ip
             logger.debug("Call IP : ${ip} RunH")
             if (ip != null) {
-                var re = mtp.http.get("http://${ip}", 12000)
-                var h = om.readValue<HObject>(re)
-                return h
+                try {
+                    var re = mtp.http.get("http://${ip}", 12000)
+                    var h = om.readValue<HObject>(re)
+                    return h
+                }catch (e:Exception)
+                {
+                   var sensorlist =  sipj.findByPijob_id(job.id)
+                    if(sensorlist!=null &&sensorlist.size>0)
+                    {
+                        sensorlist.forEach{
+
+                            try{
+                                var re = mtp.http.get("http://${it.sensor!!.ip}", 12000)
+                                var h = om.readValue<HObject>(re)
+                                return h
+                            }
+                            catch (e:Exception)
+                            {
+                                //can not connect to target
+
+                            }
+
+                        }
+                    }
+
+                }
             }
             logger.error("getHobj IP is Null ")
             lgs.createERROR(
