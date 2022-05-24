@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PideviceApplicationKt" type="JetRunConfigurationType" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="me.pixka.kt.pidevice.PideviceApplicationKt" />
+    <module name="pidevice" />
+    <shortenClasspath name="NONE" />
+    <option name="VM_PARAMETERS" value="-Dpiserver=http://192.168.88.21:3333 -Dmac=00:e0:4c:68:07:ae -Dspring.datasource.url=jdbc:h2:$PROJECT_DIR$/../../../../../database/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

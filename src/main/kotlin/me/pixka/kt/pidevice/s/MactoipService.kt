@@ -270,7 +270,6 @@ class MactoipService(
         var url = "http://${pidevice.ip}"
         var status:Statusobj?=null
         try {
-            var url = "http://${pidevice.ip}"
 
             var result = http.getNoCache(url,timeout)
             status = om.readValue<Statusobj>(result)
