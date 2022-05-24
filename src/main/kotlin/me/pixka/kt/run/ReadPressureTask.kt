@@ -39,7 +39,7 @@ class ReadPressureTask(p: Pijob, var mtp:MactoipService,
             if (ip != null) {
 
                 try {
-                    var re = mtp.http.get("http://${ip}",10000)
+                    var re = mtp.http.get("http://${ip}",300000)
                     var o = om.readValue<PSIObject>(re)
                     logger.debug("${pijob.name} Get pressure ${o}")
                     status = "${pijob.name} Get pressure ${o}"

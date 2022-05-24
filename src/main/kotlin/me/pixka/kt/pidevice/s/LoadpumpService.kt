@@ -69,6 +69,7 @@ val om = ObjectMapper()
                     pi =  pds.findOrCreate(it.pidevice?.mac!!)
                     pi.ip = it.pidevice?.ip
                     pi.name = it.pidevice?.name
+                    pi.refid = it.pidevice!!.id
                     pds.save(pi)
                 }
                 var p = pus.checkPumpinjob(pi.id, job.id)

@@ -34,7 +34,7 @@ class DustWorker(job: Pijob, var ports: ArrayList<Portstatusinjob>,val mtp:Macto
                         totalwait = it.waittime!!.toInt()
 //                    var url = "http://${ip.ip}/run?port=${it.portname?.name}&delay=${it.runtime}&value=${it.status?.toInt()}&wait=${it.waittime}"
 //                    var re = httpService.get(url, 12000)
-                    var re = mtp.setport(it)
+                    var re = mtp.setport(it,60000)
                     var s = om.readValue<Status>(re)
                     status = "Set ${it.portname?.name} to ${it.status?.name} uptime:${s.uptime}  status:${s.status}  Pm2.5:${s.pm25} pm10:${s.pm10} pm1:${s.pm1}"
                 }

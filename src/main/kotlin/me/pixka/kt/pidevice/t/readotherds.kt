@@ -41,7 +41,7 @@ class ReadTmp(val pjs: PijobService, val js: JobService, val ts: TaskService,
                     pijob = i
                     logger.debug("Run job ${i}")
                     if (i.tlow != null) {
-                        var t= mtp.readTmp(i)?.toDouble()
+                        var t= mtp.readTmp(i,300000)?.toDouble()
                         if (i.tlow?.toDouble()!! <= t!!){
                             if (!taskService.checkrun(i)) {
                                 var t = ReadTmpTask(i, null, pideviceService, dvs, mtp)

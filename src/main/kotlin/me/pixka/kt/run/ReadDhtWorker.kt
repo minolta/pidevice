@@ -24,7 +24,7 @@ class ReadDhtWorker(pijob: Pijob, val pds: PideviceService, var mtp: MactoipServ
             logger.debug("Start run ${startRun}")
             Thread.currentThread().name = "JOBID:${pijob.id} ReadDHT ${pijob.name} ${startRun}"
             var ip = pijob.desdevice?.ip
-            var re = mtp.http.get("http://${ip}", 10000)
+            var re = mtp.http.get("http://${ip}", 120000)
             var dht = mtp.om.readValue<DHTObject>(re)
             var dhtvalue = Dhtvalue()
             dhtvalue.valuedate = Date()

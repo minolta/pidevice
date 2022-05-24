@@ -98,7 +98,7 @@ open class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs
 
     fun checkPressure(): Boolean {
         try {
-            var p = mactoipService.readPressure(pijob.desdevice!!)
+            var p = mactoipService.readPressure(pijob.desdevice!!,300000)
             var l = pijob.tlow!!.toDouble()
             var h = pijob.thigh!!.toDouble()
 
