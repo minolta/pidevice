@@ -141,6 +141,7 @@ class Runhjobbyd1(
 
                             }
 
+                            throw Exception("Can not read")
                         }
                     }
 

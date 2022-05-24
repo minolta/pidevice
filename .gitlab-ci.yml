@@ -66,5 +66,5 @@ runproduct:
             docker stop $OLD && docker rm $OLD
            fi
     - docker pull kykub/pidevice
-    - docker run -p 3334:888 -d --name pidevice  --restart always  -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Xms1024m -Xmx4000m -Dspring.datasource.url=jdbc:h2:~/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.21  -Dmac=00:e0:4c:68:07:ae  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://192.168.88.21:3333 " kykub/pidevice
+    - docker run -p 3334:888 -d -v /root/db:/root/db --name pidevice  --restart always  -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Xms1024m -Xmx4000m -Dspring.datasource.url=jdbc:h2:root/db/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.21  -Dmac=00:e0:4c:68:07:ae  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://192.168.88.21:3333 " kykub/pidevice
     - docker image prune -a -f

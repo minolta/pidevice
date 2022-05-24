@@ -34,7 +34,8 @@ open class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs
 //            status = "Exit job"
         } catch (e: Exception) {
             status = "Exit with ERROR ${e.message}"
-            isRun = false
+//            isRun=false
+            exitdate = findExitdate(pijob)
 
         }
     }
@@ -78,12 +79,6 @@ open class PressureWorker(p: Pijob, val mactoipService: MactoipService, var ntfs
 
                 if (!checkPressure()) {
                     status = "Pressure not in rang"
-//                    if (pijob.waittime != null) {
-//                        var wait = pijob.waittime!!.toLong()
-//                        TimeUnit.SECONDS.sleep(wait)
-//                    }
-
-//                    status = "Exit job"
                     return false
 
                 }

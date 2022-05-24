@@ -17,7 +17,7 @@ import kotlin.collections.ArrayList
  */
 @Service
 class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
-//    var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
+    //    var runinglist = ArrayList<PijobrunInterface>() // สำหรับบอกว่าตัวไหนจะ ยัง run อยู่
     var runinglist = CopyOnWriteArrayList<PijobrunInterface>()
     var removeStatus = false //สำหรับบอกว่าเอา job ที่ run เสร็จแล้วออกก่อน
     val pool = context.getBean("pool") as ExecutorService
@@ -51,19 +51,21 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
 
     fun checkrun(w: Pijob): Boolean {
 
-        var items = runinglist.iterator()
-
-        while(items.hasNext())
-        {
-            var item = items.next()
-            if( item.getPijobid() == w.id && item.runStatus())
-            {
-                    return true
-            }
-
-        }
-
+        val found =  runinglist.find { it.getPijobid()==w.id &&it.runStatus() }
+        if(found!=null)
+            return true
         return false
+//        var items = runinglist.iterator()
+//
+//        while (items.hasNext()) {
+//            var item = items.next()
+//            if (item.getPijobid() == w.id && item.runStatus()) {
+//                return true
+//            }
+//
+//        }
+//
+//        return false
     }
 
     /**
@@ -73,21 +75,25 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
     fun checkalreadyrun(w: PijobrunInterface): Boolean {
 
         try {
-            var items = runinglist.iterator()
-
-            while (items.hasNext()) {
-
-                var item = items.next()
-//                logger.error("Check run ${item.getPJ().name}")
-                if (item.getPijobid() == w.getPijobid() && item.runStatus()) {
-//                    logger.error("Found job run ${item.getPJ().name}")
-                    return true
-                }
+            val found = runinglist.find {
+                w.getPijobid() == it.getPijobid() && it.runStatus()
             }
+            if (found != null)
+                return true
             return false
-        }
-        catch (e:Exception)
-        {
+//            var items = runinglist.iterator()
+//
+//            while (items.hasNext()) {
+//
+//                var item = items.next()
+////                logger.error("Check run ${item.getPJ().name}")
+//                if (item.getPijobid() == w.getPijobid() && item.runStatus()) {
+////                    logger.error("Found job run ${item.getPJ().name}")
+//                    return true
+//                }
+//            }
+//            return false
+        } catch (e: Exception) {
             logger.error("ERROR Check already run ${e.message}")
         }
         return true
@@ -97,7 +103,7 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
     fun checkExitdate() {
         try {
             var now = Date().time
-            var items =  runinglist.iterator()
+            var items = runinglist.iterator()
             items.forEach {
                 if (it.exitdate() != null && it.exitdate()?.time!! <= now) {
                     it.setrun(false) //end this job have to remove
@@ -116,10 +122,9 @@ class TaskService(val context: ApplicationContext, val cts: CheckTimeService) {
     )
     fun removeEndjob(): List<PijobrunInterface> {
         var items = runinglist.iterator()
-        while(items.hasNext())
-        {
+        while (items.hasNext()) {
             var item = items.next()
-            if(!item.runStatus())
+            if (!item.runStatus())
                 runinglist.remove(item)
         }
         return runinglist
