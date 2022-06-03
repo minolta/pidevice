@@ -22,6 +22,9 @@ class D1hjobWorker(
     var waitstatus = false
     var token: String? = null
 
+    /**
+     * สำหรับ ดูว่าระบบน้ำ ok หรือเปล่า
+     */
     fun canrun(): Boolean {
         return lps.canuse
     }
@@ -105,7 +108,7 @@ class D1hjobWorker(
             var openpumptime = mtp.findTimeofjob(pijob)
             if(pijob.thigh!=null)
             {
-                openpumptime = openpumptime+pijob!!.thigh!!.toInt()
+                openpumptime = openpumptime+pijob.thigh!!.toInt()
             }
             openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
@@ -161,6 +164,7 @@ class D1hjobWorker(
         token = pijob.token
         if (!canrun()) {
             status = "Can not run Service not allow"
+            notify("Can not run Service not allow JOB:${pijob.name}")
             return
         }
         isRun = true
