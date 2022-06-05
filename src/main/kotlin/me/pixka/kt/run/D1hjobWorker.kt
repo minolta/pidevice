@@ -35,8 +35,9 @@ class D1hjobWorker(
                 ntfs.message(msg, token!!)
             }
         } catch (e: Exception) {
-            status = "Error in notify status"
-            logger.error("ERROR in notify ${e.message}")
+            status = "Error in notify status ${e.message} ${msg}"
+            logger.error("ERROR in notify ${e.message} ")
+            throw e
         }
     }
 
