@@ -294,7 +294,7 @@ class D1hjobWorker(
                var port =  ports.get(0)
                 if(port!=null)
                 {
-                    mtp.setport(port, 5)
+                    mtp.setport(port, 2)
                 }
             }
         }catch (e:Exception)
