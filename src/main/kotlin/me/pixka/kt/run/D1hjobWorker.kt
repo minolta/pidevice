@@ -60,30 +60,33 @@ class D1hjobWorker(
             var psivalue = ""
             pij.forEach {
                 try {
-                   devicename =  it.pidevice?.name!!
+                    devicename = it.pidevice?.name!!
                     psi = mtp.readPressure(it.pidevice!!)
                     psivalue = "PSI:${psi}"
                     if (psi == null) {
                         logger.error("WORKER D1h error ${pijob.name} ERROR:  Can not read pressure")
                         status = "WORKER D1h error ${pijob.name} ERROR:  Can not read pressure"
-                       }
+                    }
                     var setp = p.tlow?.toDouble()
                     //ถ้าอ่านและสูงกว่าก็ให้ job ทำงาน
                     if (setp!! <= psi!!)
                         return true
-                }catch (e:Exception)
-                {
+                } catch (e: Exception) {
                     status = "Error ${e.message} Check pressure devicename: ${devicename}  ${psivalue}"
+                    TimeUnit.SECONDS.sleep(1)
                 }
             }
             logger.error("${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}")
             if (token != null)
                 ntfs.message("${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}", token!!)
             status = "${pijob.name} Pressure is low  Read psi ${psi}  set PSI ${pijob.tlow}"
+            TimeUnit.SECONDS.sleep(1)
             //ถ้าอ่าน psi ของแต่ละปั๊มไม่ได้ก็ไม่ผ่าน
             return false
         } catch (e: Exception) {
             logger.error("WORKER D1h error ${pijob.name} ERROR: " + e.message)
+            status = "WORKER D1h error ${pijob.name} ERROR: ${e.message}"
+            TimeUnit.SECONDS.sleep(1)
         }
 
 
@@ -117,9 +120,8 @@ class D1hjobWorker(
     fun openpump() {
         try {
             var openpumptime = mtp.findTimeofjob(pijob)
-            if(pijob.thigh!=null)
-            {
-                openpumptime = openpumptime+pijob.thigh!!.toInt()
+            if (pijob.thigh != null) {
+                openpumptime = openpumptime + pijob.thigh!!.toInt()
             }
             openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
@@ -153,7 +155,7 @@ class D1hjobWorker(
     }
 
     fun reportlowpressure() {
-        lps.reportLowPerssure(pijob.desdevice!!.id, 0.0, pijob.desdevice,pijob)
+        lps.reportLowPerssure(pijob.desdevice!!.id, 0.0, pijob.desdevice, pijob)
         if (!lps.canuse) {
             for (i in 0..40) {
                 //ถ้าไม่สามารถ run แล้วให้  notify เลย
@@ -165,11 +167,12 @@ class D1hjobWorker(
             }
         }
     }
-    fun resetlowpressure()
-    {
+
+    fun resetlowpressure() {
         //ถ้า pressure ok แล้วก็ clear ให้หมด
         lps.reset()
     }
+
     override fun run() {
         startRun = Date()
         token = pijob.token
@@ -197,8 +200,7 @@ class D1hjobWorker(
                 status = "Exit Pressure is low "
                 reportlowpressure()
                 return
-            }
-            else{
+            } else {
                 resetlowpressure()
             }
         } catch (e: Exception) {
@@ -279,7 +281,8 @@ class D1hjobWorker(
             status = "Delay  ${runtime} + ${waittime}"
             var s = om.readValue<Status>(v)
             logger.debug("D1h Value ${status}")
-            status = "Set Device ${it.device?.name} port ${portname} to ${value}  ${s.status} and run ${runtime} sec at ${psi} psi"
+            status =
+                "Set Device ${it.device?.name} port ${portname} to ${value}  ${s.status} and run ${runtime} sec at ${psi} psi"
             notify("JOB ${pijob.name} Set ${portname} to ${value}  ${s.status} and run ${runtime}")
             TimeUnit.SECONDS.sleep(runtime)
             if (waittime != null) {
@@ -296,19 +299,16 @@ class D1hjobWorker(
     /**
      * สำหรับเปิดแรงดันออกก่อนให้ปั๊มทำงานบ้างครั้งยังไม่ถึงแรงดันเปิดและแรงดันปิดทำให้ระบบรอ
      */
-    fun openportdownpressure()
-    {
+    fun openportdownpressure() {
         try {
             var ports = mtp.getPortstatus(pijob, true)
             if (ports != null && ports.size > 0) {
-               var port =  ports.get(0)
-                if(port!=null)
-                {
+                var port = ports.get(0)
+                if (port != null) {
                     mtp.setport(port, 5)
                 }
             }
-        }catch (e:Exception)
-        {
+        } catch (e: Exception) {
             logger.error("Open pressure ${e.message}")
         }
     }
@@ -319,8 +319,7 @@ class D1hjobWorker(
         var wt = 0 //เวลาที่รอแรงดัน
         var token = pijob.token
         ports?.forEach {
-            if(!isRun)
-            {
+            if (!isRun) {
                 status = "Exit by user"
                 return
             }
