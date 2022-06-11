@@ -21,6 +21,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 @DataJpaTest
 class TestDirectorun {
     @Autowired
+    lateinit var cs:ConfigdataService
+    @Autowired
     lateinit var lps:WarterLowPressureService
     @Autowired
     lateinit var ps: PijobService
@@ -73,7 +75,7 @@ class TestDirectorun {
 
         if (pijob.job!!.equals("hjob")) {
             println("Hjob ")
-            var task = D1hjobWorker(pijob, mtp, ntf,lps)
+            var task = D1hjobWorker(pijob, mtp, ntf,lps,cs)
             var run = taskService.run(task)
             Assertions.assertTrue(run)
         }

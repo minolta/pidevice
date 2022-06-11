@@ -9,6 +9,7 @@ import me.pixka.kt.pibase.d.Pumpforpijob
 import me.pixka.kt.pibase.d.PumpforpijobService
 import me.pixka.kt.pibase.s.PideviceService
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pidevice.d.ConfigdataService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.WarterLowPressureService
 import me.pixka.kt.run.D1hjobWorker
@@ -22,7 +23,8 @@ import java.math.BigDecimal
 class CheckPressureInD1hjobWorker {
     @Autowired
     lateinit var lps: WarterLowPressureService
-
+    @Autowired
+    lateinit var cs: ConfigdataService
     @Autowired
     lateinit var pjs: PijobService
 
@@ -84,7 +86,7 @@ class CheckPressureInD1hjobWorker {
         every { m?.pus?.bypijobid(pijob.id) } returns data
 //        Assertions.assertTrue(checkPressure(pijob))
         var nfs = mockk<NotifyService>(relaxed = true)
-        var worker = D1hjobWorker(pijob, m!!, nfs, lps)
+        var worker = D1hjobWorker(pijob, m!!, nfs, lps,cs)
         Assertions.assertTrue(worker.checkPressure(pijob))
         verify { m?.readPressure(device1) }
     }

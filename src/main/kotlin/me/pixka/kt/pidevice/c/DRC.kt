@@ -3,6 +3,7 @@ package me.pixka.kt.pidevice.c
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.WaterflowService
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pidevice.d.ConfigdataService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.TaskService
 import me.pixka.kt.pidevice.s.WarterLowPressureService
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class DRC(val ps: PijobService,val mtp:MactoipService,val ntf:NotifyService,val ts:TaskService,val lps:WarterLowPressureService) {
+class DRC(val ps: PijobService,val mtp:MactoipService,val ntf:NotifyService,val ts:TaskService,val lps:WarterLowPressureService,val cs:ConfigdataService) {
 
 
     @GetMapping(path = ["/rundirect/{id}"])
@@ -25,7 +26,7 @@ class DRC(val ps: PijobService,val mtp:MactoipService,val ntf:NotifyService,val 
             {
                 if(pijob.job?.name.equals("runhbyd1"))
                 {
-                    var task = D1hjobWorker(pijob,mtp,ntf,lps)
+                    var task = D1hjobWorker(pijob,mtp,ntf,lps,cs)
                     return ts.run(task)
                 }
 

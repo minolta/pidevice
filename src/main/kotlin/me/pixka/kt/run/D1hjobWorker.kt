@@ -6,17 +6,19 @@ import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Logistate
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
+import me.pixka.kt.pidevice.d.ConfigdataService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.WarterLowPressureService
 import org.slf4j.LoggerFactory
 import java.net.ConnectException
+import java.sql.Time
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class D1hjobWorker(
     var job: Pijob,
-    val mtp: MactoipService, val ntfs: NotifyService, val lps: WarterLowPressureService
+    val mtp: MactoipService, val ntfs: NotifyService, val lps: WarterLowPressureService,val cfg:ConfigdataService
 ) : DWK(job), Runnable {
     var om = ObjectMapper()
     var waitstatus = false
@@ -106,13 +108,14 @@ class D1hjobWorker(
                     } catch (e: Exception) {
                         status = "${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}"
                         logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
-                        TimeUnit.SECONDS.sleep(10)
+                        TimeUnit.SECONDS.sleep(2)
                     }
                 }
             }
         } catch (e: Exception) {
             logger.error("ERROR openPumpinpijob ${e.message}")
             status = "ERROR openPumpinpijob ${e.message}"
+            TimeUnit.SECONDS.sleep(1)
         }
 
     }
@@ -123,14 +126,17 @@ class D1hjobWorker(
             if (pijob.thigh != null) {
                 openpumptime = openpumptime + pijob.thigh!!.toInt()
             }
-            openpumptime = openpumptime + 120 //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
+            openpumptime = openpumptime + cfg.getValue("openpumptime","2").valuename!!.toInt() //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
             openPumpinpijob(pijob, openpumptime)
             notify("JOB ${pijob.name} Open Pump Delay 10")
-            TimeUnit.SECONDS.sleep(10)
+
             status = "Open pump ok"
+            TimeUnit.SECONDS.sleep(1)
         } catch (e: Exception) {
             logger.error("Open pumps error ${e.message}")
+            status = "Open pumps error ${e.message}"
+            TimeUnit.SECONDS.sleep(1)
         }
     }
 
@@ -332,6 +338,7 @@ class D1hjobWorker(
                 } else {
                     status =
                         "Perssure not ok exit set port ${it.device?.name} port ${it.portname?.name} state ${it.status?.name}"
+                    TimeUnit.SECONDS.sleep(1)
                 }
 
 

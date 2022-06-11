@@ -6,6 +6,7 @@ import io.mockk.verify
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.d.Portstatusinjob
+import me.pixka.kt.pidevice.d.ConfigdataService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.WarterLowPressureService
 import me.pixka.kt.run.D1hjobWorker
@@ -26,12 +27,12 @@ class TestOpenpressure {
             pijob,
             mtp,
             mockk<NotifyService>(relaxed = true),
-            mockk<WarterLowPressureService>(relaxed = true)
+            mockk<WarterLowPressureService>(relaxed = true), mockk<ConfigdataService>(relaxed = true)
         )
-        every { mtp.getPortstatus(pijob,true) } returns ports
-        every { mtp.setport(port,5) } returns "{ok}"
+        every { mtp.getPortstatus(pijob, true) } returns ports
+        every { mtp.setport(port, 5) } returns "{ok}"
         d1hjobWorker.openportdownpressure()
 
-        verify { mtp.getPortstatus(pijob,true) }
+        verify { mtp.getPortstatus(pijob, true) }
     }
 }
