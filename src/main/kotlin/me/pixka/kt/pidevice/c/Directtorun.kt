@@ -4,6 +4,7 @@ import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Iptableskt
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.PijobService
+import me.pixka.kt.pidevice.d.ConfigdataService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.ReadTmpService
 import me.pixka.kt.pidevice.s.TaskService
@@ -19,7 +20,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 class Directtorun(
     val pijobService: PijobService, val task: TaskService,
-    val mtp: MactoipService, val rs: ReadTmpService,val ntf:NotifyService,val lps:WarterLowPressureService
+    val mtp: MactoipService, val rs: ReadTmpService,val ntf:NotifyService,val lps:WarterLowPressureService,val cs:ConfigdataService
 ) {
 
     @CrossOrigin
@@ -52,7 +53,7 @@ class Directtorun(
             }
             else if(job.job?.name.equals("runhbyd1"))
             {
-                return D1hjobWorker(job,mtp,ntf,lps)
+                return D1hjobWorker(job,mtp,ntf,lps,cs)
             }
         } catch (e: Exception) {
             logger.error("ERROR ${e.message}")

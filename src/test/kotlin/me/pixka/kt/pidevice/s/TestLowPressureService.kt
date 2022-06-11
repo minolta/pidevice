@@ -5,16 +5,19 @@ import io.mockk.mockk
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Pijob
 import me.pixka.kt.pibase.s.FindJob
+import me.pixka.kt.pidevice.d.ConfigdataService
 import me.pixka.kt.run.D1hjobWorker
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import java.math.BigDecimal
 
 @DataJpaTest
 class TestLowPressureService {
 
-
+    @Autowired
+    lateinit var cs:ConfigdataService
     @Test
     fun testService() {
         var f = mockk<FindJob>()
@@ -40,7 +43,7 @@ class TestLowPressureService {
         every { pijob.tlow } returns BigDecimal(0.0)
         every { lps.canuse } returns false
         every { lps.reset() } returns true
-        var dh1worker = D1hjobWorker(pijob, mtp, ntfs, lps)
+        var dh1worker = D1hjobWorker(pijob, mtp, ntfs, lps,cs)
         var pressureok = dh1worker.checkPressure(pijob)
         println(pressureok)
         var canrun = dh1worker.canrun()
