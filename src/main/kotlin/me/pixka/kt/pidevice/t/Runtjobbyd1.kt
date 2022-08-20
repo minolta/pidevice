@@ -21,14 +21,25 @@ import java.util.*
 
 @Component
 @Profile("!test")
-class Runtjobbyd1(val pjs: PijobService,
-                  val js: JobService, val mtp: MactoipService,
-                  val task: TaskService, val ips: IptableServicekt,
-                  val dhs: Dhtutil, val httpService: HttpService,
-                  val psij: PortstatusinjobService,
-                  val readUtil: ReadUtil, val findJob: FindJob,
-                  val readtmp: ReadTmpService, val lgs: LogService) {
+class Runtjobbyd1(
+    val pjs: PijobService,
+    val js: JobService, val mtp: MactoipService,
+    val task: TaskService, val ips: IptableServicekt,
+    val dhs: Dhtutil, val httpService: HttpService,
+    val psij: PortstatusinjobService,
+    val readUtil: ReadUtil, val findJob: FindJob,
+    val readtmp: ReadTmpService, val lgs: LogService
+) {
     val om = ObjectMapper()
+    fun checktmps(tmps: List<Tmpobj>, job: Pijob): Boolean {
+        for (i in tmps) {
+            if (checktmp(i, job)) {
+                return true
+            }
+
+        }
+        return false
+    }
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
@@ -44,25 +55,33 @@ class Runtjobbyd1(val pjs: PijobService,
                     jid = job.refid
                     try {
                         if (!task.checkrun(job)) {
-                            if (job.desdevice?.mac != null) {
-                                mac = job.desdevice?.mac
-                                var ip = ips.findByMac(job.desdevice?.mac!!)
-                                if (ip != null) {
 
-                                    var re = httpService.get("http://${ip.ip}", 60000)
-                                    var t = om.readValue<Tmpobj>(re)
-                                    if (checktmp(t, job)) {
-                                        var testjob = pjs.findByRefid(job.runwithid)
-                                        var t = D1tjobWorker(job, psij, mtp)
-                                        var run = task.run(t)
-                                    }
-                                }
+                            var tmps = readtmp.readTmp(job)
+                            if (checktmps(tmps, job)) {
+                                var t = D1tjobWorker(job, psij, mtp)
+                                var run = task.run(t)
                             }
+
+//                            if (job.desdevice?.mac != null) {
+//                                mac = job.desdevice?.mac
+//                                var ip = ips.findByMac(job.desdevice?.mac!!)
+//                                if (ip != null) {
+//
+//                                    var re = httpService.get("http://${ip.ip}", 60000)
+//                                    var t = om.readValue<Tmpobj>(re)
+//                                    if (checktmp(t, job)) {
+//                                        var testjob = pjs.findByRefid(job.runwithid)
+//                                        var t = D1tjobWorker(job, psij, mtp)
+//                                        var run = task.run(t)
+//                                    }
+//                                }
+//                            }
                         }
                     } catch (e: Exception) {
                         logger.error("${job.name} ${e.message}")
-                        lgs.createERROR("${e.message}", Date(), "Runtjobbyd1",
-                                "", "37", "run", mac, job.refid
+                        lgs.createERROR(
+                            "${e.message}", Date(), "Runtjobbyd1",
+                            "", "37", "run", mac, job.refid
                         )
 
                     }
@@ -70,9 +89,11 @@ class Runtjobbyd1(val pjs: PijobService,
             }
         } catch (e: Exception) {
             logger.error("Run t by d1 ${e.message}")
-            lgs.createERROR("${e.message}", Date(),
-                    "Runtjobbyd1", "",
-                    "30", "run", mac, jid)
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "Runtjobbyd1", "",
+                "30", "run", mac, jid
+            )
 
         }
     }
@@ -88,8 +109,10 @@ class Runtjobbyd1(val pjs: PijobService,
             if (job.tlow?.toDouble()!! <= tmp && job.thigh?.toDouble()!! >= tmp)
                 return true
         } catch (e: Exception) {
-            lgs.createERROR("${e.message}", Date(), "Runtjobbyd1", "",
-                    "71", "checktmp", job.desdevice?.mac, job.refid)
+            lgs.createERROR(
+                "${e.message}", Date(), "Runtjobbyd1", "",
+                "71", "checktmp", job.desdevice?.mac, job.refid
+            )
         }
         return false
 
@@ -114,9 +137,11 @@ class Runtjobbyd1(val pjs: PijobService,
             }
         } catch (e: Exception) {
             logger.error("Read tmp ${job.name} ERROR ${e.message}")
-            lgs.createERROR("${e.message}", Date(),
-                    "Runtjobbyd1", "", "87", "readtmp",
-                    job.desdevice?.mac, job.refid)
+            lgs.createERROR(
+                "${e.message}", Date(),
+                "Runtjobbyd1", "", "87", "readtmp",
+                job.desdevice?.mac, job.refid
+            )
         }
     }
 
