@@ -69,20 +69,20 @@ runproduct:
     - docker run -p 3334:888 -d -v /root/db:/root/db --name pidevice  --restart always  -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Xms1024m -Xmx4000m -Dspring.datasource.url=jdbc:h2:/root/db/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.88.21  -Dmac=00:e0:4c:68:07:ae  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://192.168.88.21:3333 " kykub/pidevice
     - docker image prune -a -f
 
-productjk:
-  stage: product_install
-  only:
-    refs:
-      - master
-  tags:
-    - tojk
-  script:
-    - CONTAINER_NAME="pidevice"
-    - OLD="$(docker ps --all --quiet --filter=name="$CONTAINER_NAME")"
-    - |-
-      if [ -n "$OLD" ]; then
-       docker stop $OLD && docker rm $OLD
-      fi
-    - docker pull kykub/pidevice
-    - docker run -p 3334:888 -d -v /root/database:/root/db --name pidevice  --restart always  -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Xms1024m -Xmx4000m -Dspring.datasource.url=jdbc:h2:/root/db/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.1.9  -Dmac=00:e0:4c:68:07:ae  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://192.168.1.9:3333 " kykub/pidevice
-    - docker image prune -a -f
+#productjk:
+#  stage: product_install
+#  only:
+#    refs:
+#      - master
+#  tags:
+#    - tojk
+#  script:
+#    - CONTAINER_NAME="pidevice"
+#    - OLD="$(docker ps --all --quiet --filter=name="$CONTAINER_NAME")"
+#    - |-
+#      if [ -n "$OLD" ]; then
+#       docker stop $OLD && docker rm $OLD
+#      fi
+#    - docker pull kykub/pidevice
+#    - docker run -p 3334:888 -d -v /root/database:/root/db --name pidevice  --restart always  -e TZ="Asia/Bangkok" -e JAVA_OPTS=" -Xms1024m -Xmx4000m -Dspring.datasource.url=jdbc:h2:/root/db/pp2;AUTO_SERVER=TRUE;IGNORECASE=TRUE  -Dfixip=192.168.1.9  -Dmac=00:e0:4c:68:07:ae  -Dfile.encoding=UTF-8  -Dspring.profiles.active=pc  -Dpiserver=http://192.168.1.9:3333 " kykub/pidevice
+#    - docker image prune -a -f
