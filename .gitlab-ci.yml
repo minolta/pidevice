@@ -2,7 +2,7 @@
 stages:
 #  - build
   - install
-  - runtest
+#  - runtest
   - product_install
   # - product_build
   # - product_install
