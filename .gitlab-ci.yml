@@ -2,9 +2,9 @@
 stages:
 #  - build
   - install
-#  - runtest
+  - runtest
   - product_install
-#  - tojk
+  - tojk
 
 #build_base:
 #  stage: build
