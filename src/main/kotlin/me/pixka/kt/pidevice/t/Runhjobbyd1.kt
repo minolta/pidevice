@@ -32,7 +32,8 @@ class Runhjobbyd1(
     val task: TaskService,
     val mtp: MactoipService,
     val groups: GroupRunService, val lgs: LogService,
-    val ntfs: NotifyService, val queue: QueueService,val lps:WarterLowPressureService,val sipj:SensorinjobService,val cs:ConfigdataService
+    val ntfs: NotifyService, val queue: QueueService,val lps:WarterLowPressureService,
+    val sipj:SensorinjobService,val cs:ConfigdataService
 ) {
     val om = ObjectMapper()
 
