@@ -246,6 +246,7 @@ class MactoipService(
     //สำหรับ setport
     fun setport(portstatusinjob: Portstatusinjob,timeout:Int): String {
         try {
+
             var url = findUrl(
                 portstatusinjob.device!!, portstatusinjob.portname!!.name!!,
                 portstatusinjob.runtime!!.toLong(), portstatusinjob.waittime!!.toLong(),

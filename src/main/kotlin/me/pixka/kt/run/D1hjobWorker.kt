@@ -24,6 +24,7 @@ class D1hjobWorker(
     var waitstatus = false
     var token: String? = null
 
+    var longtime = false //บอกว่าถ้าระบบต้องรอแรงดันต้อง set time open ใหม่
     /**
      * สำหรับ ดูว่าระบบน้ำ ok หรือเปล่า
      */
@@ -120,9 +121,12 @@ class D1hjobWorker(
 
     }
 
-    fun openpump() {
+    fun openpump(time:Int=0) {
         try {
-            var openpumptime = mtp.findTimeofjob(pijob)
+            var openpumptime =  time
+
+            if(time ==0 )
+                openpumptime = mtp.findTimeofjob(pijob)
             if (pijob.thigh != null) {
                 openpumptime = openpumptime + pijob.thigh!!.toInt()
             }
@@ -152,6 +156,7 @@ class D1hjobWorker(
             if (!checkPressure(pijob)) {
                 status = "wait pressure ${psi}  loop time ${i}/${waitloop}"
                 TimeUnit.SECONDS.sleep(1)
+                longtime = true //บอก thread ว่า set ระบบแบบใหม่ openport แบบ ใหม่
             } else {
                 return true
             }
@@ -283,6 +288,16 @@ class D1hjobWorker(
         var value = getLogic(v)
         try {
             //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
+            if(longtime)
+            {
+                //ถ้า longtime จะเปิดเป็น port ต่อ port
+                var newtimeopenpump = 0
+                if(pw!=null)
+                    newtimeopenpump = pw.toInt()
+                if(pr!=null)
+                    newtimeopenpump+= pr.toInt()
+                openpump(newtimeopenpump)
+            }
             var v = mtp.setport(it, 15000)
             status = "Delay  ${runtime} + ${waittime}"
             var s = om.readValue<Status>(v)
