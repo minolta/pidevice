@@ -10,21 +10,23 @@ import me.pixka.kt.pidevice.d.ConfigdataService
 import me.pixka.kt.pidevice.s.MactoipService
 import me.pixka.kt.pidevice.s.WarterLowPressureService
 import org.slf4j.LoggerFactory
+import org.springframework.web.reactive.function.client.WebClient
 import java.net.ConnectException
-import java.sql.Time
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+
 class D1hjobWorker(
     var job: Pijob,
-    val mtp: MactoipService, val ntfs: NotifyService, val lps: WarterLowPressureService,val cfg:ConfigdataService
+    val mtp: MactoipService, val ntfs: NotifyService, val lps: WarterLowPressureService, val cfg: ConfigdataService
 ) : DWK(job), Runnable {
     var om = ObjectMapper()
     var waitstatus = false
     var token: String? = null
 
     var longtime = false //บอกว่าถ้าระบบต้องรอแรงดันต้อง set time open ใหม่
+
     /**
      * สำหรับ ดูว่าระบบน้ำ ok หรือเปล่า
      */
@@ -98,6 +100,7 @@ class D1hjobWorker(
     }
 
     fun openPumpinpijob(pj: Pijob, timetoopen: Int) {
+        val client = WebClient.create()
         try {
             var pumpsinpijob = mtp.pus.bypijobid(pj.id)
             if (pumpsinpijob != null) {
@@ -106,6 +109,13 @@ class D1hjobWorker(
                         status = "Open pump ${it.pidevice?.name} Time:${timetoopen}"
                         TimeUnit.SECONDS.sleep(1)
                         mtp.openpumps(it.pidevice!!, timetoopen)
+
+//                        var result = client.get().uri("/run?delay=${timetoopen}")
+//                            .retrieve()
+//                            .bodyToMono(String::class.java)
+//                        result.subscribe {
+//                            println(it)
+//                        }
                     } catch (e: Exception) {
                         status = "${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}"
                         logger.error("${pijob.name} : Error Open pump in pijob PUMPNAME:${it.pidevice?.name} s ${e.message}")
@@ -121,16 +131,18 @@ class D1hjobWorker(
 
     }
 
-    fun openpump(time:Int=0) {
+    fun openpump(time: Int = 0) {
         try {
-            var openpumptime =  time
-
-            if(time ==0 )
+            var openpumptime = time
+            if (time == 0)
                 openpumptime = mtp.findTimeofjob(pijob)
             if (pijob.thigh != null) {
                 openpumptime = openpumptime + pijob.thigh!!.toInt()
             }
-            openpumptime = openpumptime + cfg.getValue("openpumptime","2").valuename!!.toInt() //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
+            openpumptime = openpumptime + cfg.getValue(
+                "openpumptime",
+                "2"
+            ).valuename!!.toInt() //สำหรับเวลาเกิดปัญหาหรือเปิดช้า ไปนิดหนึ่ง
             status = "Time of job : ${openpumptime}"
             openPumpinpijob(pijob, openpumptime)
             notify("JOB ${pijob.name} Open Pump Delay 10")
@@ -145,6 +157,9 @@ class D1hjobWorker(
     }
 
 
+    /**
+     * สำหรับตรวจสอบ แรงดันว่าได้แล้วหรือเปล่า
+     */
     fun checkperssureLoop(): Boolean {
 
         var waitloop = 30
@@ -153,6 +168,8 @@ class D1hjobWorker(
             waitloop = pijob.thigh!!.toInt()
 
         for (i in 1..waitloop) {
+            //เวลารอให้เปิด pump ไปเลย
+            openpump()
             if (!checkPressure(pijob)) {
                 status = "wait pressure ${psi}  loop time ${i}/${waitloop}"
                 TimeUnit.SECONDS.sleep(1)
@@ -288,14 +305,13 @@ class D1hjobWorker(
         var value = getLogic(v)
         try {
             //30 วิถ้าติดต่อไม่ได้ให้หยุดเลย
-            if(longtime)
-            {
+            if (longtime) {
                 //ถ้า longtime จะเปิดเป็น port ต่อ port
                 var newtimeopenpump = 0
-                if(pw!=null)
+                if (pw != null)
                     newtimeopenpump = pw.toInt()
-                if(pr!=null)
-                    newtimeopenpump+= pr.toInt()
+                if (pr != null)
+                    newtimeopenpump += pr.toInt()
                 openpump(newtimeopenpump)
             }
             var v = mtp.setport(it, 15000)
@@ -324,9 +340,8 @@ class D1hjobWorker(
         try {
             var ports = mtp.getPortstatus(pijob, true)
             if (ports != null && ports.size > 0) {
-               var port =  ports.get(0)
-                if(port!=null)
-                {
+                var port = ports.get(0)
+                if (port != null) {
                     mtp.setport(port, 2)
                 }
             }

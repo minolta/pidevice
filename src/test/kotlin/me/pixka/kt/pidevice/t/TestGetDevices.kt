@@ -18,20 +18,20 @@ class TestGetDevices {
     @Test
     fun testGetDevice()
     {
-        val request: HttpRequest = HttpRequest.newBuilder()
-            .uri(URI("http://192.168.88.21:3333/devices"))
-            .GET()
-            .build()
-
-        val response: HttpResponse<String> = HttpClient.newBuilder()
-            .build()
-            .send(request, BodyHandlers.ofString())
-
-        println(response.body())
-        var list = om.readValue<List<PiDevice>>(response.body())
-
-        list.forEach{
-            println(it)
-        }
+//        val request: HttpRequest = HttpRequest.newBuilder()
+//            .uri(URI("http://192.168.88.21:3333/devices"))
+//            .GET()
+//            .build()
+//
+//        val response: HttpResponse<String> = HttpClient.newBuilder()
+//            .build()
+//            .send(request, BodyHandlers.ofString())
+//
+//        println(response.body())
+//        var list = om.readValue<List<PiDevice>>(response.body())
+//
+//        list.forEach{
+//            println(it)
+//        }
     }
 }
