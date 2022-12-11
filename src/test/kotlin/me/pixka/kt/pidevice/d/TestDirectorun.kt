@@ -1,6 +1,5 @@
 package me.pixka.kt.pidevice.d
 
-import io.mockk.every
 import io.mockk.mockk
 import me.pixka.base.line.s.NotifyService
 import me.pixka.kt.pibase.d.Job

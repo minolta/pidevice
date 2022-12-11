@@ -4,7 +4,7 @@ import me.pixka.log.d.LogService
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import javax.transaction.Transactional
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 @Profile("!test")
