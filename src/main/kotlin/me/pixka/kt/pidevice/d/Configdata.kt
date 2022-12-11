@@ -1,12 +1,12 @@
 package me.pixka.kt.pidevice.d
 
+import jakarta.persistence.Entity
 import me.pixka.base.d.En
 import me.pixka.base.s.DefaultService
 import me.pixka.base.s.findByName
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
-import javax.persistence.Entity
 
 @Entity
 class Configdata(var name: String? = null, var valuename: String? = null) : En() {
